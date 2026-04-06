@@ -93,6 +93,27 @@ export default function Home() {
         }
         .nav-cta:hover { background:var(--cacao-dark); transform:translateY(-1px); }
 
+        .nav-btn {
+          padding: 0.65rem 1.1rem;
+          border-radius: 999px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          text-decoration: none;
+          cursor: pointer;
+
+          background: white;
+          color: var(--indigo);
+          border: 1px solid rgba(26,43,76,0.12);
+
+          transition: all 0.22s;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .nav-btn:hover {
+          background: rgba(255,255,255,0.85);
+          transform: translateY(-1px);
+        }
+
         /* HERO */
         .hero {
           min-height: 100vh; position:relative;
@@ -371,9 +392,9 @@ export default function Home() {
       <nav className={`nav ${scrollY > 50 ? 'scrolled' : ''}`}>
         <div className="logo">RESER<span>-VE</span></div>
         <div className="nav-links">
-          <a href="#destinos">Destinos</a>
-          <a href="#posaderos">Posaderos</a>
-          <a href="#como-funciona">Cómo funciona</a>
+          <a href="#destinos" className="nav-btn">Destinos</a>
+          <a href="#posaderos" className="nav-btn">Posaderos</a>
+          <a href="#como-funciona" className="nav-btn">Cómo funciona</a>
           <button className="nav-cta">Registra tu posada</button>
         </div>
       </nav>
