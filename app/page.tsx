@@ -234,6 +234,7 @@ export default function Home() {
 
         .hero-panel {
           max-width: 580px;
+          
           padding: 2rem 0;
         }
 
@@ -321,7 +322,7 @@ export default function Home() {
         .search-bar {
           max-width: 820px;
           margin: 0 auto;
-          transform: translateX(-40px);
+          transform: translateX(-60px);
           padding: 0.7rem;
           display: grid;
           grid-template-columns: 1.4fr 1fr 1fr auto;
@@ -748,7 +749,28 @@ export default function Home() {
           }
 
           .hero {
-            padding-top: 6.8rem;
+           min-height: auto;
+           padding: 7rem 1rem 3rem;
+          }
+
+          .hero-content {
+            padding: 0;
+          }
+
+          .hero-panel {
+           max-width: 100%;
+           transform: none !important;
+           text-align: left;
+          }
+
+          .hero-h1 {
+           font-size: clamp(2.8rem, 13vw, 4.3rem);
+           line-height: 0.95;
+          }
+
+          .hero-sub {
+           font-size: 0.95rem;
+           line-height: 1.65;
           }
 
           .hero-overlay {
