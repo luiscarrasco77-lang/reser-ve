@@ -281,6 +281,8 @@ export default function Home() {
         .dest-card {
           position:relative; overflow:hidden; aspect-ratio:4/3; cursor:pointer;
           border-radius:24px; border:1px solid rgba(26,43,76,0.08);
+          text-decoration: none;
+          color: inherit;
           transition:transform 0.32s ease, box-shadow 0.32s ease;
           box-shadow:var(--shadow);
         }
@@ -539,7 +541,11 @@ export default function Home() {
         <p className="section-sub">Posadas verificadas en destinos memorables de Venezuela, con una experiencia más boutique, cálida y confiable.</p>
         <div className="dest-grid">
           {destinos.map((d, i) => (
-            <div className="dest-card" key={i}>
+            <a 
+             href={`/destinos/${d.name.toLowerCase().replace(/\s+/g, '-')}`} 
+             className="dest-card" 
+             key={i}
+            >
               <img src={d.img} alt={d.name} />
               <div className="dest-overlay" />
               <div className="dest-info">
@@ -547,7 +553,7 @@ export default function Home() {
                 <div className="dest-name">{d.name}</div>
                 <div className="dest-count">{d.count}</div>
               </div>
-            </div>
+            </a>
           ))}
         </div>
       </section>
