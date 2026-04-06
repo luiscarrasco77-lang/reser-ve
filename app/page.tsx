@@ -234,7 +234,6 @@ export default function Home() {
 
         .hero-panel {
           max-width: 580px;
-          transform: translateX(80px);
           padding: 2rem 0;
         }
 
@@ -322,7 +321,7 @@ export default function Home() {
         .search-bar {
           max-width: 820px;
           margin: 0 auto;
-          transform: translateX(-70px);
+          transform: translateX(-40px);
           padding: 0.7rem;
           display: grid;
           grid-template-columns: 1.4fr 1fr 1fr auto;
