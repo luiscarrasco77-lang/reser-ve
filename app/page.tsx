@@ -446,7 +446,22 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="divider" style={{ marginTop: '2rem' }} />
+      <div className="divider" style={{ marginTop: '2rem'
+        
+       }} />
+       {/* QUE ES UNA POSADA */}
+       <section className="section">
+      <div className="section-label">Sobre las posadas</div>
+       <h2 className="section-h2">¿Qué es una <em>posada</em>?</h2>
+        <p className="section-sub" style={{ maxWidth: '800px' }}>
+       Una posada es un alojamiento más pequeño, cálido y auténtico que un hotel tradicional.
+       En Venezuela, muchas posadas están ubicadas en destinos naturales y ofrecen una experiencia
+        más cercana, personalizada y local. Son ideales para quienes buscan comodidad, hospitalidad
+        y una conexión real con el destino.
+       </p>
+       </section>
+
+<div className="divider" />
 
       {/* CÓMO FUNCIONA */}
       <section id="como-funciona" className="section">
