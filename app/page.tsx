@@ -79,7 +79,7 @@ export default function Home() {
           border-bottom: 1px solid var(--line);
           box-shadow: 0 8px 30px rgba(26,43,76,0.05);
         }
-        .logo { font-size:1.05rem; font-weight:800; letter-spacing:-0.04em; color:var(--indigo); }
+        .logo { font-size:3.05rem; font-weight:800; letter-spacing:-0.04em; color:var(--indigo); }
         .logo span { color:var(--cacao); }
         .nav-links { display:flex; align-items:center; gap:1.5rem; }
         .nav-links a { font-size:0.94rem; color:rgba(26,43,76,0.78); text-decoration:none; transition:color 0.22s; }
