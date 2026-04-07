@@ -15,12 +15,12 @@ export default function Home() {
   }, [])
 
   const destinos = [
-    { name: 'Los Roques', tag: 'Archipiélago', count: '12 posadas', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80' },
-    { name: 'Mérida', tag: 'Los Andes', count: '9 posadas', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80' },
-    { name: 'Mochima', tag: 'Costa Oriental', count: '7 posadas', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=800&q=80' },
-    { name: 'Morrocoy', tag: 'Costa Occidental', count: '6 posadas', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80' },
-    { name: 'Canaima', tag: 'Gran Sabana', count: '4 posadas', img: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80' },
-    { name: 'Isla Margarita', tag: 'Caribe', count: '11 posadas', img: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&q=80' },
+    { name: 'Los Roques', slug: 'los-roques', tag: 'Archipiélago', count: '12 posadas', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80' },
+    { name: 'Mérida', slug: 'merida', tag: 'Los Andes', count: '9 posadas', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80' },
+    { name: 'Mochima', slug: 'mochima', tag: 'Costa Oriental', count: '7 posadas', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=800&q=80' },
+    { name: 'Morrocoy', slug: 'morrocoy', tag: 'Costa Occidental', count: '6 posadas', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80' },
+    { name: 'Canaima', slug: 'canaima', tag: 'Gran Sabana', count: '4 posadas', img: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80' },
+    { name: 'Isla Margarita', slug: 'isla-margarita', tag: 'Caribe', count: '11 posadas', img: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&q=80' },
   ]
 
   return (
@@ -394,10 +394,10 @@ export default function Home() {
       <nav className={`nav ${scrollY > 50 ? 'scrolled' : ''}`}>
         <div className="logo">RESER<span>-VE</span></div>
         <div className="nav-links">
-          <a href="#destinos" className="nav-btn">Destinos</a>
-          <a href="#posaderos" className="nav-btn">Posaderos</a>
+          <a href="/buscar" className="nav-btn">Destinos</a>
+          <a href="/registro-posada" className="nav-btn">Posaderos</a>
           <a href="#como-funciona" className="nav-btn">Cómo funciona</a>
-          <button className="nav-cta">Registra tu posada</button>
+          <a href="/registro-posada" className="nav-cta">Registra tu posada</a>
         </div>
       </nav>
 
@@ -423,8 +423,8 @@ export default function Home() {
               Reserva con confianza y paga en USD o bolívares con Zelle, Pago Móvil, transferencia o Binance.
             </p>
             <div className={`hero-btns ${loaded ? 'anim-3' : ''}`}>
-              <a href="#destinos" className="btn-primary">Explorar posadas</a>
-              <a href="#posaderos" className="btn-secondary">¿Tienes una posada?</a>
+              <a href="/buscar" className="btn-primary">Explorar posadas</a>
+              <a href="/registro-posada" className="btn-secondary">¿Tienes una posada?</a>
             </div>
           </div>
         </div>
@@ -541,9 +541,9 @@ export default function Home() {
         <p className="section-sub">Posadas verificadas en destinos memorables de Venezuela, con una experiencia más boutique, cálida y confiable.</p>
         <div className="dest-grid">
           {destinos.map((d, i) => (
-            <a 
-             href={`/destinos/${d.name.toLowerCase().replace(/\s+/g, '-')}`} 
-             className="dest-card" 
+            <a
+             href={`/destinos/${d.slug}`}
+             className="dest-card"
              key={i}
             >
               <img src={d.img} alt={d.name} />
@@ -597,7 +597,7 @@ export default function Home() {
                 <li>Optimización visual y descripción</li>
                 <li>1 mes de visibilidad premium</li>
               </ul>
-              <button className="btn-primary full-btn">Quiero digitalizar mi posada</button>
+              <a href="/registro-posada" className="btn-primary full-btn">Quiero digitalizar mi posada</a>
             </div>
           </div>
         </div>

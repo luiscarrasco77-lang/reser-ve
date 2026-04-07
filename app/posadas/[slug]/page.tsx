@@ -2,60 +2,13 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-
-const posadas: Record<string, any> = {
-  'posada-sol-roques': {
-    nombre: 'Posada Sol de Los Roques',
-    destino: 'Los Roques',
-    tipo: 'Archipiélago',
-    precio: 120,
-    habitaciones: 8,
-    rating: 4.9,
-    reviews: 47,
-    descripcion: 'Enclavada frente al mar cristalino del archipiélago de Los Roques, esta posada familiar ofrece una experiencia auténtica venezolana. Despertarás con el sonido de las olas y el olor a café recién hecho. Nuestras habitaciones tienen vista directa al mar y acceso privado a la playa de arena blanca.',
-    servicios: ['Desayuno incluido', 'Snorkel', 'Wi-Fi', 'Aire acondicionado', 'Traslado en lancha', 'Bar de playa'],
-    politicas: ['Check-in: 2:00 PM', 'Check-out: 11:00 AM', 'No se admiten mascotas', 'Cancelación gratuita 48h antes'],
-    imgs: [
-      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=80',
-      'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=80',
-      'https://images.unsplash.com/photo-1582610116397-edb318620f90?w=1200&q=80',
-      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1200&q=80',
-    ],
-    host: { nombre: 'María González', desde: '2019', idiomas: ['Español', 'Inglés'] },
-    reseñas: [
-      { autor: 'Carlos M.', pais: 'España', rating: 5, texto: 'Increíble experiencia. Las mejores aguas turquesas que he visto en mi vida. María es una anfitriona excepcional.' },
-      { autor: 'Ana R.', pais: 'Miami, EE.UU.', rating: 5, texto: 'Volví a Venezuela después de 8 años y esta posada superó todas mis expectativas. Como regresar a casa.' },
-      { autor: 'Pierre L.', pais: 'Francia', rating: 4, texto: 'Paradise on earth. The snorkeling is absolutely spectacular. Will definitely come back.' },
-    ],
-  },
-  'posada-los-andes': {
-    nombre: 'Posada Los Andes de Mérida',
-    destino: 'Mérida',
-    tipo: 'Los Andes',
-    precio: 65,
-    habitaciones: 12,
-    rating: 4.8,
-    reviews: 83,
-    descripcion: 'Ubicada en el corazón de los Andes venezolanos, esta posada colonial combina la calidez de la arquitectura tradicional con todas las comodidades modernas. Ideal para los amantes del senderismo, la naturaleza y la gastronomía andina. A pocos minutos del teleférico más alto del mundo.',
-    servicios: ['Chimenea', 'Desayuno andino', 'Wi-Fi', 'Estacionamiento', 'Tours guiados', 'Agua caliente'],
-    politicas: ['Check-in: 3:00 PM', 'Check-out: 12:00 PM', 'Se admiten mascotas pequeñas', 'Cancelación gratuita 72h antes'],
-    imgs: [
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80',
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=80',
-      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&q=80',
-      'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&q=80',
-    ],
-    host: { nombre: 'Roberto Pérez', desde: '2017', idiomas: ['Español'] },
-    reseñas: [
-      { autor: 'Luisa T.', pais: 'Bogotá, Colombia', rating: 5, texto: 'Los Andes venezolanos son mágicos y esta posada los complementa perfectamente. El desayuno andino es espectacular.' },
-      { autor: 'Miguel S.', pais: 'Caracas, Venezuela', rating: 5, texto: 'Perfecto para desconectarse. Roberto conoce cada sendero de la montaña y comparte esa pasión con los huéspedes.' },
-    ],
-  },
-}
+import { useRouter } from 'next/navigation'
+import { getPosada } from '@/lib/data'
 
 const defaultPosada = {
   nombre: 'Posada en Venezuela',
   destino: 'Venezuela',
+  destinoSlug: '',
   tipo: 'Alojamiento',
   precio: 80,
   habitaciones: 6,
@@ -70,7 +23,8 @@ const defaultPosada = {
 }
 
 export default function FichaPosada({ params }: { params: { slug: string } }) {
-  const posada = posadas[params.slug] || defaultPosada
+  const posada = getPosada(params.slug) || defaultPosada
+  const router = useRouter()
   const [imgActiva, setImgActiva] = useState(0)
   const [fechaEntrada, setFechaEntrada] = useState('')
   const [fechaSalida, setFechaSalida] = useState('')
@@ -79,7 +33,14 @@ export default function FichaPosada({ params }: { params: { slug: string } }) {
   const noches = fechaEntrada && fechaSalida
     ? Math.max(0, Math.round((new Date(fechaSalida).getTime() - new Date(fechaEntrada).getTime()) / 86400000))
     : 0
-  const total = noches * posada.precio
+
+  const handleReservar = () => {
+    const qs = new URLSearchParams()
+    if (fechaEntrada) qs.set('llegada', fechaEntrada)
+    if (fechaSalida) qs.set('salida', fechaSalida)
+    qs.set('huespedes', String(huespedes))
+    router.push(`/reservar/${params.slug}?${qs.toString()}`)
+  }
 
   return (
     <>
@@ -305,7 +266,7 @@ export default function FichaPosada({ params }: { params: { slug: string } }) {
                 </div>
               </div>
 
-              <button className="btn-reservar">
+              <button className="btn-reservar" onClick={handleReservar}>
                 {noches > 0 ? `Reservar ${noches} noche${noches > 1 ? 's' : ''}` : 'Reservar ahora'}
               </button>
               <button className="btn-whatsapp">Consultar por WhatsApp</button>
