@@ -1,11 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0)
   const [loaded, setLoaded] = useState(false)
   const [activeTab, setActiveTab] = useState<'viajero' | 'posadero'>('viajero')
+  const [destinoBusqueda, setDestinoBusqueda] = useState('')
+  const router = useRouter()
 
   useEffect(() => {
     setLoaded(true)
@@ -431,14 +434,14 @@ export default function Home() {
 
         <div className={`search-wrap ${loaded ? 'anim-4' : ''}`}>
           <div className="search-bar">
-            <select>
-              <option>¿A dónde vas?</option>
-              <option>Los Roques</option>
-              <option>Mérida</option>
-              <option>Mochima</option>
-              <option>Morrocoy</option>
-              <option>Canaima</option>
-              <option>Isla Margarita</option>
+            <select value={destinoBusqueda} onChange={e => setDestinoBusqueda(e.target.value)}>
+              <option value="">¿A dónde vas?</option>
+              <option value="Los Roques">Los Roques</option>
+              <option value="Mérida">Mérida</option>
+              <option value="Mochima">Mochima</option>
+              <option value="Morrocoy">Morrocoy</option>
+              <option value="Canaima">Canaima</option>
+              <option value="Isla Margarita">Isla Margarita</option>
             </select>
             <input type="date" />
             <select>
@@ -448,7 +451,10 @@ export default function Home() {
               <option>Transferencia</option>
               <option>Binance</option>
             </select>
-            <button>Buscar</button>
+            <button onClick={() => {
+              const url = destinoBusqueda ? `/buscar?destino=${encodeURIComponent(destinoBusqueda)}` : '/buscar'
+              router.push(url)
+            }}>Buscar</button>
           </div>
         </div>
       </section>

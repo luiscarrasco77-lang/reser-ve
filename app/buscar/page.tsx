@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
 const posadas = [
   {
@@ -80,10 +81,19 @@ const posadas = [
 
 const destinos = ['Todos', 'Los Roques', 'Mérida', 'Mochima', 'Morrocoy', 'Canaima', 'Isla Margarita']
 
-export default function Buscar() {
-  const [destino, setDestino] = useState('Todos')
+function BuscarContent() {
+  const searchParams = useSearchParams()
+  const destinoParam = searchParams.get('destino') || 'Todos'
+  const initialDestino = destinos.includes(destinoParam) ? destinoParam : 'Todos'
+
+  const [destino, setDestino] = useState(initialDestino)
   const [precioMax, setPrecioMax] = useState(200)
   const [orden, setOrden] = useState('rating')
+
+  useEffect(() => {
+    const d = searchParams.get('destino') || 'Todos'
+    setDestino(destinos.includes(d) ? d : 'Todos')
+  }, [searchParams])
 
   const filtradas = posadas
     .filter(p => destino === 'Todos' || p.destino === destino)
@@ -274,5 +284,17 @@ export default function Buscar() {
         </div>
       </div>
     </>
+  )
+}
+
+export default function Buscar() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', background: '#0A0A08', color: '#F5F0E8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'DM Sans, sans-serif' }}>
+        Cargando...
+      </div>
+    }>
+      <BuscarContent />
+    </Suspense>
   )
 }
