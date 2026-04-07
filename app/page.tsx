@@ -551,7 +551,7 @@ export default function Home() {
               <div className="step-num">02</div>
               <div className="step-title">Te ayudamos con el contenido</div>
               <div className="step-desc">Fotografía profesional y acompañamiento para presentar tu posada de forma premium.</div>
-              <span className="step-optional">Servicio opcional · sin costo adicional</span>
+              <span className="step-optional">Servicio opcional · consulta nuestros planes</span>
             </div>
             <div className="step-card">
               <div className="step-num">03</div>
