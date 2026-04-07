@@ -1,29 +1,86 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+
+function useCounter(target: number, active: boolean, duration = 1800) {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    if (!active) return
+    let start = 0
+    const step = target / (duration / 16)
+    const timer = setInterval(() => {
+      start += step
+      if (start >= target) { setCount(target); clearInterval(timer) }
+      else setCount(Math.floor(start))
+    }, 16)
+    return () => clearInterval(timer)
+  }, [active, target, duration])
+  return count
+}
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0)
+  const [progress, setProgress] = useState(0)
   const [loaded, setLoaded] = useState(false)
   const [activeTab, setActiveTab] = useState<'viajero' | 'posadero'>('viajero')
   const [destinoBusqueda, setDestinoBusqueda] = useState('')
+  const [statsVisible, setStatsVisible] = useState(false)
+  const statsRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+
+  const c1 = useCounter(49, statsVisible)
+  const c2 = useCounter(44, statsVisible)
+  const c3 = useCounter(6, statsVisible)
+
+  const handleCardTilt = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    const el = e.currentTarget
+    const rect = el.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 12
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * -12
+    el.style.transform = `perspective(900px) rotateX(${y}deg) rotateY(${x}deg) translateY(-8px) scale(1.02)`
+  }, [])
+
+  const handleCardReset = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    e.currentTarget.style.transform = ''
+  }, [])
 
   useEffect(() => {
     setLoaded(true)
-    const handleScroll = () => setScrollY(window.scrollY)
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    const onScroll = () => {
+      const sy = window.scrollY
+      setScrollY(sy)
+      const total = document.documentElement.scrollHeight - window.innerHeight
+      setProgress(total > 0 ? (sy / total) * 100 : 0)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+
+    const revealObs = new IntersectionObserver(
+      (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') }),
+      { threshold: 0.1 }
+    )
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => revealObs.observe(el))
+
+    const statsObs = new IntersectionObserver(
+      (entries) => entries.forEach(e => { if (e.isIntersecting) setStatsVisible(true) }),
+      { threshold: 0.5 }
+    )
+    if (statsRef.current) statsObs.observe(statsRef.current)
+
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      revealObs.disconnect()
+      statsObs.disconnect()
+    }
   }, [])
 
   const destinos = [
-    { name: 'Los Roques', slug: 'los-roques', tag: 'Archipiélago', count: '12 posadas', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80' },
-    { name: 'Mérida', slug: 'merida', tag: 'Los Andes', count: '9 posadas', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80' },
-    { name: 'Mochima', slug: 'mochima', tag: 'Costa Oriental', count: '7 posadas', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=800&q=80' },
-    { name: 'Morrocoy', slug: 'morrocoy', tag: 'Costa Occidental', count: '6 posadas', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80' },
-    { name: 'Canaima', slug: 'canaima', tag: 'Gran Sabana', count: '4 posadas', img: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80' },
-    { name: 'Isla Margarita', slug: 'isla-margarita', tag: 'Caribe', count: '11 posadas', img: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&q=80' },
+    { name: 'Los Roques', slug: 'los-roques', tag: 'Archipiélago', count: '12 posadas', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=90' },
+    { name: 'Mérida', slug: 'merida', tag: 'Los Andes', count: '9 posadas', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&q=90' },
+    { name: 'Mochima', slug: 'mochima', tag: 'Costa Oriental', count: '7 posadas', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=900&q=90' },
+    { name: 'Morrocoy', slug: 'morrocoy', tag: 'Costa Occidental', count: '6 posadas', img: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=900&q=90' },
+    { name: 'Canaima', slug: 'canaima', tag: 'Gran Sabana', count: '4 posadas', img: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=900&q=90' },
+    { name: 'Isla Margarita', slug: 'isla-margarita', tag: 'Caribe', count: '11 posadas', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=900&q=90' },
   ]
 
   return (
@@ -33,498 +90,644 @@ export default function Home() {
 
         :root {
           --indigo: #1A2B4C;
+          --indigo-deep: #0F1B30;
           --sand: #FDFBF7;
           --cream: #F5EFE0;
           --cacao: #E67E22;
           --cacao-dark: #C96510;
+          --cacao-light: rgba(230,126,34,0.12);
           --text: #1A2B4C;
           --muted: #7A8699;
           --line: rgba(26,43,76,0.08);
-          --card: rgba(255,255,255,0.78);
           --shadow: 0 8px 32px rgba(26,43,76,0.10);
+          --shadow-lg: 0 20px 60px rgba(26,43,76,0.14);
         }
 
-        * { margin:0; padding:0; box-sizing:border-box; }
-        html { scroll-behavior: smooth; }
-
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
         body {
-          font-family: 'Inter', sans-serif;
-          background: radial-gradient(circle at top left, rgba(230,126,34,0.08) 0%, transparent 28%),
-            radial-gradient(circle at top right, rgba(26,43,76,0.06) 0%, transparent 30%),
-            linear-gradient(180deg, #fffefb 0%, var(--sand) 42%, #f8f3ea 100%);
-          color: var(--text);
-          overflow-x: hidden;
+          font-family:'Inter',sans-serif;
+          background: linear-gradient(180deg,#fffefb 0%,var(--sand) 60%,#f5ede0 100%);
+          color:var(--text); overflow-x:hidden;
         }
 
-        @keyframes fadeUp {
-          from { opacity:0; transform:translateY(26px); }
-          to { opacity:1; transform:translateY(0); }
+        /* SCROLL PROGRESS */
+        .scroll-bar {
+          position:fixed; top:0; left:0; height:3px; z-index:300;
+          background:linear-gradient(90deg, var(--cacao), var(--cacao-dark));
+          border-radius:0 3px 3px 0;
+          transition:width 0.08s linear;
+          pointer-events:none;
         }
-        .anim-0 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
-        .anim-1 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.15s both; }
-        .anim-2 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.25s both; }
-        .anim-3 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.35s both; }
-        .anim-4 { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.45s both; }
 
+        /* GRAIN TEXTURE */
         .grain {
-          position:fixed; inset:0; pointer-events:none; z-index:100; opacity:0.018;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+          position:fixed; inset:0; pointer-events:none; z-index:100; opacity:0.016;
+          background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
         }
 
-        /* NAV */
+        /* ─── REVEAL ANIMATIONS ─── */
+        .reveal {
+          opacity:0; transform:translateY(52px);
+          transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal-left {
+          opacity:0; transform:translateX(-52px);
+          transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal-right {
+          opacity:0; transform:translateX(52px);
+          transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal-scale {
+          opacity:0; transform:scale(0.92);
+          transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal.visible, .reveal-left.visible, .reveal-right.visible, .reveal-scale.visible {
+          opacity:1; transform:none;
+        }
+        .d1 { transition-delay:0.1s !important; }
+        .d2 { transition-delay:0.2s !important; }
+        .d3 { transition-delay:0.3s !important; }
+        .d4 { transition-delay:0.4s !important; }
+        .d5 { transition-delay:0.5s !important; }
+        .d6 { transition-delay:0.6s !important; }
+
+        /* ─── KEYFRAMES ─── */
+        @keyframes fadeUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes wordIn { from{opacity:0;transform:translateY(32px) rotateX(-12deg)} to{opacity:1;transform:translateY(0) rotateX(0)} }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+        @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+        @keyframes pulseShadow {
+          0%,100%{box-shadow:0 12px 30px rgba(230,126,34,0.28)}
+          50%{box-shadow:0 12px 44px rgba(230,126,34,0.48),0 0 0 10px rgba(230,126,34,0.06)}
+        }
+        @keyframes slideInRight { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes kenBurns { from{transform:scale(1)} to{transform:scale(1.08)} }
+        @keyframes lineGrow { from{transform:scaleX(0)} to{transform:scaleX(1)} }
+
+        .anim-0 { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
+        .anim-1 { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.15s both; }
+        .anim-2 { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.28s both; }
+        .anim-3 { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.42s both; }
+        .anim-4 { animation:fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.56s both; }
+
+        /* ─── NAV ─── */
         .nav {
           position:fixed; top:0; left:0; right:0; z-index:60;
           display:flex; align-items:center; justify-content:space-between;
-          padding:1rem 2rem; transition:all 0.35s ease;
+          padding:1rem 2rem; transition:all 0.38s ease;
         }
         .nav.scrolled {
-          background: rgba(253,251,247,0.88);
-          backdrop-filter: blur(18px);
-          border-bottom: 1px solid var(--line);
-          box-shadow: 0 8px 30px rgba(26,43,76,0.05);
+          background:rgba(253,251,247,0.92); backdrop-filter:blur(24px);
+          border-bottom:1px solid var(--line);
+          box-shadow:0 8px 40px rgba(26,43,76,0.07);
+          padding:0.75rem 2rem;
         }
-        .logo {
-          font-size:3.05rem; font-weight:800; letter-spacing:-0.04em; color:var(--indigo);
-          text-decoration:none; cursor:pointer;
-        }
-        .logo span { color:var(--cacao); }
+        .logo-img { height:34px; width:auto; display:block; transition:opacity 0.2s; }
+        .logo-img:hover { opacity:0.82; }
         .nav-links { display:flex; align-items:center; gap:1.5rem; }
-        .nav-links a { font-size:0.94rem; color:rgba(26,43,76,0.78); text-decoration:none; transition:color 0.22s; cursor:pointer; }
-        .nav-links a:hover { color:var(--indigo); }
+        .nav-link {
+          font-size:0.9rem; color:rgba(255,255,255,0.88); text-decoration:none;
+          font-weight:500; transition:color 0.22s; position:relative;
+        }
+        .nav.scrolled .nav-link { color:rgba(26,43,76,0.72); }
+        .nav-link::after {
+          content:''; position:absolute; bottom:-3px; left:0; right:0;
+          height:1.5px; background:var(--cacao); transform:scaleX(0);
+          transform-origin:left; transition:transform 0.28s ease;
+        }
+        .nav-link:hover::after { transform:scaleX(1); }
+        .nav-link:hover { color:white; }
+        .nav.scrolled .nav-link:hover { color:var(--indigo); }
         .nav-cta {
-          padding:0.75rem 1.15rem; border-radius:999px;
-          font-size:0.84rem; font-weight:600; cursor:pointer;
-          background:var(--cacao); border:1px solid var(--cacao); color:white;
-          box-shadow:0 12px 30px rgba(230,126,34,0.22); transition:all 0.22s;
-          font-family:'Inter',sans-serif; height:44px; display:inline-flex; align-items:center;
+          padding:0.72rem 1.2rem; border-radius:999px;
+          font-size:0.84rem; font-weight:700; cursor:pointer;
+          background:var(--cacao); border:none; color:white;
+          box-shadow:0 10px 28px rgba(230,126,34,0.28); transition:all 0.22s;
+          font-family:'Inter',sans-serif; text-decoration:none;
+          animation:pulseShadow 3s ease-in-out infinite;
         }
-        .nav-cta:hover { background:var(--cacao-dark); transform:translateY(-1px); }
+        .nav-cta:hover { background:var(--cacao-dark); transform:translateY(-1px); animation:none; box-shadow:0 14px 35px rgba(230,126,34,0.38); }
+        @media(max-width:768px){.nav-links{display:none;} .nav{padding:1rem;} .nav.scrolled{padding:0.75rem 1rem;}}
 
-        .nav-btn {
-          padding: 0.65rem 1.1rem;
-          border-radius: 999px;
-          font-size: 0.9rem;
-          font-weight: 600;
-          text-decoration: none;
-          cursor: pointer;
-          background: white;
-          color: var(--indigo);
-          border: 1px solid rgba(26,43,76,0.12);
-          transition: all 0.22s;
-          font-family: 'Inter', sans-serif;
-          height:44px; display:inline-flex; align-items:center;
-        }
-
-        .nav-btn:hover {
-          background: rgba(255,255,255,0.85);
-          transform: translateY(-1px);
-        }
-
-        /* HERO */
+        /* ─── HERO ─── */
         .hero {
-          min-height: 100vh; position:relative;
+          min-height:100dvh; position:relative;
           display:flex; flex-direction:column;
           align-items:center; justify-content:center;
           overflow:hidden; padding:7rem 1.5rem 3rem;
         }
         .hero-bg-img {
           position:absolute; inset:0;
-          background: url('/images/los-roques-hero.webp') center/cover no-repeat;
-          filter: saturate(1.05) brightness(0.82);
-        }
-        .hero-bg {
-          position:absolute; inset:0;
-          background: linear-gradient(180deg, rgba(253,251,247,0.05) 0%, rgba(253,251,247,0.55) 100%);
+          background:url('/images/los-roques-hero.webp') center/cover no-repeat;
+          animation:kenBurns 18s ease-in-out alternate infinite;
+          filter:saturate(1.1) brightness(0.78);
+          will-change:transform;
         }
         .hero-overlay {
           position:absolute; inset:0;
-          background: linear-gradient(105deg, rgba(26,43,76,0.78) 0%, rgba(26,43,76,0.5) 40%, rgba(26,43,76,0.12) 70%, transparent 100%);
+          background:linear-gradient(105deg,rgba(15,27,48,0.85) 0%,rgba(26,43,76,0.6) 40%,rgba(26,43,76,0.15) 70%,transparent 100%);
+        }
+        .hero-overlay2 {
+          position:absolute; inset:0;
+          background:linear-gradient(180deg,transparent 50%,rgba(15,27,48,0.45) 100%);
         }
         .hero-content {
           position:relative; z-index:2;
-          width:100%; max-width:1100px;
-          margin:0 auto; color:white;
+          width:100%; max-width:1100px; margin:0 auto; color:white;
         }
-        .hero-panel { max-width:600px; padding:1rem 0; }
-        .hero-badges { display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:1rem; }
+        .hero-panel { max-width:640px; padding:1rem 0; }
+        .hero-badges { display:flex; gap:0.65rem; flex-wrap:wrap; margin-bottom:1.2rem; }
         .hero-badge {
           display:inline-flex; align-items:center;
-          padding:0.45rem 0.9rem; font-size:0.76rem; font-weight:600;
+          padding:0.48rem 1rem; font-size:0.75rem; font-weight:700;
           border-radius:999px; background:rgba(230,126,34,0.95); color:white;
-          box-shadow:0 10px 24px rgba(230,126,34,0.18);
+          box-shadow:0 8px 22px rgba(230,126,34,0.22);
+          animation:float 3.5s ease-in-out infinite;
         }
+        .hero-badge:nth-child(2) { animation-delay:0.5s; background:rgba(255,255,255,0.18); backdrop-filter:blur(8px); }
         .hero-h1 {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-size:clamp(2.8rem, 7vw, 5.5rem); line-height:0.95;
-          letter-spacing:-0.03em; font-weight:800; margin-bottom:1rem;
+          font-family:'Playfair Display',Georgia,serif;
+          font-size:clamp(3rem,8vw,6rem); line-height:0.92;
+          letter-spacing:-0.04em; font-weight:800; margin-bottom:1.2rem;
         }
-        .hero-h1 em { font-style:italic; color:#ffe1c4; }
+        .hero-h1 em { font-style:italic; color:#ffc88a; }
+        .hero-word {
+          display:inline-block; opacity:0; transform:translateY(36px) rotateX(-14deg);
+          animation:wordIn 0.75s cubic-bezier(0.16,1,0.3,1) forwards;
+          transform-origin:bottom center;
+        }
         .hero-sub {
-          max-width:540px; font-size:1rem; line-height:1.75;
-          color:rgba(255,255,255,0.86); margin-bottom:1.6rem;
+          max-width:520px; font-size:1.05rem; line-height:1.8;
+          color:rgba(255,255,255,0.82); margin-bottom:2rem;
         }
-        .hero-btns { display:flex; gap:0.9rem; flex-wrap:wrap; margin-bottom:0; }
+        .hero-btns { display:flex; gap:1rem; flex-wrap:wrap; }
         .btn-primary {
-          display:inline-flex; align-items:center; text-decoration:none;
-          padding:0.98rem 1.6rem; border-radius:999px; min-height:44px;
-          font-size:0.94rem; font-weight:600; cursor:pointer;
-          background:var(--cacao); border:1px solid var(--cacao); color:white;
-          box-shadow:0 12px 30px rgba(230,126,34,0.28); transition:all 0.22s;
+          display:inline-flex; align-items:center; gap:0.5rem;
+          text-decoration:none; padding:1.05rem 1.8rem; border-radius:999px;
+          font-size:0.95rem; font-weight:700; cursor:pointer;
+          background:var(--cacao); border:none; color:white;
+          box-shadow:0 12px 32px rgba(230,126,34,0.32); transition:all 0.25s;
+          font-family:'Inter',sans-serif;
         }
-        .btn-primary:hover { background:var(--cacao-dark); transform:translateY(-1px); }
+        .btn-primary:hover { background:var(--cacao-dark); transform:translateY(-2px); box-shadow:0 18px 42px rgba(230,126,34,0.42); }
+        .btn-primary:active { transform:scale(0.97); }
         .btn-secondary {
-          display:inline-flex; align-items:center; text-decoration:none;
-          padding:0.98rem 1.6rem; border-radius:999px; min-height:44px;
-          font-size:0.94rem; font-weight:600; cursor:pointer;
+          display:inline-flex; align-items:center; gap:0.5rem;
+          text-decoration:none; padding:1.05rem 1.8rem; border-radius:999px;
+          font-size:0.95rem; font-weight:600; cursor:pointer;
           background:transparent; color:white;
-          border:1px solid rgba(255,255,255,0.42);
-          backdrop-filter:blur(8px); transition:all 0.22s;
+          border:1.5px solid rgba(255,255,255,0.45);
+          backdrop-filter:blur(10px); transition:all 0.25s;
+          font-family:'Inter',sans-serif;
         }
-        .btn-secondary:hover { background:rgba(255,255,255,0.12); transform:translateY(-1px); }
+        .btn-secondary:hover { background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.75); transform:translateY(-2px); }
 
-        /* SEARCH BAR */
+        /* ─── SEARCH BAR ─── */
         .search-wrap {
           position:relative; z-index:3;
-          width:100%; max-width:1100px;
-          margin:2rem auto 0; padding:0 0;
+          width:100%; max-width:1100px; margin:2.5rem auto 0;
         }
         .search-bar {
-          max-width:780px;
-          padding:0.65rem;
+          max-width:820px;
+          padding:0.6rem;
           display:grid;
-          grid-template-columns: 1.4fr 1fr 1fr auto;
-          gap:0.65rem;
-          background:rgba(255,255,255,0.92);
-          border:1px solid rgba(26,43,76,0.08);
-          backdrop-filter:blur(18px);
-          box-shadow:0 20px 60px rgba(26,43,76,0.18);
-          border-radius:22px;
+          grid-template-columns:1.6fr 1fr 1fr auto;
+          gap:0.5rem;
+          background:rgba(255,255,255,0.96);
+          border:1px solid rgba(255,255,255,0.6);
+          backdrop-filter:blur(24px);
+          box-shadow:0 24px 80px rgba(15,27,48,0.28), 0 0 0 1px rgba(255,255,255,0.4);
+          border-radius:20px;
         }
         .search-bar select, .search-bar input {
-          width:100%; min-width:0;
-          border:1px solid rgba(26,43,76,0.08);
-          background:white; color:var(--indigo);
-          padding:0.9rem 1rem; border-radius:14px;
-          outline:none; font-size:0.9rem;
-          font-family:'Inter',sans-serif; cursor:pointer;
+          width:100%; min-width:0; border:1px solid transparent; background:white;
+          color:var(--indigo); padding:0.88rem 1rem; border-radius:12px;
+          outline:none; font-size:0.9rem; font-family:'Inter',sans-serif;
+          transition:border-color 0.2s, box-shadow 0.2s; cursor:pointer;
+        }
+        .search-bar select:focus, .search-bar input:focus {
+          border-color:rgba(230,126,34,0.4); box-shadow:0 0 0 3px rgba(230,126,34,0.1);
         }
         .search-bar select option { background:white; color:var(--indigo); }
-        .search-bar button {
-          border:none; padding:0.9rem 1.35rem; border-radius:14px;
+        .search-btn {
+          border:none; padding:0.88rem 1.5rem; border-radius:12px;
           font-size:0.9rem; font-weight:700; cursor:pointer; white-space:nowrap;
-          background:var(--cacao); color:white; min-height:44px;
-          box-shadow:0 10px 24px rgba(230,126,34,0.22);
-          transition:all 0.22s; font-family:'Inter',sans-serif;
+          background:var(--cacao); color:white;
+          box-shadow:0 8px 22px rgba(230,126,34,0.25); transition:all 0.22s;
+          font-family:'Inter',sans-serif; min-height:44px;
         }
-        .search-bar button:hover { background:var(--cacao-dark); }
+        .search-btn:hover { background:var(--cacao-dark); transform:translateY(-1px); }
+        @media(max-width:900px){ .search-bar{grid-template-columns:1fr 1fr;} }
+        @media(max-width:600px){ .search-bar{grid-template-columns:1fr; max-width:100%;} .search-wrap{margin-top:1.5rem;} }
 
-        /* STATS STRIP */
-        .stats-strip-wrapper {
-          width:100%;
-          background:var(--cream);
-          border-top:1px solid var(--line);
-          border-bottom:1px solid var(--line);
-          margin-top:2rem;
+        /* ─── PHOTO MOSAIC ─── */
+        .mosaic-section { padding:0; overflow:hidden; }
+        .mosaic-grid {
+          display:grid;
+          grid-template-columns:1.4fr 1fr 1fr;
+          grid-template-rows:420px;
+          gap:4px;
         }
+        @media(max-width:768px){
+          .mosaic-grid{grid-template-columns:1fr 1fr;grid-template-rows:240px 240px;}
+          .mosaic-item:last-child{grid-column:1/3;}
+        }
+        @media(max-width:480px){ .mosaic-grid{grid-template-columns:1fr;grid-template-rows:280px 200px 200px;} .mosaic-item:last-child{grid-column:auto;} }
+        .mosaic-item {
+          position:relative; overflow:hidden; cursor:pointer;
+        }
+        .mosaic-item img {
+          width:100%; height:100%; object-fit:cover;
+          transition:transform 0.8s cubic-bezier(0.16,1,0.3,1), filter 0.5s ease;
+          filter:brightness(0.88) saturate(1.1);
+        }
+        .mosaic-item:hover img { transform:scale(1.07); filter:brightness(0.96) saturate(1.15); }
+        .mosaic-label {
+          position:absolute; bottom:0; left:0; right:0;
+          background:linear-gradient(to top,rgba(15,27,48,0.75) 0%,transparent 100%);
+          padding:2rem 1.5rem 1.25rem;
+          font-family:'Playfair Display',Georgia,serif;
+          font-size:1.25rem; font-weight:700; color:white;
+          transform:translateY(4px); transition:transform 0.4s ease;
+        }
+        .mosaic-item:hover .mosaic-label { transform:translateY(0); }
+        .mosaic-tag {
+          display:inline-block; font-family:'Inter',sans-serif;
+          font-size:0.68rem; font-weight:700; letter-spacing:0.1em;
+          color:rgba(255,255,255,0.72); text-transform:uppercase; margin-bottom:0.3rem;
+        }
+
+        /* ─── STATS STRIP ─── */
         .stats-strip {
-          display:flex; align-items:center; justify-content:center;
+          background:var(--cream);
+          border-top:1px solid rgba(230,126,34,0.12);
+          border-bottom:1px solid rgba(230,126,34,0.12);
+        }
+        .stats-inner {
           max-width:1100px; margin:0 auto;
-          padding:2rem 1.5rem;
+          display:grid; grid-template-columns:repeat(4,1fr);
+          padding:0;
         }
-        .stats-strip-item {
-          flex:1; display:flex; flex-direction:column;
-          align-items:center; text-align:center; padding:0 1.5rem;
+        @media(max-width:640px){ .stats-inner{grid-template-columns:repeat(2,1fr);} }
+        .stat-item {
+          padding:2.5rem 1.5rem; text-align:center;
+          border-right:1px solid rgba(26,43,76,0.08);
+          transition:background 0.3s;
         }
-        .stats-strip-item + .stats-strip-item {
-          border-left:1px solid rgba(26,43,76,0.12);
-        }
+        .stat-item:last-child { border-right:none; }
+        .stat-item:hover { background:rgba(230,126,34,0.04); }
         .stat-n {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-size:2.2rem; font-weight:700; letter-spacing:-0.04em;
-          color:var(--indigo); margin-bottom:0.3rem; line-height:1;
+          font-family:'Playfair Display',Georgia,serif;
+          font-size:2.8rem; font-weight:800; letter-spacing:-0.05em;
+          color:var(--indigo); line-height:1; margin-bottom:0.4rem;
         }
-        .stat-l { font-size:0.82rem; color:var(--muted); font-weight:500; }
+        .stat-n .accent { color:var(--cacao); }
+        .stat-l { font-size:0.84rem; color:var(--muted); font-weight:500; }
 
-        /* DIVIDER */
+        /* ─── DIVIDER ─── */
         .divider {
-          width:min(1100px, calc(100% - 3rem)); height:1px; margin:0 auto;
-          background:linear-gradient(to right, transparent, rgba(26,43,76,0.12), transparent);
+          width:min(1100px,calc(100% - 3rem)); height:1px; margin:0 auto;
+          background:linear-gradient(to right,transparent,rgba(26,43,76,0.1),transparent);
+          transform-origin:center; animation:lineGrow 1.2s cubic-bezier(0.16,1,0.3,1) both;
         }
 
-        /* SECTIONS */
-        .section { padding:6rem 1.5rem; max-width:1100px; margin:0 auto; }
+        /* ─── SECTIONS ─── */
+        .section { padding:7rem 1.5rem; max-width:1100px; margin:0 auto; }
         .section-label {
-          display:inline-block; padding:0.42rem 0.78rem; border-radius:999px;
-          font-size:0.76rem; font-weight:700; color:var(--indigo);
-          background:rgba(26,43,76,0.05); border:1px solid rgba(26,43,76,0.08);
-          margin-bottom:1rem;
+          display:inline-flex; align-items:center; gap:0.5rem;
+          padding:0.44rem 0.85rem; border-radius:999px; font-size:0.74rem; font-weight:700;
+          color:var(--cacao); background:rgba(230,126,34,0.08); border:1px solid rgba(230,126,34,0.18);
+          margin-bottom:1.1rem;
         }
+        .section-label::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--cacao); }
         .section-h2 {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-size:clamp(2rem, 5vw, 3.5rem); line-height:1.02;
-          letter-spacing:-0.02em; font-weight:700; color:var(--indigo); margin-bottom:0.8rem;
+          font-family:'Playfair Display',Georgia,serif;
+          font-size:clamp(2.2rem,5vw,3.8rem); line-height:1.0;
+          letter-spacing:-0.04em; font-weight:800; color:var(--indigo); margin-bottom:0.9rem;
         }
         .section-h2 em { font-style:italic; color:var(--cacao); }
-        .section-sub { font-size:1rem; line-height:1.78; color:var(--muted); max-width:700px; margin-bottom:2.4rem; }
+        .section-sub { font-size:1.05rem; line-height:1.82; color:var(--muted); max-width:680px; margin-bottom:2.8rem; }
 
-        /* TABS */
+        /* ─── SPLIT SECTION (posada explanation) ─── */
+        .split-section { display:grid; grid-template-columns:1fr 1fr; gap:5rem; align-items:center; }
+        @media(max-width:768px){ .split-section{grid-template-columns:1fr; gap:3rem;} }
+        .split-photo {
+          position:relative; border-radius:28px; overflow:hidden;
+          aspect-ratio:4/5;
+          box-shadow:0 30px 80px rgba(26,43,76,0.18);
+        }
+        .split-photo img { width:100%; height:100%; object-fit:cover; transition:transform 0.6s ease; }
+        .split-photo:hover img { transform:scale(1.04); }
+        .split-photo-badge {
+          position:absolute; bottom:1.5rem; left:1.5rem; right:1.5rem;
+          background:rgba(253,251,247,0.96); backdrop-filter:blur(16px);
+          border-radius:16px; padding:1.1rem 1.25rem;
+          border:1px solid rgba(26,43,76,0.08);
+          box-shadow:0 8px 32px rgba(26,43,76,0.12);
+        }
+        .split-photo-badge-title { font-size:0.82rem; font-weight:700; color:var(--indigo); margin-bottom:0.2rem; }
+        .split-photo-badge-sub { font-size:0.75rem; color:var(--muted); }
+        .split-text .blockquote {
+          font-family:'Playfair Display',Georgia,serif;
+          font-size:1.4rem; font-style:italic; color:var(--indigo);
+          line-height:1.6; margin-bottom:1.5rem;
+          padding-left:1.5rem; border-left:3px solid var(--cacao);
+        }
+        .feature-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:2rem; }
+        @media(max-width:480px){ .feature-grid{grid-template-columns:1fr;} }
+        .feature-card {
+          padding:1.1rem 1.2rem; background:white;
+          border:1px solid var(--line); border-radius:16px;
+          box-shadow:0 4px 16px rgba(26,43,76,0.06);
+          transition:transform 0.25s, box-shadow 0.25s;
+        }
+        .feature-card:hover { transform:translateY(-3px); box-shadow:var(--shadow); }
+        .feature-card-icon { font-size:1.3rem; margin-bottom:0.5rem; }
+        .feature-card-title { font-size:0.88rem; font-weight:700; color:var(--indigo); margin-bottom:0.2rem; }
+        .feature-card-desc { font-size:0.78rem; color:var(--muted); line-height:1.5; }
+
+        /* ─── TABS ─── */
         .tabs {
-          display:inline-flex; padding:0.35rem; border-radius:999px;
-          background:rgba(26,43,76,0.05); border:1px solid rgba(26,43,76,0.08);
-          margin-bottom:2rem; gap:0.35rem;
+          display:inline-flex; padding:0.3rem; border-radius:999px;
+          background:rgba(26,43,76,0.05); border:1px solid rgba(26,43,76,0.09);
+          margin-bottom:2.5rem; gap:0.3rem;
         }
         .tab-btn {
-          padding:0.82rem 1.2rem; border:none; border-radius:999px;
-          background:transparent; color:rgba(26,43,76,0.62);
+          padding:0.85rem 1.4rem; border:none; border-radius:999px;
+          background:transparent; color:rgba(26,43,76,0.58);
           font-size:0.9rem; font-weight:600; cursor:pointer;
-          transition:all 0.22s; font-family:'Inter',sans-serif; min-height:44px;
+          transition:all 0.25s; font-family:'Inter',sans-serif; min-height:44px;
         }
-        .tab-btn.active { background:var(--indigo); color:white; box-shadow:0 12px 24px rgba(26,43,76,0.18); }
+        .tab-btn.active { background:var(--indigo); color:white; box-shadow:0 10px 24px rgba(26,43,76,0.2); }
+        .tab-btn:hover:not(.active) { color:var(--indigo); background:rgba(26,43,76,0.06); }
 
-        /* STEPS */
-        .steps-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; }
+        /* ─── STEPS ─── */
+        .steps-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.25rem; }
         .step-card {
-          padding:1.5rem; border-radius:24px;
-          background:rgba(255,255,255,0.78);
+          padding:1.75rem; border-radius:24px;
+          background:rgba(255,255,255,0.88);
           border:1px solid var(--line);
-          box-shadow:var(--shadow); transition:transform 0.3s ease;
+          box-shadow:var(--shadow); transition:all 0.3s ease; cursor:default;
         }
-        .step-card:hover { transform:translateY(-3px); }
+        .step-card:hover { transform:translateY(-5px); box-shadow:var(--shadow-lg); border-color:rgba(230,126,34,0.2); }
         .step-card-recommended {
-          position:relative; padding:1.5rem; border-radius:24px;
-          background:linear-gradient(135deg,rgba(230,126,34,0.07) 0%,rgba(230,126,34,0.03) 100%);
-          border:1.5px dashed rgba(230,126,34,0.35);
-          box-shadow:0 8px 30px rgba(230,126,34,0.10); transition:transform 0.3s ease;
+          position:relative; padding:1.75rem; border-radius:24px;
+          background:linear-gradient(135deg,rgba(230,126,34,0.07) 0%,rgba(230,126,34,0.02) 100%);
+          border:1.5px dashed rgba(230,126,34,0.38);
+          box-shadow:0 8px 30px rgba(230,126,34,0.12); transition:all 0.3s ease; cursor:default;
         }
-        .step-card-recommended:hover { transform:translateY(-3px); }
+        .step-card-recommended:hover { transform:translateY(-5px); box-shadow:0 20px 50px rgba(230,126,34,0.18); }
         .step-badge {
-          position:absolute; top:-11px; left:1.25rem;
-          padding:0.22rem 0.75rem; border-radius:999px;
+          position:absolute; top:-12px; left:1.5rem;
+          padding:0.24rem 0.85rem; border-radius:999px;
           background:var(--cacao); color:white;
           font-size:0.62rem; font-weight:800; letter-spacing:0.12em; text-transform:uppercase;
-          box-shadow:0 4px 12px rgba(230,126,34,0.35);
+          box-shadow:0 4px 14px rgba(230,126,34,0.38);
         }
-        .step-optional {
-          display:inline-block; margin-top:0.5rem;
-          font-size:0.72rem; font-weight:600; color:rgba(230,126,34,0.75);
-          letter-spacing:0.04em;
-        }
-        .step-num { font-size:2rem; font-weight:800; letter-spacing:-0.04em; color:var(--cacao); margin-bottom:0.7rem; }
-        .step-title { font-size:1rem; font-weight:700; color:var(--indigo); margin-bottom:0.5rem; }
-        .step-desc { font-size:0.92rem; line-height:1.7; color:var(--muted); }
+        .step-optional { display:inline-block; margin-top:0.6rem; font-size:0.72rem; font-weight:600; color:rgba(230,126,34,0.72); }
+        .step-num { font-family:'Playfair Display',serif; font-size:2.4rem; font-weight:800; color:var(--cacao); margin-bottom:0.8rem; letter-spacing:-0.05em; }
+        .step-title { font-size:1rem; font-weight:700; color:var(--indigo); margin-bottom:0.55rem; }
+        .step-desc { font-size:0.9rem; line-height:1.72; color:var(--muted); }
 
-        /* DESTINOS — Editorial Magazine Grid */
+        /* ─── DESTINATIONS ─── */
         .dest-grid {
           display:grid;
-          grid-template-columns:repeat(3, 1fr);
-          gap:1rem;
+          grid-template-columns:repeat(3,1fr);
+          grid-template-rows:auto auto;
+          gap:1.25rem;
         }
+        @media(max-width:900px){ .dest-grid{grid-template-columns:repeat(2,1fr);} }
+        @media(max-width:560px){ .dest-grid{grid-template-columns:1fr;} }
         .dest-card {
           position:relative; overflow:hidden; cursor:pointer;
-          border-radius:24px; border:1px solid var(--line);
-          text-decoration: none; color: inherit;
-          transition:transform 0.32s ease, box-shadow 0.32s ease;
+          border-radius:24px; text-decoration:none; color:inherit;
           box-shadow:var(--shadow);
+          transition:box-shadow 0.4s ease;
           aspect-ratio:4/3;
+          will-change:transform;
         }
-        .dest-card.featured {
-          grid-column: 1 / 3;
-          aspect-ratio:16/9;
-        }
-        .dest-card:hover { transform:translateY(-4px); box-shadow:0 24px 45px rgba(26,43,76,0.16); }
-        .dest-card img { width:100%; height:100%; object-fit:cover; transition:transform 0.45s ease; filter:brightness(0.80); }
-        .dest-card:hover img { transform:scale(1.04); }
-        .dest-overlay { position:absolute; inset:0; background:linear-gradient(to top, rgba(26,43,76,0.88) 0%, rgba(26,43,76,0.12) 65%); }
-        .dest-info { position:absolute; left:0; right:0; bottom:0; padding:1.35rem; }
+        .dest-card.featured { grid-column:1/3; aspect-ratio:16/8; }
+        @media(max-width:900px){ .dest-card.featured{grid-column:1/3;aspect-ratio:16/9;} }
+        @media(max-width:560px){ .dest-card.featured{grid-column:1;aspect-ratio:4/3;} }
+        .dest-card:hover { box-shadow:0 28px 60px rgba(26,43,76,0.22); }
+        .dest-card img { width:100%; height:100%; object-fit:cover; transition:transform 0.7s cubic-bezier(0.16,1,0.3,1); filter:brightness(0.82) saturate(1.1); display:block; }
+        .dest-card:hover img { transform:scale(1.07); }
+        .dest-overlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(15,27,48,0.88) 0%,rgba(15,27,48,0.12) 65%); transition:background 0.4s; }
+        .dest-card:hover .dest-overlay { background:linear-gradient(to top,rgba(15,27,48,0.72) 0%,rgba(15,27,48,0.05) 65%); }
+        .dest-info { position:absolute; left:0; right:0; bottom:0; padding:1.5rem; }
         .dest-tag {
-          display:inline-block; margin-bottom:0.55rem;
-          padding:0.36rem 0.65rem; border-radius:999px;
-          font-size:0.72rem; font-weight:700; color:white;
-          background:rgba(230,126,34,0.96);
+          display:inline-block; margin-bottom:0.6rem;
+          padding:0.36rem 0.7rem; border-radius:999px;
+          font-size:0.7rem; font-weight:700; color:white;
+          background:rgba(230,126,34,0.94);
+          transform:translateY(4px); transition:transform 0.3s;
         }
+        .dest-card:hover .dest-tag { transform:translateY(0); }
         .dest-name {
-          font-size:1.45rem; font-weight:800; letter-spacing:-0.04em; color:white; margin-bottom:0.25rem;
+          font-family:'Playfair Display',Georgia,serif;
+          font-size:1.5rem; font-weight:800; color:white; margin-bottom:0.25rem;
+          line-height:1.15;
         }
-        .dest-card.featured .dest-name {
-          font-family:'Playfair Display', Georgia, serif;
-          font-size:2.2rem; font-weight:700; letter-spacing:-0.02em;
+        .dest-card.featured .dest-name { font-size:2.2rem; }
+        .dest-count { font-size:0.85rem; color:rgba(255,255,255,0.82); }
+        .dest-arrow {
+          position:absolute; top:1.25rem; right:1.25rem; width:36px; height:36px;
+          border-radius:50%; background:rgba(255,255,255,0.18); backdrop-filter:blur(8px);
+          display:flex; align-items:center; justify-content:center;
+          font-size:1rem; color:white; opacity:0;
+          transition:opacity 0.3s, transform 0.3s; transform:translateX(-8px);
         }
-        .dest-count { font-size:0.88rem; color:rgba(255,255,255,0.84); }
+        .dest-card:hover .dest-arrow { opacity:1; transform:translateX(0); }
 
-        /* TESTIMONIALS */
-        .testimonials-section {
-          background:var(--cream);
-          border-top:1px solid var(--line);
-          border-bottom:1px solid var(--line);
-          padding:6rem 1.5rem;
-        }
+        /* ─── TESTIMONIALS ─── */
+        .testimonials-section { background:var(--cream); padding:7rem 1.5rem; }
         .testimonials-inner { max-width:1100px; margin:0 auto; }
-        .testimonials-grid {
-          display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; margin-top:2.5rem;
-        }
+        .testimonials-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; }
+        @media(max-width:900px){ .testimonials-grid{grid-template-columns:1fr 1fr;} }
+        @media(max-width:580px){ .testimonials-grid{grid-template-columns:1fr;} }
         .testimonial-card {
-          background:white; border-radius:20px;
-          border:1px solid var(--line);
-          box-shadow:var(--shadow);
-          padding:1.75rem 1.5rem;
-          display:flex; flex-direction:column; gap:1rem;
-          position:relative; overflow:hidden;
+          background:white; border-radius:24px;
+          padding:2rem; border:1px solid var(--line);
+          box-shadow:var(--shadow); position:relative; overflow:hidden;
+          transition:transform 0.3s, box-shadow 0.3s;
         }
-        .testimonial-card::before {
-          content:''; position:absolute; top:0; left:0; right:0; height:4px;
-          background:var(--cacao);
-          border-radius:20px 20px 0 0;
-        }
-        .testimonial-stars { font-size:1rem; color:var(--cacao); letter-spacing:0.1em; }
+        .testimonial-card:hover { transform:translateY(-5px); box-shadow:var(--shadow-lg); }
+        .testimonial-bar { height:4px; background:var(--cacao); border-radius:4px 4px 0 0; position:absolute; top:0; left:0; right:0; }
+        .testimonial-stars { color:var(--cacao); font-size:0.95rem; margin-bottom:1rem; letter-spacing:2px; }
         .testimonial-quote {
-          font-size:0.98rem; line-height:1.78; color:var(--text);
-          font-style:italic; font-family:'Playfair Display', Georgia, serif;
-          font-weight:400; flex:1;
+          font-family:'Playfair Display',Georgia,serif;
+          font-size:1.05rem; font-style:italic; line-height:1.75;
+          color:var(--indigo); margin-bottom:1.5rem;
         }
-        .testimonial-author { display:flex; flex-direction:column; gap:0.18rem; }
-        .testimonial-name { font-size:0.92rem; font-weight:700; color:var(--indigo); }
-        .testimonial-country { font-size:0.8rem; color:var(--muted); }
+        .testimonial-author { display:flex; align-items:center; gap:0.75rem; }
+        .testimonial-avatar {
+          width:40px; height:40px; border-radius:50%;
+          background:linear-gradient(135deg,var(--cacao),var(--cacao-dark));
+          display:flex; align-items:center; justify-content:center;
+          font-size:0.95rem; font-weight:800; color:white; flex-shrink:0;
+          font-family:'Playfair Display',serif;
+        }
+        .testimonial-name { font-size:0.88rem; font-weight:700; color:var(--indigo); }
+        .testimonial-from { font-size:0.76rem; color:var(--muted); }
 
-        /* POSADERO */
+        /* ─── POSADEROS ─── */
         .posadero-section {
-          background:white; border:1px solid var(--line);
-          padding:2.5rem; border-radius:28px;
-          display:flex; gap:2.5rem; align-items:flex-start; flex-wrap:wrap;
+          background:rgba(255,255,255,0.85); border:1px solid var(--line);
+          padding:3rem; border-radius:32px;
+          display:flex; gap:3rem; align-items:flex-start; flex-wrap:wrap;
           box-shadow:var(--shadow);
         }
         .posadero-left { flex:1.2; min-width:280px; }
-        .posadero-right { flex:1; min-width:260px; }
-        .feature-list { display:flex; flex-direction:column; gap:0.9rem; margin-top:1.2rem; }
-        .feature-item { display:flex; align-items:flex-start; gap:0.75rem; }
-        .feature-dot { width:9px; height:9px; border-radius:999px; background:var(--cacao); margin-top:0.42rem; flex-shrink:0; }
+        .posadero-right { flex:1; min-width:270px; }
+        .feature-list { display:flex; flex-direction:column; gap:1rem; margin-top:1.5rem; }
+        .feature-item { display:flex; align-items:flex-start; gap:0.85rem; padding:0.75rem 0; border-bottom:1px solid rgba(26,43,76,0.04); }
+        .feature-item:last-child { border-bottom:none; }
+        .feature-dot { width:10px; height:10px; border-radius:50%; background:var(--cacao); margin-top:0.38rem; flex-shrink:0; box-shadow:0 2px 8px rgba(230,126,34,0.3); }
         .feature-text { font-size:0.94rem; line-height:1.7; color:var(--muted); }
 
-        /* PLAN CARD */
+        /* ─── PLAN CARD ─── */
         .plan-card {
-          padding:1.75rem; border-radius:24px;
-          background:linear-gradient(180deg, #fffaf3 0%, #ffffff 100%);
-          border:1px solid rgba(230,126,34,0.18);
-          box-shadow:0 22px 50px rgba(230,126,34,0.10);
+          padding:2rem; border-radius:24px;
+          background:linear-gradient(180deg,#fffaf3 0%,white 100%);
+          border:1px solid rgba(230,126,34,0.2);
+          box-shadow:0 24px 60px rgba(230,126,34,0.12);
         }
         .plan-label {
-          display:inline-block; margin-bottom:0.9rem;
-          padding:0.35rem 0.6rem; border-radius:999px;
-          font-size:0.76rem; font-weight:700; color:var(--cacao-dark);
-          background:rgba(230,126,34,0.10); border:1px solid rgba(230,126,34,0.12);
+          display:inline-block; margin-bottom:1rem;
+          padding:0.35rem 0.7rem; border-radius:999px;
+          font-size:0.74rem; font-weight:700; color:var(--cacao-dark);
+          background:rgba(230,126,34,0.1); border:1px solid rgba(230,126,34,0.15);
         }
         .plan-price {
-          font-family:'Playfair Display', Georgia, serif;
-          font-size:2.6rem; font-weight:700; line-height:1;
-          letter-spacing:-0.02em; color:var(--indigo);
+          font-family:'Playfair Display',serif;
+          font-size:2.8rem; font-weight:800; line-height:1;
+          letter-spacing:-0.05em; color:var(--indigo); margin-bottom:0.3rem;
         }
-        .plan-price span { font-size:0.9rem; font-weight:500; color:var(--muted); font-family:'Inter',sans-serif; }
-        .plan-desc { font-size:0.95rem; line-height:1.7; color:var(--muted); margin:0.85rem 0 1.2rem; }
-        .plan-items { list-style:none; display:flex; flex-direction:column; gap:0.7rem; margin-bottom:1.4rem; }
-        .plan-items li { font-size:0.92rem; color:var(--text); display:flex; gap:0.6rem; align-items:flex-start; }
-        .plan-items li::before { content:'✓'; color:var(--cacao); font-weight:700; flex-shrink:0; }
-        .full-btn { width:100%; text-align:center; cursor:pointer; justify-content:center; }
+        .plan-price span { font-family:'Inter',sans-serif; font-size:0.88rem; font-weight:500; color:var(--muted); }
+        .plan-desc { font-size:0.92rem; line-height:1.7; color:var(--muted); margin:0.9rem 0 1.3rem; }
+        .plan-items { list-style:none; display:flex; flex-direction:column; gap:0.75rem; margin-bottom:1.5rem; }
+        .plan-items li { font-size:0.92rem; color:var(--text); display:flex; gap:0.65rem; align-items:flex-start; }
+        .plan-items li::before { content:'✓'; color:var(--cacao); font-weight:800; flex-shrink:0; font-size:0.9rem; margin-top:0.05rem; }
+        .full-btn { width:100%; text-align:center; cursor:pointer; }
 
-        /* FOOTER */
-        .footer-outer {
+        /* ─── DARK CTA BAND ─── */
+        .dark-cta {
+          background:var(--indigo-deep);
+          padding:7rem 1.5rem;
+          text-align:center;
+          position:relative; overflow:hidden;
+        }
+        .dark-cta::before {
+          content:''; position:absolute; inset:0;
+          background:radial-gradient(ellipse 80% 60% at 50% 50%, rgba(230,126,34,0.15) 0%, transparent 70%);
+          pointer-events:none;
+        }
+        .dark-cta-inner { position:relative; z-index:1; max-width:680px; margin:0 auto; }
+        .dark-cta h2 {
+          font-family:'Playfair Display',Georgia,serif;
+          font-size:clamp(2.4rem,6vw,4rem); font-weight:800;
+          color:white; letter-spacing:-0.04em; line-height:1.05; margin-bottom:1rem;
+        }
+        .dark-cta h2 em { font-style:italic; color:#ffc88a; }
+        .dark-cta p { font-size:1.05rem; line-height:1.8; color:rgba(255,255,255,0.68); margin-bottom:2.5rem; }
+        .dark-cta-btns { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+        .btn-light {
+          display:inline-flex; align-items:center; gap:0.5rem;
+          text-decoration:none; padding:1.1rem 2rem; border-radius:999px;
+          font-size:0.95rem; font-weight:700; cursor:pointer;
+          background:white; color:var(--indigo); transition:all 0.25s;
+          font-family:'Inter',sans-serif;
+          box-shadow:0 12px 36px rgba(0,0,0,0.2);
+        }
+        .btn-light:hover { transform:translateY(-2px); box-shadow:0 18px 48px rgba(0,0,0,0.28); }
+        .btn-outline-light {
+          display:inline-flex; align-items:center; gap:0.5rem;
+          text-decoration:none; padding:1.1rem 2rem; border-radius:999px;
+          font-size:0.95rem; font-weight:600; cursor:pointer;
+          background:transparent; color:rgba(255,255,255,0.9);
+          border:1.5px solid rgba(255,255,255,0.35); transition:all 0.25s;
+          font-family:'Inter',sans-serif;
+        }
+        .btn-outline-light:hover { background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.7); transform:translateY(-2px); }
+
+        /* ─── FOOTER ─── */
+        .footer {
           background:var(--indigo);
-          padding:4rem 1.5rem 2rem;
-          margin-top:0;
+          padding:5rem 1.5rem 2rem;
+          color:rgba(255,255,255,0.72);
         }
-        .footer-inner {
+        .footer-grid {
           max-width:1100px; margin:0 auto;
-          display:grid; grid-template-columns:1.4fr 1fr 1fr;
-          gap:3rem; padding-bottom:2.5rem;
-          border-bottom:1px solid rgba(255,255,255,0.10);
+          display:grid; grid-template-columns:1.8fr 1fr 1fr 1fr;
+          gap:3rem; margin-bottom:4rem;
         }
-        .footer-col-logo { display:flex; flex-direction:column; gap:0.75rem; }
-        .footer-logo { font-size:2rem; font-weight:800; letter-spacing:-0.04em; color:white; }
-        .footer-logo span { color:var(--cacao); }
-        .footer-tagline { font-size:0.9rem; color:rgba(255,255,255,0.54); line-height:1.65; max-width:220px; }
-        .footer-col-nav { display:flex; flex-direction:column; gap:0.5rem; }
-        .footer-col-title { font-size:0.76rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.38); margin-bottom:0.5rem; }
-        .footer-col-nav a, .footer-col-contact a {
-          font-size:0.94rem; color:rgba(255,255,255,0.7); text-decoration:none;
-          transition:color 0.22s; cursor:pointer; line-height:2;
-        }
-        .footer-col-nav a:hover, .footer-col-contact a:hover { color:white; }
-        .footer-col-contact { display:flex; flex-direction:column; gap:0.5rem; }
+        @media(max-width:900px){ .footer-grid{grid-template-columns:1fr 1fr; gap:2rem;} }
+        @media(max-width:560px){ .footer-grid{grid-template-columns:1fr; gap:2rem;} }
+        .footer-brand .logo-img-footer { height:28px; filter:brightness(0) invert(1); margin-bottom:1.1rem; }
+        .footer-brand p { font-size:0.9rem; line-height:1.7; color:rgba(255,255,255,0.55); max-width:260px; }
+        .footer-col h4 { font-size:0.76rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.45); margin-bottom:1.2rem; }
+        .footer-col a { display:block; font-size:0.9rem; color:rgba(255,255,255,0.65); text-decoration:none; margin-bottom:0.65rem; transition:color 0.2s; }
+        .footer-col a:hover { color:white; }
         .footer-bottom {
           max-width:1100px; margin:0 auto;
-          display:flex; align-items:center; justify-content:space-between;
-          padding-top:1.5rem; flex-wrap:wrap; gap:0.75rem;
+          border-top:1px solid rgba(255,255,255,0.08);
+          padding-top:2rem;
+          display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;
         }
-        .footer-copy { font-size:0.84rem; color:rgba(255,255,255,0.38); }
-        .footer-powered { font-size:0.84rem; color:rgba(255,255,255,0.38); }
+        .footer-bottom p { font-size:0.82rem; color:rgba(255,255,255,0.38); }
+        .footer-bottom a { color:rgba(255,255,255,0.45); text-decoration:none; font-size:0.82rem; transition:color 0.2s; }
+        .footer-bottom a:hover { color:rgba(255,255,255,0.8); }
 
-        /* RESPONSIVE */
-        @media (max-width:900px) {
-          .search-bar { grid-template-columns:1fr 1fr; }
-          .dest-grid { grid-template-columns:1fr 1fr; }
-          .dest-card.featured { grid-column:1/3; }
-          .testimonials-grid { grid-template-columns:1fr; }
-          .footer-inner { grid-template-columns:1fr 1fr; gap:2rem; }
+        @media(max-width:768px){
+          .section{padding:5rem 1rem;}
+          .posadero-section{padding:2rem;gap:2rem;}
+          .dark-cta{padding:5rem 1rem;}
+          .footer{padding:4rem 1rem 2rem;}
+        }
+        @media(max-width:480px){
+          .hero-h1{font-size:2.8rem;}
+          .hero-sub{font-size:0.95rem;}
+          .hero{padding:6rem 1rem 2.5rem;}
+          .dest-card.featured .dest-name{font-size:1.6rem;}
         }
 
-        @media (max-width:768px) {
-          .nav { padding:0.9rem 1rem; }
-          .nav-links { display:none; }
-
-          .hero {
-            padding:5.5rem 1rem 2.5rem;
-            justify-content:flex-start;
-          }
-          .hero-panel {
-            max-width:100%;
-            padding:0.5rem 0 1rem;
-          }
-          .hero-h1 { font-size:clamp(2.4rem, 11vw, 3.2rem); }
-          .hero-sub { font-size:0.92rem; }
-          .hero-overlay {
-            background:linear-gradient(180deg, rgba(26,43,76,0.72) 0%, rgba(26,43,76,0.55) 50%, rgba(26,43,76,0.28) 100%);
-          }
-
-          .search-wrap { margin-top:1.5rem; padding:0; }
-          .search-bar {
-            grid-template-columns:1fr;
-            border-radius:20px;
-            max-width:100%;
-          }
-
-          .stats-strip { flex-direction:column; gap:1.5rem; padding:1.5rem 1rem; }
-          .stats-strip-item + .stats-strip-item { border-left:none; border-top:1px solid rgba(26,43,76,0.12); padding-top:1.5rem; }
-
-          .section { padding:4rem 1rem; }
-          .dest-grid { grid-template-columns:1fr; }
-          .dest-card.featured { grid-column:auto; aspect-ratio:4/3; }
-          .dest-card.featured .dest-name { font-size:1.45rem; }
-          .posadero-section { padding:1.5rem; gap:1.5rem; }
-          .testimonials-section { padding:4rem 1rem; }
-          .testimonials-grid { grid-template-columns:1fr; }
-
-          .footer-outer { padding:3rem 1rem 1.5rem; }
-          .footer-inner { grid-template-columns:1fr; gap:2rem; }
-          .footer-bottom { flex-direction:column; align-items:flex-start; gap:0.5rem; }
+        @media(prefers-reduced-motion:reduce){
+          .reveal, .reveal-left, .reveal-right, .reveal-scale { transition:none; }
+          .hero-word { animation:none; opacity:1; transform:none; }
+          .hero-badge { animation:none; }
+          .nav-cta { animation:none; }
+          .hero-bg-img { animation:none; }
         }
       `}</style>
 
+      <div className="scroll-bar" style={{ width: `${progress}%` }} />
       <div className="grain" />
 
-      {/* NAV */}
-      <nav className={`nav ${scrollY > 50 ? 'scrolled' : ''}`}>
-        <a href="/" className="logo">RESER<span>-VE</span></a>
+      {/* ── NAV ─────────────────────────────────────────── */}
+      <nav className={`nav ${scrollY > 60 ? 'scrolled' : ''}`}>
+        <a href="/">
+          <img
+            src="/images/logo-horizontal.svg"
+            alt="RESER-VE"
+            className="logo-img"
+            style={{ filter: scrollY > 60 ? 'none' : 'brightness(0) invert(1)' }}
+          />
+        </a>
         <div className="nav-links">
-          <a href="/buscar" className="nav-btn">Destinos</a>
-          <a href="/registro-posada" className="nav-btn">Posaderos</a>
-          <a href="#como-funciona" className="nav-btn">Cómo funciona</a>
+          <a href="/buscar" className="nav-link">Destinos</a>
+          <a href="/registro-posada" className="nav-link">Posaderos</a>
+          <a href="#como-funciona" className="nav-link">Cómo funciona</a>
           <a href="/registro-posada" className="nav-cta">Registra tu posada</a>
         </div>
       </nav>
 
-      {/* HERO */}
+      {/* ── HERO ─────────────────────────────────────────── */}
       <section className="hero">
-        <div className="hero-bg-img" style={{ transform: `translateY(${scrollY * 0.18}px)` }} />
-        <div className="hero-bg" />
+        <div className="hero-bg-img" style={{ transform: `translateY(${scrollY * 0.16}px)` }} />
         <div className="hero-overlay" />
+        <div className="hero-overlay2" />
 
         <div className="hero-content">
           <div className="hero-panel">
@@ -533,16 +736,29 @@ export default function Home() {
               <span className="hero-badge">Venezuela</span>
             </div>
             <h1 className={`hero-h1 ${loaded ? 'anim-1' : ''}`}>
-              Descubre <br />
-              <em>posadas auténticas</em><br />
-              en Venezuela
+              {loaded ? (
+                <>
+                  {'Descubre'.split('').map((c,i) => (
+                    <span key={i} className="hero-word" style={{animationDelay:`${0.15 + i*0.03}s`}}>{c}</span>
+                  ))}
+                  {' '}
+                  <em>
+                    {'posadas'.split('').map((c,i) => (
+                      <span key={i} className="hero-word" style={{animationDelay:`${0.48 + i*0.03}s`}}>{c}</span>
+                    ))}
+                  </em>
+                  <br />
+                  {'auténticas'.split('').map((c,i) => (
+                    <span key={i} className="hero-word" style={{animationDelay:`${0.88 + i*0.025}s`}}>{c}</span>
+                  ))}
+                </>
+              ) : 'Descubre posadas auténticas'}
             </h1>
             <p className={`hero-sub ${loaded ? 'anim-2' : ''}`}>
-              La primera plataforma especializada en alojamientos locales venezolanos.
-              Reserva con confianza y paga en USD o bolívares con Zelle, Pago Móvil, transferencia o Binance.
+              La primera plataforma de alojamientos locales venezolanos. Reserva con confianza, paga en USD o bolívares.
             </p>
             <div className={`hero-btns ${loaded ? 'anim-3' : ''}`}>
-              <a href="/buscar" className="btn-primary">Explorar posadas</a>
+              <a href="/buscar" className="btn-primary">Explorar posadas →</a>
               <a href="/registro-posada" className="btn-secondary">¿Tienes una posada?</a>
             </div>
           </div>
@@ -561,13 +777,13 @@ export default function Home() {
             </select>
             <input type="date" />
             <select>
-              <option>Tipo de pago</option>
+              <option>Método de pago</option>
               <option>Zelle</option>
               <option>Pago Móvil</option>
               <option>Transferencia</option>
               <option>Binance</option>
             </select>
-            <button onClick={() => {
+            <button className="search-btn" onClick={() => {
               const url = destinoBusqueda ? `/buscar?destino=${encodeURIComponent(destinoBusqueda)}` : '/buscar'
               router.push(url)
             }}>Buscar</button>
@@ -575,62 +791,139 @@ export default function Home() {
         </div>
       </section>
 
-      {/* STATS STRIP */}
-      <div className={`stats-strip-wrapper ${loaded ? 'anim-4' : ''}`}>
-        <div className="stats-strip">
-          <div className="stats-strip-item">
-            <div className="stat-n">+3.4M</div>
-            <div className="stat-l">turistas en 2025</div>
+      {/* ── PHOTO MOSAIC ─────────────────────────────────── */}
+      <section className="mosaic-section">
+        <div className="mosaic-grid">
+          <div className="mosaic-item">
+            <img
+              src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=90"
+              alt="Los Roques"
+              loading="lazy"
+            />
+            <div className="mosaic-label">
+              <div className="mosaic-tag">Archipiélago</div>
+              <div>Los Roques</div>
+            </div>
           </div>
-          <div className="stats-strip-item">
-            <div className="stat-n">+44%</div>
+          <div className="mosaic-item">
+            <img
+              src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=90"
+              alt="Posada boutique"
+              loading="lazy"
+            />
+            <div className="mosaic-label">
+              <div className="mosaic-tag">Experiencia</div>
+              <div>Posadas auténticas</div>
+            </div>
+          </div>
+          <div className="mosaic-item">
+            <img
+              src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=90"
+              alt="Canaima"
+              loading="lazy"
+            />
+            <div className="mosaic-label">
+              <div className="mosaic-tag">Gran Sabana</div>
+              <div>Canaima</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── STATS STRIP ─────────────────────────────────── */}
+      <div className="stats-strip" ref={statsRef}>
+        <div className="stats-inner">
+          <div className="stat-item reveal d1">
+            <div className="stat-n"><span className="accent">+{c1}</span></div>
+            <div className="stat-l">posadas registradas</div>
+          </div>
+          <div className="stat-item reveal d2">
+            <div className="stat-n"><span className="accent">+{c2}%</span></div>
             <div className="stat-l">crecimiento turístico</div>
           </div>
-          <div className="stats-strip-item">
-            <div className="stat-n">Flexible</div>
-            <div className="stat-l">USD, bolívares, Zelle, Binance y más</div>
+          <div className="stat-item reveal d3">
+            <div className="stat-n">{c3}</div>
+            <div className="stat-l">destinos exclusivos</div>
+          </div>
+          <div className="stat-item reveal d4">
+            <div className="stat-n" style={{fontSize:'1.8rem',letterSpacing:'-0.02em'}}>Flexible</div>
+            <div className="stat-l">USD, Bs, Zelle, Binance</div>
           </div>
         </div>
       </div>
 
-      <div className="divider" style={{ marginTop: '2rem' }} />
+      <div className="divider" style={{marginTop:'5rem'}} />
 
-      {/* QUE ES UNA POSADA */}
+      {/* ── QUÉ ES UNA POSADA ────────────────────────────── */}
       <section className="section">
-        <div className="section-label">Sobre las posadas</div>
-        <h2 className="section-h2">¿Qué es una <em>posada</em>?</h2>
-        <p className="section-sub" style={{ maxWidth: '800px' }}>
-          Una posada es un alojamiento más pequeño, cálido y auténtico que un hotel tradicional.
-          En Venezuela, muchas posadas están ubicadas en destinos naturales y ofrecen una experiencia
-          más cercana, personalizada y local. Son ideales para quienes buscan comodidad, hospitalidad
-          y una conexión real con el destino.
-        </p>
+        <div className="split-section">
+          <div className="split-photo reveal-left">
+            <img
+              src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=900&q=90"
+              alt="Posada boutique en Venezuela"
+              loading="lazy"
+            />
+            <div className="split-photo-badge">
+              <div className="split-photo-badge-title">Posada La Brisa · Los Roques</div>
+              <div className="split-photo-badge-sub">★ 4.9 · 48 reseñas · desde $120/noche</div>
+            </div>
+          </div>
+          <div className="split-text reveal-right">
+            <div className="section-label">Sobre las posadas</div>
+            <h2 className="section-h2">¿Qué es una <em>posada</em>?</h2>
+            <p className="blockquote">
+              "Calidez, autenticidad y una experiencia que ningún hotel de cadena puede ofrecer."
+            </p>
+            <p className="section-sub" style={{marginBottom:'0'}}>
+              Una posada es un alojamiento íntimo, cálido y genuino — gestionado por familias locales en los destinos más extraordinarios de Venezuela.
+            </p>
+            <div className="feature-grid">
+              {[
+                {icon:'🏖', title:'Ubicaciones únicas', desc:'Frente al mar, en montaña o en la selva'},
+                {icon:'👨‍👩‍👧', title:'Trato familiar', desc:'Anfitriones que conocen cada rincón'},
+                {icon:'💳', title:'Pagos flexibles', desc:'USD, Bs, Zelle, Pago Móvil, Binance'},
+                {icon:'⭐', title:'Verificadas', desc:'Fotos reales, descripciones honestas'},
+              ].map((f,i) => (
+                <div className={`feature-card reveal d${i+1}`} key={i}>
+                  <div className="feature-card-icon">{f.icon}</div>
+                  <div className="feature-card-title">{f.title}</div>
+                  <div className="feature-card-desc">{f.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
       <div className="divider" />
 
-      {/* CÓMO FUNCIONA */}
+      {/* ── CÓMO FUNCIONA ────────────────────────────────── */}
       <section id="como-funciona" className="section">
-        <div className="section-label">Cómo funciona</div>
-        <h2 className="section-h2">Simple para <em>todos</em></h2>
-        <p className="section-sub">Desde la búsqueda hasta el check-in. Una experiencia clara y confiable para viajeros y posaderos.</p>
-        <div className="tabs">
-          <button className={`tab-btn ${activeTab === 'viajero' ? 'active' : ''}`} onClick={() => setActiveTab('viajero')}>
-            Soy viajero
-          </button>
-          <button className={`tab-btn ${activeTab === 'posadero' ? 'active' : ''}`} onClick={() => setActiveTab('posadero')}>
-            Tengo una posada
-          </button>
+        <div className="reveal">
+          <div className="section-label">Cómo funciona</div>
+          <h2 className="section-h2">Simple para <em>todos</em></h2>
+          <p className="section-sub">Desde la búsqueda hasta el check-in. Una experiencia clara y confiable.</p>
         </div>
+        <div className="reveal d1">
+          <div className="tabs">
+            <button className={`tab-btn ${activeTab === 'viajero' ? 'active' : ''}`} onClick={() => setActiveTab('viajero')}>
+              Soy viajero
+            </button>
+            <button className={`tab-btn ${activeTab === 'posadero' ? 'active' : ''}`} onClick={() => setActiveTab('posadero')}>
+              Tengo una posada
+            </button>
+          </div>
+        </div>
+
         {activeTab === 'viajero' ? (
           <div className="steps-grid">
             {[
               ['Busca tu destino', 'Filtra por destino, fechas y método de pago en los rincones más especiales de Venezuela.'],
-              ['Elige con confianza', 'Fotos profesionales, perfiles cuidados y toda la información antes de reservar.'],
+              ['Elige con confianza', 'Fotos profesionales, perfiles verificados y toda la información antes de reservar.'],
               ['Reserva y paga fácil', 'Paga en USD o bolívares con Zelle, Pago Móvil, transferencia o Binance.'],
               ['Vive la experiencia', 'Llega con todo listo y disfruta una estancia boutique sin fricción.'],
             ].map(([t, d], i) => (
-              <div className="step-card" key={i}>
+              <div className={`step-card reveal d${i+1}`} key={i}>
                 <div className="step-num">0{i + 1}</div>
                 <div className="step-title">{t}</div>
                 <div className="step-desc">{d}</div>
@@ -639,24 +932,24 @@ export default function Home() {
           </div>
         ) : (
           <div className="steps-grid">
-            <div className="step-card">
+            <div className="step-card reveal d1">
               <div className="step-num">01</div>
               <div className="step-title">Registra tu posada</div>
               <div className="step-desc">Alta sencilla y visual para mostrar tu espacio con el nivel que merece.</div>
             </div>
-            <div className="step-card-recommended">
+            <div className="step-card-recommended reveal d2">
               <div className="step-badge">Recomendado</div>
               <div className="step-num">02</div>
               <div className="step-title">Te ayudamos con el contenido</div>
               <div className="step-desc">Fotografía profesional y acompañamiento para presentar tu posada de forma premium.</div>
               <span className="step-optional">Servicio opcional · consulta nuestros planes</span>
             </div>
-            <div className="step-card">
+            <div className="step-card reveal d3">
               <div className="step-num">03</div>
               <div className="step-title">Empieza a recibir reservas</div>
               <div className="step-desc">Tu perfil queda activo para viajeros locales, internacionales y diáspora venezolana.</div>
             </div>
-            <div className="step-card">
+            <div className="step-card reveal d4">
               <div className="step-num">04</div>
               <div className="step-title">Cobra con flexibilidad</div>
               <div className="step-desc">Recibe pagos en USD o bolívares con Zelle, Pago Móvil, transferencia o Binance.</div>
@@ -667,91 +960,84 @@ export default function Home() {
 
       <div className="divider" />
 
-      {/* DESTINOS */}
+      {/* ── DESTINOS ─────────────────────────────────────── */}
       <section id="destinos" className="section">
-        <div className="section-label">Destinos</div>
-        <h2 className="section-h2">Los rincones más <em>extraordinarios</em></h2>
-        <p className="section-sub">Posadas verificadas en destinos memorables de Venezuela, con una experiencia más boutique, cálida y confiable.</p>
+        <div className="reveal">
+          <div className="section-label">Destinos</div>
+          <h2 className="section-h2">Los rincones más <em>extraordinarios</em></h2>
+          <p className="section-sub">Posadas verificadas en los destinos que hacen de Venezuela un país único en el mundo.</p>
+        </div>
         <div className="dest-grid">
           {destinos.map((d, i) => (
             <a
               href={`/destinos/${d.slug}`}
-              className={`dest-card${i === 0 ? ' featured' : ''}`}
+              className={`dest-card reveal ${i === 0 ? 'featured' : ''} d${Math.min(i+1,6)}`}
               key={i}
+              onMouseMove={handleCardTilt}
+              onMouseLeave={handleCardReset}
+              style={{transition:'transform 0.15s ease, box-shadow 0.4s ease'}}
             >
-              <img src={d.img} alt={d.name} />
+              <img src={d.img} alt={d.name} loading={i > 2 ? 'lazy' : undefined} />
               <div className="dest-overlay" />
               <div className="dest-info">
                 <div className="dest-tag">{d.tag}</div>
                 <div className="dest-name">{d.name}</div>
                 <div className="dest-count">{d.count}</div>
               </div>
+              <div className="dest-arrow">→</div>
             </a>
           ))}
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <div className="testimonials-section">
+      {/* ── TESTIMONIALS ─────────────────────────────────── */}
+      <section className="testimonials-section">
         <div className="testimonials-inner">
-          <div className="section-label">Lo que dicen los viajeros</div>
-          <h2 className="section-h2">Experiencias que <em>inspiran</em></h2>
+          <div className="reveal" style={{textAlign:'center',marginBottom:'3.5rem'}}>
+            <div className="section-label">Lo que dicen los viajeros</div>
+            <h2 className="section-h2">Experiencias que <em>inspiran</em></h2>
+          </div>
           <div className="testimonials-grid">
-            <div className="testimonial-card">
-              <div className="testimonial-stars">★★★★★</div>
-              <p className="testimonial-quote">
-                "Reservar en Los Roques fue lo más fácil del mundo. La posada era exactamente como en las fotos y el posadero nos recibió como familia."
-              </p>
-              <div className="testimonial-author">
-                <div className="testimonial-name">Carlos M.</div>
-                <div className="testimonial-country">Barcelona, España</div>
+            {[
+              { stars:'★★★★★', text:'Reservar en Los Roques fue lo más fácil del mundo. La posada era exactamente como en las fotos y el posadero nos recibió como familia.', name:'Carlos M.', from:'Barcelona, España', initial:'C' },
+              { stars:'★★★★★', text:'Me sorprendió poder pagar con Zelle desde Miami. La plataforma es clara y el equipo de RESER-VE te ayuda en todo momento.', name:'Valentina R.', from:'Miami, EE.UU.', initial:'V' },
+              { stars:'★★★★★', text:'Mérida desde otro ángulo. La posada en Los Andes superó todas mis expectativas. Una experiencia completamente diferente a cualquier hotel.', name:'Pedro A.', from:'Caracas, Venezuela', initial:'P' },
+            ].map((t, i) => (
+              <div className={`testimonial-card reveal d${i+1}`} key={i}>
+                <div className="testimonial-bar" />
+                <div className="testimonial-stars">{t.stars}</div>
+                <p className="testimonial-quote">"{t.text}"</p>
+                <div className="testimonial-author">
+                  <div className="testimonial-avatar">{t.initial}</div>
+                  <div>
+                    <div className="testimonial-name">{t.name}</div>
+                    <div className="testimonial-from">{t.from}</div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="testimonial-card">
-              <div className="testimonial-stars">★★★★★</div>
-              <p className="testimonial-quote">
-                "Me sorprendió poder pagar con Zelle desde Miami. La plataforma es clara y el equipo de RESER-VE te ayuda en todo."
-              </p>
-              <div className="testimonial-author">
-                <div className="testimonial-name">Valentina R.</div>
-                <div className="testimonial-country">Miami, EE.UU.</div>
-              </div>
-            </div>
-            <div className="testimonial-card">
-              <div className="testimonial-stars">★★★★★</div>
-              <p className="testimonial-quote">
-                "Mérida desde otro ángulo. La posada en Los Andes superó mis expectativas y la experiencia fue completamente diferente a un hotel."
-              </p>
-              <div className="testimonial-author">
-                <div className="testimonial-name">Pedro A.</div>
-                <div className="testimonial-country">Caracas, Venezuela</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="divider" />
-
-      {/* POSADEROS */}
+      {/* ── POSADEROS ────────────────────────────────────── */}
       <section id="posaderos" className="section">
         <div className="posadero-section">
-          <div className="posadero-left">
+          <div className="posadero-left reveal-left">
             <div className="section-label">Para posaderos</div>
-            <h2 className="section-h2" style={{ marginBottom: '0.5rem' }}>
+            <h2 className="section-h2" style={{marginBottom:'0.6rem'}}>
               Tu posada merece <br /><em>visibilidad real</em>
             </h2>
-            <p className="section-sub" style={{ marginBottom: '0' }}>
-              Deja de depender solo de WhatsApp. RESER-VE te ayuda a mostrar tu posada con imagen premium,
-              recibir reservas con más confianza y cobrar con flexibilidad.
+            <p className="section-sub" style={{marginBottom:'0'}}>
+              Deja de depender solo de WhatsApp. Muestra tu posada con imagen premium, recibe reservas con más confianza y cobra con total flexibilidad.
             </p>
             <div className="feature-list">
               {[
                 'Fotografía profesional incluida en el paquete de digitalización',
-                'Perfil activo con mayor visibilidad para viajeros y diáspora venezolana',
-                'Cobros flexibles vía Zelle, Pago Móvil, transferencia o Binance',
+                'Perfil activo visible para viajeros locales, internacionales y la diáspora venezolana',
+                'Cobros flexibles vía Zelle, Pago Móvil, transferencia, Zinli o Binance',
                 'Respaldado por la comunidad Dos Locos de Viaje',
-              ].map((f, i) => (
+              ].map((f,i) => (
                 <div className="feature-item" key={i}>
                   <div className="feature-dot" />
                   <div className="feature-text">{f}</div>
@@ -759,7 +1045,7 @@ export default function Home() {
               ))}
             </div>
           </div>
-          <div className="posadero-right">
+          <div className="posadero-right reveal-right">
             <div className="plan-card">
               <div className="plan-label">Paquete digitalización</div>
               <div className="plan-price">$150 <span>USD / equiv. en bolívares</span></div>
@@ -770,34 +1056,63 @@ export default function Home() {
                 <li>Optimización visual y descripción</li>
                 <li>1 mes de visibilidad premium</li>
               </ul>
-              <a href="/registro-posada" className="btn-primary full-btn">Quiero digitalizar mi posada</a>
+              <a href="/registro-posada" className="btn-primary full-btn">Quiero digitalizar mi posada →</a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="footer-outer">
-        <div className="footer-inner">
-          <div className="footer-col-logo">
-            <div className="footer-logo">RESER<span>-VE</span></div>
-            <p className="footer-tagline">La primera plataforma especializada en posadas auténticas de Venezuela.</p>
+      {/* ── DARK CTA BAND ────────────────────────────────── */}
+      <section className="dark-cta">
+        <div className="dark-cta-inner">
+          <div className="reveal">
+            <h2>Venezuela te está <em>esperando.</em></h2>
+            <p>Más de 49 posadas auténticas en los destinos más increíbles. Tu próxima aventura empieza con un solo clic.</p>
           </div>
-          <div className="footer-col-nav">
-            <div className="footer-col-title">Explorar</div>
-            <a href="/buscar">Destinos</a>
-            <a href="/registro-posada">Posaderos</a>
+          <div className="dark-cta-btns reveal d2">
+            <a href="/buscar" className="btn-light">Explorar posadas →</a>
+            <a href="/registro-posada" className="btn-outline-light">Registra tu posada</a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ───────────────────────────────────────── */}
+      <footer className="footer">
+        <div className="footer-grid">
+          <div className="footer-brand">
+            <img src="/images/logo-horizontal.svg" alt="RESER-VE" className="logo-img-footer" />
+            <p>La primera plataforma especializada en posadas auténticas venezolanas. Conectamos viajeros con anfitriones locales extraordinarios.</p>
+          </div>
+          <div className="footer-col">
+            <h4>Explorar</h4>
+            <a href="/buscar">Todos los destinos</a>
+            <a href="/destinos/los-roques">Los Roques</a>
+            <a href="/destinos/merida">Mérida</a>
+            <a href="/destinos/canaima">Canaima</a>
+            <a href="/destinos/isla-margarita">Isla Margarita</a>
+          </div>
+          <div className="footer-col">
+            <h4>Posaderos</h4>
+            <a href="/registro-posada">Registra tu posada</a>
             <a href="#como-funciona">Cómo funciona</a>
+            <a href="#">Paquete digitalización</a>
+            <a href="#">Preguntas frecuentes</a>
           </div>
-          <div className="footer-col-contact">
-            <div className="footer-col-title">Contacto</div>
-            <a href="mailto:hola@reserve.ve">hola@reserve.ve</a>
-            <a href="https://wa.me/584000000000" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          <div className="footer-col">
+            <h4>Contacto</h4>
+            <a href="#">hola@reser-ve.com</a>
+            <a href="#">WhatsApp</a>
+            <a href="#">Instagram</a>
+            <a href="#">Dos Locos de Viaje</a>
           </div>
         </div>
         <div className="footer-bottom">
-          <span className="footer-copy">© 2025 RESER-VE. Todos los derechos reservados.</span>
-          <span className="footer-powered">Impulsado por Dos Locos de Viaje</span>
+          <p>© 2026 RESER-VE · Impulsado por Dos Locos de Viaje</p>
+          <div style={{display:'flex',gap:'1.5rem'}}>
+            <a href="#">Términos</a>
+            <a href="#">Privacidad</a>
+            <a href="#">Sobre nosotros</a>
+          </div>
         </div>
       </footer>
     </>
