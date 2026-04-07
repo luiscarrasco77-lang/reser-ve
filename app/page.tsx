@@ -58,6 +58,11 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
+    // Preload all slide images so transitions are instant
+    heroSlides.forEach(src => {
+      const img = new window.Image()
+      img.src = src
+    })
     const interval = setInterval(() => {
       setSlideIdx(prev => (prev + 1) % heroSlides.length)
       setSlideKey(k => k + 1)
@@ -256,9 +261,7 @@ export default function Home() {
 
         /* ─── SLIDE DOTS ─── */
         .slide-dots {
-          position:absolute; left:50%; transform:translateX(-50%);
-          bottom:calc(var(--search-offset, 7rem) + 0.5rem);
-          display:flex; gap:0.5rem; z-index:5; align-items:center;
+          display:flex; gap:0.5rem; align-items:center; margin-top:1.6rem;
         }
         .slide-dot {
           height:5px; width:5px; border-radius:99px; border:none; cursor:pointer; padding:0;
@@ -664,8 +667,8 @@ export default function Home() {
         .dark-cta-bg-img {
           position:absolute; inset:0;
           background:url('/images/MedinaEnCenitalII.webp') center/cover no-repeat;
-          filter:blur(14px) brightness(0.28) saturate(0.65);
-          transform:scale(1.07);
+          filter:blur(5px) brightness(0.42) saturate(0.75);
+          transform:scale(1.03);
           pointer-events:none; z-index:0;
         }
         .dark-cta-glow {
@@ -819,19 +822,18 @@ export default function Home() {
               <a href="/buscar" className="btn-primary">Explorar posadas →</a>
               <a href="/registro-posada" className="btn-secondary">¿Tienes una posada?</a>
             </div>
+            {/* Slide indicators — inline below buttons, no overlap with search bar */}
+            <div className="slide-dots">
+              {heroSlides.map((_, i) => (
+                <button
+                  key={i}
+                  className={`slide-dot${i === slideIdx ? ' active' : ''}`}
+                  onClick={() => { setSlideIdx(i); setSlideKey(k => k + 1) }}
+                  aria-label={`Foto ${i + 1}`}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-
-        {/* Slide indicators */}
-        <div className="slide-dots" style={{bottom:'calc(7rem + 0.75rem)'}}>
-          {heroSlides.map((_, i) => (
-            <button
-              key={i}
-              className={`slide-dot${i === slideIdx ? ' active' : ''}`}
-              onClick={() => { setSlideIdx(i); setSlideKey(k => k + 1) }}
-              aria-label={`Foto ${i + 1}`}
-            />
-          ))}
         </div>
 
         <div className={`search-wrap ${loaded ? 'anim-4' : ''}`}>
