@@ -29,18 +29,19 @@ export default function Home() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
         :root {
           --indigo: #1A2B4C;
           --sand: #FDFBF7;
+          --cream: #F5EFE0;
           --cacao: #E67E22;
           --cacao-dark: #C96510;
-          --text: #23324A;
-          --muted: #6B7482;
-          --line: rgba(26,43,76,0.10);
+          --text: #1A2B4C;
+          --muted: #7A8699;
+          --line: rgba(26,43,76,0.08);
           --card: rgba(255,255,255,0.78);
-          --shadow: 0 20px 60px rgba(26,43,76,0.10);
+          --shadow: 0 8px 32px rgba(26,43,76,0.10);
         }
 
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -82,17 +83,20 @@ export default function Home() {
           border-bottom: 1px solid var(--line);
           box-shadow: 0 8px 30px rgba(26,43,76,0.05);
         }
-        .logo { font-size:3.05rem; font-weight:800; letter-spacing:-0.04em; color:var(--indigo); }
+        .logo {
+          font-size:3.05rem; font-weight:800; letter-spacing:-0.04em; color:var(--indigo);
+          text-decoration:none; cursor:pointer;
+        }
         .logo span { color:var(--cacao); }
         .nav-links { display:flex; align-items:center; gap:1.5rem; }
-        .nav-links a { font-size:0.94rem; color:rgba(26,43,76,0.78); text-decoration:none; transition:color 0.22s; }
+        .nav-links a { font-size:0.94rem; color:rgba(26,43,76,0.78); text-decoration:none; transition:color 0.22s; cursor:pointer; }
         .nav-links a:hover { color:var(--indigo); }
         .nav-cta {
           padding:0.75rem 1.15rem; border-radius:999px;
           font-size:0.84rem; font-weight:600; cursor:pointer;
           background:var(--cacao); border:1px solid var(--cacao); color:white;
           box-shadow:0 12px 30px rgba(230,126,34,0.22); transition:all 0.22s;
-          font-family:'Inter',sans-serif;
+          font-family:'Inter',sans-serif; height:44px; display:inline-flex; align-items:center;
         }
         .nav-cta:hover { background:var(--cacao-dark); transform:translateY(-1px); }
 
@@ -103,13 +107,12 @@ export default function Home() {
           font-weight: 600;
           text-decoration: none;
           cursor: pointer;
-
           background: white;
           color: var(--indigo);
           border: 1px solid rgba(26,43,76,0.12);
-
           transition: all 0.22s;
           font-family: 'Inter', sans-serif;
+          height:44px; display:inline-flex; align-items:center;
         }
 
         .nav-btn:hover {
@@ -151,27 +154,28 @@ export default function Home() {
           box-shadow:0 10px 24px rgba(230,126,34,0.18);
         }
         .hero-h1 {
+          font-family: 'Playfair Display', Georgia, serif;
           font-size:clamp(2.8rem, 7vw, 5.5rem); line-height:0.95;
-          letter-spacing:-0.065em; font-weight:800; margin-bottom:1rem;
+          letter-spacing:-0.03em; font-weight:800; margin-bottom:1rem;
         }
-        .hero-h1 em { font-style:normal; color:#ffe1c4; }
+        .hero-h1 em { font-style:italic; color:#ffe1c4; }
         .hero-sub {
           max-width:540px; font-size:1rem; line-height:1.75;
           color:rgba(255,255,255,0.86); margin-bottom:1.6rem;
         }
         .hero-btns { display:flex; gap:0.9rem; flex-wrap:wrap; margin-bottom:0; }
         .btn-primary {
-          display:inline-block; text-decoration:none;
-          padding:0.98rem 1.6rem; border-radius:999px;
-          font-size:0.94rem; font-weight:600;
+          display:inline-flex; align-items:center; text-decoration:none;
+          padding:0.98rem 1.6rem; border-radius:999px; min-height:44px;
+          font-size:0.94rem; font-weight:600; cursor:pointer;
           background:var(--cacao); border:1px solid var(--cacao); color:white;
           box-shadow:0 12px 30px rgba(230,126,34,0.28); transition:all 0.22s;
         }
         .btn-primary:hover { background:var(--cacao-dark); transform:translateY(-1px); }
         .btn-secondary {
-          display:inline-block; text-decoration:none;
-          padding:0.98rem 1.6rem; border-radius:999px;
-          font-size:0.94rem; font-weight:600;
+          display:inline-flex; align-items:center; text-decoration:none;
+          padding:0.98rem 1.6rem; border-radius:999px; min-height:44px;
+          font-size:0.94rem; font-weight:600; cursor:pointer;
           background:transparent; color:white;
           border:1px solid rgba(255,255,255,0.42);
           backdrop-filter:blur(8px); transition:all 0.22s;
@@ -202,34 +206,44 @@ export default function Home() {
           background:white; color:var(--indigo);
           padding:0.9rem 1rem; border-radius:14px;
           outline:none; font-size:0.9rem;
-          font-family:'Inter',sans-serif;
+          font-family:'Inter',sans-serif; cursor:pointer;
         }
         .search-bar select option { background:white; color:var(--indigo); }
         .search-bar button {
           border:none; padding:0.9rem 1.35rem; border-radius:14px;
           font-size:0.9rem; font-weight:700; cursor:pointer; white-space:nowrap;
-          background:var(--cacao); color:white;
+          background:var(--cacao); color:white; min-height:44px;
           box-shadow:0 10px 24px rgba(230,126,34,0.22);
           transition:all 0.22s; font-family:'Inter',sans-serif;
         }
         .search-bar button:hover { background:var(--cacao-dark); }
 
-        /* STATS */
-        .stats {
-          display:flex; justify-content:center;
-          gap:1rem; flex-wrap:wrap;
-          width:min(1100px, calc(100% - 2rem));
-          margin:2rem auto 0; padding:0 0 1rem;
+        /* STATS STRIP */
+        .stats-strip-wrapper {
+          width:100%;
+          background:var(--cream);
+          border-top:1px solid var(--line);
+          border-bottom:1px solid var(--line);
+          margin-top:2rem;
         }
-        .stat-card {
-          min-width:180px; padding:1.2rem 1.4rem;
-          border-radius:20px;
-          background:rgba(255,255,255,0.82);
-          border:1px solid rgba(26,43,76,0.08);
-          box-shadow:var(--shadow); text-align:center;
+        .stats-strip {
+          display:flex; align-items:center; justify-content:center;
+          max-width:1100px; margin:0 auto;
+          padding:2rem 1.5rem;
         }
-        .stat-n { font-size:1.9rem; font-weight:800; letter-spacing:-0.05em; color:var(--indigo); margin-bottom:0.16rem; }
-        .stat-l { font-size:0.82rem; color:var(--muted); }
+        .stats-strip-item {
+          flex:1; display:flex; flex-direction:column;
+          align-items:center; text-align:center; padding:0 1.5rem;
+        }
+        .stats-strip-item + .stats-strip-item {
+          border-left:1px solid rgba(26,43,76,0.12);
+        }
+        .stat-n {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-size:2.2rem; font-weight:700; letter-spacing:-0.04em;
+          color:var(--indigo); margin-bottom:0.3rem; line-height:1;
+        }
+        .stat-l { font-size:0.82rem; color:var(--muted); font-weight:500; }
 
         /* DIVIDER */
         .divider {
@@ -246,10 +260,11 @@ export default function Home() {
           margin-bottom:1rem;
         }
         .section-h2 {
+          font-family: 'Playfair Display', Georgia, serif;
           font-size:clamp(2rem, 5vw, 3.5rem); line-height:1.02;
-          letter-spacing:-0.06em; font-weight:800; color:var(--indigo); margin-bottom:0.8rem;
+          letter-spacing:-0.02em; font-weight:700; color:var(--indigo); margin-bottom:0.8rem;
         }
-        .section-h2 em { font-style:normal; color:var(--cacao); }
+        .section-h2 em { font-style:italic; color:var(--cacao); }
         .section-sub { font-size:1rem; line-height:1.78; color:var(--muted); max-width:700px; margin-bottom:2.4rem; }
 
         /* TABS */
@@ -262,7 +277,7 @@ export default function Home() {
           padding:0.82rem 1.2rem; border:none; border-radius:999px;
           background:transparent; color:rgba(26,43,76,0.62);
           font-size:0.9rem; font-weight:600; cursor:pointer;
-          transition:all 0.22s; font-family:'Inter',sans-serif;
+          transition:all 0.22s; font-family:'Inter',sans-serif; min-height:44px;
         }
         .tab-btn.active { background:var(--indigo); color:white; box-shadow:0 12px 24px rgba(26,43,76,0.18); }
 
@@ -271,7 +286,7 @@ export default function Home() {
         .step-card {
           padding:1.5rem; border-radius:24px;
           background:rgba(255,255,255,0.78);
-          border:1px solid rgba(26,43,76,0.08);
+          border:1px solid var(--line);
           box-shadow:var(--shadow); transition:transform 0.3s ease;
         }
         .step-card:hover { transform:translateY(-3px); }
@@ -298,15 +313,23 @@ export default function Home() {
         .step-title { font-size:1rem; font-weight:700; color:var(--indigo); margin-bottom:0.5rem; }
         .step-desc { font-size:0.92rem; line-height:1.7; color:var(--muted); }
 
-        /* DESTINOS */
-        .dest-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem; }
+        /* DESTINOS — Editorial Magazine Grid */
+        .dest-grid {
+          display:grid;
+          grid-template-columns:repeat(3, 1fr);
+          gap:1rem;
+        }
         .dest-card {
-          position:relative; overflow:hidden; aspect-ratio:4/3; cursor:pointer;
-          border-radius:24px; border:1px solid rgba(26,43,76,0.08);
-          text-decoration: none;
-          color: inherit;
+          position:relative; overflow:hidden; cursor:pointer;
+          border-radius:24px; border:1px solid var(--line);
+          text-decoration: none; color: inherit;
           transition:transform 0.32s ease, box-shadow 0.32s ease;
           box-shadow:var(--shadow);
+          aspect-ratio:4/3;
+        }
+        .dest-card.featured {
+          grid-column: 1 / 3;
+          aspect-ratio:16/9;
         }
         .dest-card:hover { transform:translateY(-4px); box-shadow:0 24px 45px rgba(26,43,76,0.16); }
         .dest-card img { width:100%; height:100%; object-fit:cover; transition:transform 0.45s ease; filter:brightness(0.80); }
@@ -319,12 +342,52 @@ export default function Home() {
           font-size:0.72rem; font-weight:700; color:white;
           background:rgba(230,126,34,0.96);
         }
-        .dest-name { font-size:1.45rem; font-weight:800; letter-spacing:-0.04em; color:white; margin-bottom:0.25rem; }
+        .dest-name {
+          font-size:1.45rem; font-weight:800; letter-spacing:-0.04em; color:white; margin-bottom:0.25rem;
+        }
+        .dest-card.featured .dest-name {
+          font-family:'Playfair Display', Georgia, serif;
+          font-size:2.2rem; font-weight:700; letter-spacing:-0.02em;
+        }
         .dest-count { font-size:0.88rem; color:rgba(255,255,255,0.84); }
+
+        /* TESTIMONIALS */
+        .testimonials-section {
+          background:var(--cream);
+          border-top:1px solid var(--line);
+          border-bottom:1px solid var(--line);
+          padding:6rem 1.5rem;
+        }
+        .testimonials-inner { max-width:1100px; margin:0 auto; }
+        .testimonials-grid {
+          display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; margin-top:2.5rem;
+        }
+        .testimonial-card {
+          background:white; border-radius:20px;
+          border:1px solid var(--line);
+          box-shadow:var(--shadow);
+          padding:1.75rem 1.5rem;
+          display:flex; flex-direction:column; gap:1rem;
+          position:relative; overflow:hidden;
+        }
+        .testimonial-card::before {
+          content:''; position:absolute; top:0; left:0; right:0; height:4px;
+          background:var(--cacao);
+          border-radius:20px 20px 0 0;
+        }
+        .testimonial-stars { font-size:1rem; color:var(--cacao); letter-spacing:0.1em; }
+        .testimonial-quote {
+          font-size:0.98rem; line-height:1.78; color:var(--text);
+          font-style:italic; font-family:'Playfair Display', Georgia, serif;
+          font-weight:400; flex:1;
+        }
+        .testimonial-author { display:flex; flex-direction:column; gap:0.18rem; }
+        .testimonial-name { font-size:0.92rem; font-weight:700; color:var(--indigo); }
+        .testimonial-country { font-size:0.8rem; color:var(--muted); }
 
         /* POSADERO */
         .posadero-section {
-          background:rgba(255,255,255,0.80); border:1px solid rgba(26,43,76,0.08);
+          background:white; border:1px solid var(--line);
           padding:2.5rem; border-radius:28px;
           display:flex; gap:2.5rem; align-items:flex-start; flex-wrap:wrap;
           box-shadow:var(--shadow);
@@ -349,30 +412,57 @@ export default function Home() {
           font-size:0.76rem; font-weight:700; color:var(--cacao-dark);
           background:rgba(230,126,34,0.10); border:1px solid rgba(230,126,34,0.12);
         }
-        .plan-price { font-size:2.6rem; font-weight:800; line-height:1; letter-spacing:-0.05em; color:var(--indigo); }
-        .plan-price span { font-size:0.9rem; font-weight:500; color:var(--muted); }
+        .plan-price {
+          font-family:'Playfair Display', Georgia, serif;
+          font-size:2.6rem; font-weight:700; line-height:1;
+          letter-spacing:-0.02em; color:var(--indigo);
+        }
+        .plan-price span { font-size:0.9rem; font-weight:500; color:var(--muted); font-family:'Inter',sans-serif; }
         .plan-desc { font-size:0.95rem; line-height:1.7; color:var(--muted); margin:0.85rem 0 1.2rem; }
         .plan-items { list-style:none; display:flex; flex-direction:column; gap:0.7rem; margin-bottom:1.4rem; }
         .plan-items li { font-size:0.92rem; color:var(--text); display:flex; gap:0.6rem; align-items:flex-start; }
         .plan-items li::before { content:'✓'; color:var(--cacao); font-weight:700; flex-shrink:0; }
-        .full-btn { width:100%; text-align:center; cursor:pointer; }
+        .full-btn { width:100%; text-align:center; cursor:pointer; justify-content:center; }
 
         /* FOOTER */
-        footer {
-          border-top:1px solid rgba(26,43,76,0.08);
-          padding:2rem 1.5rem;
-          display:flex; align-items:center; justify-content:space-between;
-          flex-wrap:wrap; gap:1rem;
-          max-width:1100px; margin:0 auto;
+        .footer-outer {
+          background:var(--indigo);
+          padding:4rem 1.5rem 2rem;
+          margin-top:0;
         }
-        footer a { color:rgba(26,43,76,0.64); text-decoration:none; font-size:0.9rem; transition:color 0.2s; }
-        footer a:hover { color:var(--indigo); }
-        .footer-logo { font-size:1rem; font-weight:800; color:var(--indigo); }
+        .footer-inner {
+          max-width:1100px; margin:0 auto;
+          display:grid; grid-template-columns:1.4fr 1fr 1fr;
+          gap:3rem; padding-bottom:2.5rem;
+          border-bottom:1px solid rgba(255,255,255,0.10);
+        }
+        .footer-col-logo { display:flex; flex-direction:column; gap:0.75rem; }
+        .footer-logo { font-size:2rem; font-weight:800; letter-spacing:-0.04em; color:white; }
         .footer-logo span { color:var(--cacao); }
+        .footer-tagline { font-size:0.9rem; color:rgba(255,255,255,0.54); line-height:1.65; max-width:220px; }
+        .footer-col-nav { display:flex; flex-direction:column; gap:0.5rem; }
+        .footer-col-title { font-size:0.76rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.38); margin-bottom:0.5rem; }
+        .footer-col-nav a, .footer-col-contact a {
+          font-size:0.94rem; color:rgba(255,255,255,0.7); text-decoration:none;
+          transition:color 0.22s; cursor:pointer; line-height:2;
+        }
+        .footer-col-nav a:hover, .footer-col-contact a:hover { color:white; }
+        .footer-col-contact { display:flex; flex-direction:column; gap:0.5rem; }
+        .footer-bottom {
+          max-width:1100px; margin:0 auto;
+          display:flex; align-items:center; justify-content:space-between;
+          padding-top:1.5rem; flex-wrap:wrap; gap:0.75rem;
+        }
+        .footer-copy { font-size:0.84rem; color:rgba(255,255,255,0.38); }
+        .footer-powered { font-size:0.84rem; color:rgba(255,255,255,0.38); }
 
         /* RESPONSIVE */
         @media (max-width:900px) {
           .search-bar { grid-template-columns:1fr 1fr; }
+          .dest-grid { grid-template-columns:1fr 1fr; }
+          .dest-card.featured { grid-column:1/3; }
+          .testimonials-grid { grid-template-columns:1fr; }
+          .footer-inner { grid-template-columns:1fr 1fr; gap:2rem; }
         }
 
         @media (max-width:768px) {
@@ -400,13 +490,20 @@ export default function Home() {
             max-width:100%;
           }
 
-          .stats { flex-direction:column; align-items:stretch; }
-          .stat-card { width:100%; min-width:unset; }
+          .stats-strip { flex-direction:column; gap:1.5rem; padding:1.5rem 1rem; }
+          .stats-strip-item + .stats-strip-item { border-left:none; border-top:1px solid rgba(26,43,76,0.12); padding-top:1.5rem; }
 
           .section { padding:4rem 1rem; }
           .dest-grid { grid-template-columns:1fr; }
+          .dest-card.featured { grid-column:auto; aspect-ratio:4/3; }
+          .dest-card.featured .dest-name { font-size:1.45rem; }
           .posadero-section { padding:1.5rem; gap:1.5rem; }
-          footer { padding:2rem 1rem; }
+          .testimonials-section { padding:4rem 1rem; }
+          .testimonials-grid { grid-template-columns:1fr; }
+
+          .footer-outer { padding:3rem 1rem 1.5rem; }
+          .footer-inner { grid-template-columns:1fr; gap:2rem; }
+          .footer-bottom { flex-direction:column; align-items:flex-start; gap:0.5rem; }
         }
       `}</style>
 
@@ -414,7 +511,7 @@ export default function Home() {
 
       {/* NAV */}
       <nav className={`nav ${scrollY > 50 ? 'scrolled' : ''}`}>
-        <div className="logo">RESER<span>-VE</span></div>
+        <a href="/" className="logo">RESER<span>-VE</span></a>
         <div className="nav-links">
           <a href="/buscar" className="nav-btn">Destinos</a>
           <a href="/registro-posada" className="nav-btn">Posaderos</a>
@@ -478,38 +575,39 @@ export default function Home() {
         </div>
       </section>
 
-      {/* STATS */}
-      <div className={`stats ${loaded ? 'anim-4' : ''}`}>
-        <div className="stat-card">
-          <div className="stat-n">+3.4M</div>
-          <div className="stat-l">turistas en 2025</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-n">+44%</div>
-          <div className="stat-l">crecimiento turístico</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-n">Flexible</div>
-          <div className="stat-l">USD, bolívares, Zelle, Binance y más</div>
+      {/* STATS STRIP */}
+      <div className={`stats-strip-wrapper ${loaded ? 'anim-4' : ''}`}>
+        <div className="stats-strip">
+          <div className="stats-strip-item">
+            <div className="stat-n">+3.4M</div>
+            <div className="stat-l">turistas en 2025</div>
+          </div>
+          <div className="stats-strip-item">
+            <div className="stat-n">+44%</div>
+            <div className="stat-l">crecimiento turístico</div>
+          </div>
+          <div className="stats-strip-item">
+            <div className="stat-n">Flexible</div>
+            <div className="stat-l">USD, bolívares, Zelle, Binance y más</div>
+          </div>
         </div>
       </div>
 
-      <div className="divider" style={{ marginTop: '2rem'
-        
-       }} />
-       {/* QUE ES UNA POSADA */}
-       <section className="section">
-      <div className="section-label">Sobre las posadas</div>
-       <h2 className="section-h2">¿Qué es una <em>posada</em>?</h2>
-        <p className="section-sub" style={{ maxWidth: '800px' }}>
-       Una posada es un alojamiento más pequeño, cálido y auténtico que un hotel tradicional.
-       En Venezuela, muchas posadas están ubicadas en destinos naturales y ofrecen una experiencia
-        más cercana, personalizada y local. Son ideales para quienes buscan comodidad, hospitalidad
-        y una conexión real con el destino.
-       </p>
-       </section>
+      <div className="divider" style={{ marginTop: '2rem' }} />
 
-<div className="divider" />
+      {/* QUE ES UNA POSADA */}
+      <section className="section">
+        <div className="section-label">Sobre las posadas</div>
+        <h2 className="section-h2">¿Qué es una <em>posada</em>?</h2>
+        <p className="section-sub" style={{ maxWidth: '800px' }}>
+          Una posada es un alojamiento más pequeño, cálido y auténtico que un hotel tradicional.
+          En Venezuela, muchas posadas están ubicadas en destinos naturales y ofrecen una experiencia
+          más cercana, personalizada y local. Son ideales para quienes buscan comodidad, hospitalidad
+          y una conexión real con el destino.
+        </p>
+      </section>
+
+      <div className="divider" />
 
       {/* CÓMO FUNCIONA */}
       <section id="como-funciona" className="section">
@@ -577,9 +675,9 @@ export default function Home() {
         <div className="dest-grid">
           {destinos.map((d, i) => (
             <a
-             href={`/destinos/${d.slug}`}
-             className="dest-card"
-             key={i}
+              href={`/destinos/${d.slug}`}
+              className={`dest-card${i === 0 ? ' featured' : ''}`}
+              key={i}
             >
               <img src={d.img} alt={d.name} />
               <div className="dest-overlay" />
@@ -592,6 +690,46 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* TESTIMONIALS */}
+      <div className="testimonials-section">
+        <div className="testimonials-inner">
+          <div className="section-label">Lo que dicen los viajeros</div>
+          <h2 className="section-h2">Experiencias que <em>inspiran</em></h2>
+          <div className="testimonials-grid">
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-quote">
+                "Reservar en Los Roques fue lo más fácil del mundo. La posada era exactamente como en las fotos y el posadero nos recibió como familia."
+              </p>
+              <div className="testimonial-author">
+                <div className="testimonial-name">Carlos M.</div>
+                <div className="testimonial-country">Barcelona, España</div>
+              </div>
+            </div>
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-quote">
+                "Me sorprendió poder pagar con Zelle desde Miami. La plataforma es clara y el equipo de RESER-VE te ayuda en todo."
+              </p>
+              <div className="testimonial-author">
+                <div className="testimonial-name">Valentina R.</div>
+                <div className="testimonial-country">Miami, EE.UU.</div>
+              </div>
+            </div>
+            <div className="testimonial-card">
+              <div className="testimonial-stars">★★★★★</div>
+              <p className="testimonial-quote">
+                "Mérida desde otro ángulo. La posada en Los Andes superó mis expectativas y la experiencia fue completamente diferente a un hotel."
+              </p>
+              <div className="testimonial-author">
+                <div className="testimonial-name">Pedro A.</div>
+                <div className="testimonial-country">Caracas, Venezuela</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="divider" />
 
@@ -639,16 +777,27 @@ export default function Home() {
       </section>
 
       {/* FOOTER */}
-      <footer>
-        <div className="footer-logo">RESER<span>-VE</span></div>
-        <div style={{ display:'flex', gap:'1.25rem', flexWrap:'wrap' }}>
-          <a href="#">Sobre nosotros</a>
-          <a href="#">Contacto</a>
-          <a href="#">Términos</a>
-          <a href="#">Privacidad</a>
+      <footer className="footer-outer">
+        <div className="footer-inner">
+          <div className="footer-col-logo">
+            <div className="footer-logo">RESER<span>-VE</span></div>
+            <p className="footer-tagline">La primera plataforma especializada en posadas auténticas de Venezuela.</p>
+          </div>
+          <div className="footer-col-nav">
+            <div className="footer-col-title">Explorar</div>
+            <a href="/buscar">Destinos</a>
+            <a href="/registro-posada">Posaderos</a>
+            <a href="#como-funciona">Cómo funciona</a>
+          </div>
+          <div className="footer-col-contact">
+            <div className="footer-col-title">Contacto</div>
+            <a href="mailto:hola@reserve.ve">hola@reserve.ve</a>
+            <a href="https://wa.me/584000000000" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          </div>
         </div>
-        <div style={{ fontSize:'0.88rem', color:'rgba(26,43,76,0.48)' }}>
-          Impulsado por Dos Locos de Viaje
+        <div className="footer-bottom">
+          <span className="footer-copy">© 2025 RESER-VE. Todos los derechos reservados.</span>
+          <span className="footer-powered">Impulsado por Dos Locos de Viaje</span>
         </div>
       </footer>
     </>
