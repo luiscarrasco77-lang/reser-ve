@@ -732,8 +732,8 @@ export default function Home() {
         <div className="hero-content">
           <div className="hero-panel">
             <div className={`hero-badges ${loaded ? 'anim-0' : ''}`}>
-              <span className="hero-badge">Boutique</span>
               <span className="hero-badge">Venezuela</span>
+              <span className="hero-badge">Autenticidad garantizada</span>
             </div>
             <h1 className={`hero-h1 ${loaded ? 'anim-1' : ''}`}>
               {loaded ? (
