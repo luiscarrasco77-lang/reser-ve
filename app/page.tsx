@@ -58,16 +58,24 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    // Preload all slide images so transitions are instant
-    heroSlides.forEach(src => {
-      const img = new window.Image()
-      img.src = src
+    // Preload next 2 slides immediately, then stagger the rest to avoid blocking
+    heroSlides.slice(1, 3).forEach(src => {
+      const img = new window.Image(); img.src = src
     })
+    let preloadIdx = 3
+    const preloadTimer = setInterval(() => {
+      if (preloadIdx < heroSlides.length) {
+        const img = new window.Image(); img.src = heroSlides[preloadIdx++]
+      } else {
+        clearInterval(preloadTimer)
+      }
+    }, 2000)
+
     const interval = setInterval(() => {
       setSlideIdx(prev => (prev + 1) % heroSlides.length)
       setSlideKey(k => k + 1)
     }, 7000)
-    return () => clearInterval(interval)
+    return () => { clearInterval(interval); clearInterval(preloadTimer) }
   }, [])
 
   useEffect(() => {
@@ -351,6 +359,10 @@ export default function Home() {
           color:var(--indigo); padding:0.88rem 1rem; border-radius:12px;
           outline:none; font-size:0.9rem; font-family:'Inter',sans-serif;
           transition:border-color 0.2s, box-shadow 0.2s; cursor:pointer;
+          box-sizing:border-box; -webkit-appearance:none; appearance:none;
+        }
+        .search-bar input[type="date"]::-webkit-calendar-picker-indicator {
+          opacity:0.5; cursor:pointer; margin-left:auto;
         }
         .search-bar select:focus, .search-bar input:focus {
           border-color:rgba(230,126,34,0.4); box-shadow:0 0 0 3px rgba(230,126,34,0.1);
@@ -556,6 +568,10 @@ export default function Home() {
         .dest-card.featured { grid-column:1/3; aspect-ratio:16/8; }
         @media(max-width:900px){ .dest-card.featured{grid-column:1/3;aspect-ratio:16/9;} }
         @media(max-width:560px){ .dest-card.featured{grid-column:1;aspect-ratio:4/3;} }
+        /* Wide card (Otros destinos) — full row on tablet/mobile to avoid implicit grid columns */
+        .dest-card-wide { grid-column:2/4; }
+        @media(max-width:900px){ .dest-card-wide{grid-column:1/3;} }
+        @media(max-width:560px){ .dest-card-wide{grid-column:1;} }
         .dest-card:hover { box-shadow:0 28px 60px rgba(26,43,76,0.22); }
         .dest-card img { width:100%; height:100%; object-fit:cover; transition:transform 0.7s cubic-bezier(0.16,1,0.3,1); filter:brightness(0.82) saturate(1.1); display:block; }
         .dest-card:hover img { transform:scale(1.07); }
@@ -567,9 +583,8 @@ export default function Home() {
           padding:0.36rem 0.7rem; border-radius:999px;
           font-size:0.7rem; font-weight:700; color:white;
           background:rgba(230,126,34,0.94);
-          transform:translateY(4px); transition:transform 0.3s;
+          white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis;
         }
-        .dest-card:hover .dest-tag { transform:translateY(0); }
         .dest-name {
           font-family:'Playfair Display',Georgia,serif;
           font-size:1.5rem; font-weight:800; color:white; margin-bottom:0.25rem;
@@ -1055,16 +1070,13 @@ export default function Home() {
           {destinos.map((d, i) => (
             <a
               href={d.slug ? `/destinos/${d.slug}` : '/buscar'}
-              className={`dest-card reveal ${i === 0 ? 'featured' : ''} d${Math.min(i+1,6)}`}
+              className={`dest-card reveal ${i === 0 ? 'featured' : ''} ${d.wide ? 'dest-card-wide' : ''} d${Math.min(i+1,6)}`}
               key={i}
               onMouseMove={handleCardTilt}
               onMouseLeave={handleCardReset}
-              style={{
-                transition:'transform 0.15s ease, box-shadow 0.4s ease',
-                ...(d.wide ? {gridColumn:'2/4'} : {})
-              }}
+              style={{transition:'transform 0.15s ease, box-shadow 0.4s ease'}}
             >
-              <img src={d.img} alt={d.name} loading={i > 2 ? 'lazy' : undefined} />
+              <img src={d.img} alt={d.name} loading={i === 0 ? 'eager' : 'lazy'} />
               <div className="dest-overlay" />
               <div className="dest-info">
                 <div className="dest-tag">{d.tag}</div>
