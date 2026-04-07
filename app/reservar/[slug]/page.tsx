@@ -2,10 +2,12 @@
 
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams, useRouter, useParams } from 'next/navigation'
 import { getPosada } from '@/lib/data'
 
-function ReservarContent({ slug }: { slug: string }) {
+function ReservarContent() {
+  const rawParams = useParams<{ slug: string }>()
+  const slug = rawParams?.slug ?? ''
   const searchParams = useSearchParams()
   const router = useRouter()
   const posada = getPosada(slug)
@@ -222,10 +224,10 @@ function ReservarContent({ slug }: { slug: string }) {
   )
 }
 
-export default function ReservarPage({ params }: { params: { slug: string } }) {
+export default function ReservarPage() {
   return (
     <Suspense fallback={<div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>Cargando…</div>}>
-      <ReservarContent slug={params.slug} />
+      <ReservarContent />
     </Suspense>
   )
 }
