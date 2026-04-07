@@ -275,6 +275,25 @@ export default function Home() {
           box-shadow:var(--shadow); transition:transform 0.3s ease;
         }
         .step-card:hover { transform:translateY(-3px); }
+        .step-card-recommended {
+          position:relative; padding:1.5rem; border-radius:24px;
+          background:linear-gradient(135deg,rgba(230,126,34,0.07) 0%,rgba(230,126,34,0.03) 100%);
+          border:1.5px dashed rgba(230,126,34,0.35);
+          box-shadow:0 8px 30px rgba(230,126,34,0.10); transition:transform 0.3s ease;
+        }
+        .step-card-recommended:hover { transform:translateY(-3px); }
+        .step-badge {
+          position:absolute; top:-11px; left:1.25rem;
+          padding:0.22rem 0.75rem; border-radius:999px;
+          background:var(--cacao); color:white;
+          font-size:0.62rem; font-weight:800; letter-spacing:0.12em; text-transform:uppercase;
+          box-shadow:0 4px 12px rgba(230,126,34,0.35);
+        }
+        .step-optional {
+          display:inline-block; margin-top:0.5rem;
+          font-size:0.72rem; font-weight:600; color:rgba(230,126,34,0.75);
+          letter-spacing:0.04em;
+        }
         .step-num { font-size:2rem; font-weight:800; letter-spacing:-0.04em; color:var(--cacao); margin-bottom:0.7rem; }
         .step-title { font-size:1rem; font-weight:700; color:var(--indigo); margin-bottom:0.5rem; }
         .step-desc { font-size:0.92rem; line-height:1.7; color:var(--muted); }
@@ -522,18 +541,28 @@ export default function Home() {
           </div>
         ) : (
           <div className="steps-grid">
-            {[
-              ['Registra tu posada', 'Alta sencilla y visual para mostrar tu espacio con el nivel que merece.'],
-              ['Te ayudamos con el contenido', 'Fotografía profesional y acompañamiento para presentar tu posada de forma premium.'],
-              ['Empieza a recibir reservas', 'Tu perfil queda activo para viajeros locales, internacionales y diáspora venezolana.'],
-              ['Cobra con flexibilidad', 'Recibe pagos en USD o bolívares con Zelle, Pago Móvil, transferencia o Binance.'],
-            ].map(([t, d], i) => (
-              <div className="step-card" key={i}>
-                <div className="step-num">0{i + 1}</div>
-                <div className="step-title">{t}</div>
-                <div className="step-desc">{d}</div>
-              </div>
-            ))}
+            <div className="step-card">
+              <div className="step-num">01</div>
+              <div className="step-title">Registra tu posada</div>
+              <div className="step-desc">Alta sencilla y visual para mostrar tu espacio con el nivel que merece.</div>
+            </div>
+            <div className="step-card-recommended">
+              <div className="step-badge">Recomendado</div>
+              <div className="step-num">02</div>
+              <div className="step-title">Te ayudamos con el contenido</div>
+              <div className="step-desc">Fotografía profesional y acompañamiento para presentar tu posada de forma premium.</div>
+              <span className="step-optional">Servicio opcional · sin costo adicional</span>
+            </div>
+            <div className="step-card">
+              <div className="step-num">03</div>
+              <div className="step-title">Empieza a recibir reservas</div>
+              <div className="step-desc">Tu perfil queda activo para viajeros locales, internacionales y diáspora venezolana.</div>
+            </div>
+            <div className="step-card">
+              <div className="step-num">04</div>
+              <div className="step-title">Cobra con flexibilidad</div>
+              <div className="step-desc">Recibe pagos en USD o bolívares con Zelle, Pago Móvil, transferencia o Binance.</div>
+            </div>
           </div>
         )}
       </section>
