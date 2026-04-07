@@ -26,8 +26,20 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'viajero' | 'posadero'>('viajero')
   const [destinoBusqueda, setDestinoBusqueda] = useState('')
   const [statsVisible, setStatsVisible] = useState(false)
+  const [slideIdx, setSlideIdx] = useState(0)
+  const [slideKey, setSlideKey] = useState(0)
   const statsRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+
+  const heroSlides = [
+    '/images/CayoDeAgua.webp',
+    '/images/Jape.webp',
+    '/images/KerepaKupaiWenaII.webp',
+    '/images/CayoSombero.webp',
+    '/images/RapidosDeMayupa.webp',
+    '/images/Medanos.webp',
+    '/images/Guacamaya.webp',
+  ]
 
   const c1 = useCounter(49, statsVisible)
   const c2 = useCounter(44, statsVisible)
@@ -43,6 +55,14 @@ export default function Home() {
 
   const handleCardReset = useCallback((e: React.MouseEvent<HTMLElement>) => {
     e.currentTarget.style.transform = ''
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSlideIdx(prev => (prev + 1) % heroSlides.length)
+      setSlideKey(k => k + 1)
+    }, 7000)
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -74,13 +94,14 @@ export default function Home() {
     }
   }, [])
 
-  const destinos = [
-    { name: 'Los Roques', slug: 'los-roques', tag: 'Archipiélago', count: '12 posadas', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=90' },
+  const destinos: { name: string; slug: string | null; tag: string; count: string; img: string; wide?: boolean }[] = [
+    { name: 'Los Roques', slug: 'los-roques', tag: 'Archipiélago', count: '12 posadas', img: '/images/Archipielago.webp' },
     { name: 'Mérida', slug: 'merida', tag: 'Los Andes', count: '9 posadas', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&q=90' },
-    { name: 'Mochima', slug: 'mochima', tag: 'Costa Oriental', count: '7 posadas', img: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=900&q=90' },
-    { name: 'Morrocoy', slug: 'morrocoy', tag: 'Costa Occidental', count: '6 posadas', img: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=900&q=90' },
-    { name: 'Canaima', slug: 'canaima', tag: 'Gran Sabana', count: '4 posadas', img: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=900&q=90' },
-    { name: 'Isla Margarita', slug: 'isla-margarita', tag: 'Caribe', count: '11 posadas', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=900&q=90' },
+    { name: 'Mochima', slug: 'mochima', tag: 'Costa Oriental', count: '7 posadas', img: '/images/Mochima.webp' },
+    { name: 'Morrocoy', slug: 'morrocoy', tag: 'Costa Occidental', count: '6 posadas', img: '/images/CayoSombero.webp' },
+    { name: 'Canaima', slug: 'canaima', tag: 'Gran Sabana', count: '4 posadas', img: '/images/KerepaKupaiWena.webp' },
+    { name: 'Isla Margarita', slug: 'isla-margarita', tag: 'Caribe', count: '11 posadas', img: '/images/PlayaElAgua.webp' },
+    { name: 'Otros destinos', slug: null, tag: 'Descúbrelos', count: 'Vargas, Miranda y más', img: '/images/PlayaElIndio.webp', wide: true },
   ]
 
   return (
@@ -218,13 +239,34 @@ export default function Home() {
           align-items:center; justify-content:center;
           overflow:hidden; padding:7rem 1.5rem 3rem;
         }
-        .hero-bg-img {
+        /* ─── HERO SLIDESHOW ─── */
+        .hero-slideshow { position:absolute; inset:0; overflow:hidden; }
+        .hero-slide {
           position:absolute; inset:0;
-          background:url('/images/los-roques-hero.webp') center/cover no-repeat;
-          animation:kenBurns 18s ease-in-out alternate infinite;
-          filter:saturate(1.1) brightness(0.78);
-          will-change:transform;
+          background-size:cover; background-position:center;
+          opacity:0;
+          transition:opacity 1.8s cubic-bezier(0.16,1,0.3,1);
+          filter:saturate(1.12) brightness(0.76);
+          will-change:opacity, transform;
         }
+        .hero-slide.active {
+          opacity:1;
+          animation:kenBurns 10s ease-in-out forwards;
+        }
+
+        /* ─── SLIDE DOTS ─── */
+        .slide-dots {
+          position:absolute; left:50%; transform:translateX(-50%);
+          bottom:calc(var(--search-offset, 7rem) + 0.5rem);
+          display:flex; gap:0.5rem; z-index:5; align-items:center;
+        }
+        .slide-dot {
+          height:5px; width:5px; border-radius:99px; border:none; cursor:pointer; padding:0;
+          background:rgba(255,255,255,0.42);
+          transition:all 0.45s cubic-bezier(0.16,1,0.3,1);
+        }
+        .slide-dot:hover { background:rgba(255,255,255,0.72); }
+        .slide-dot.active { width:24px; background:white; box-shadow:0 2px 12px rgba(0,0,0,0.28); }
         .hero-overlay {
           position:absolute; inset:0;
           background:linear-gradient(105deg,rgba(15,27,48,0.85) 0%,rgba(26,43,76,0.6) 40%,rgba(26,43,76,0.15) 70%,transparent 100%);
@@ -619,12 +661,20 @@ export default function Home() {
           text-align:center;
           position:relative; overflow:hidden;
         }
-        .dark-cta::before {
-          content:''; position:absolute; inset:0;
-          background:radial-gradient(ellipse 80% 60% at 50% 50%, rgba(230,126,34,0.15) 0%, transparent 70%);
-          pointer-events:none;
+        .dark-cta-bg-img {
+          position:absolute; inset:0;
+          background:url('/images/MedinaEnCenitalII.webp') center/cover no-repeat;
+          filter:blur(14px) brightness(0.28) saturate(0.65);
+          transform:scale(1.07);
+          pointer-events:none; z-index:0;
         }
-        .dark-cta-inner { position:relative; z-index:1; max-width:680px; margin:0 auto; }
+        .dark-cta-glow {
+          position:absolute; inset:0; z-index:1; pointer-events:none;
+          background:
+            radial-gradient(ellipse 80% 55% at 50% 50%, rgba(230,126,34,0.18) 0%, transparent 70%),
+            linear-gradient(180deg, rgba(15,27,48,0.55) 0%, rgba(15,27,48,0.3) 50%, rgba(15,27,48,0.7) 100%);
+        }
+        .dark-cta-inner { position:relative; z-index:2; max-width:680px; margin:0 auto; }
         .dark-cta h2 {
           font-family:'Playfair Display',Georgia,serif;
           font-size:clamp(2.4rem,6vw,4rem); font-weight:800;
@@ -725,7 +775,15 @@ export default function Home() {
 
       {/* ── HERO ─────────────────────────────────────────── */}
       <section className="hero">
-        <div className="hero-bg-img" style={{ transform: `translateY(${scrollY * 0.16}px)` }} />
+        <div className="hero-slideshow">
+          {heroSlides.map((src, i) => (
+            <div
+              key={i === slideIdx ? `active-${slideKey}` : src}
+              className={`hero-slide${i === slideIdx ? ' active' : ''}`}
+              style={{ backgroundImage: `url(${src})` }}
+            />
+          ))}
+        </div>
         <div className="hero-overlay" />
         <div className="hero-overlay2" />
 
@@ -764,6 +822,18 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Slide indicators */}
+        <div className="slide-dots" style={{bottom:'calc(7rem + 0.75rem)'}}>
+          {heroSlides.map((_, i) => (
+            <button
+              key={i}
+              className={`slide-dot${i === slideIdx ? ' active' : ''}`}
+              onClick={() => { setSlideIdx(i); setSlideKey(k => k + 1) }}
+              aria-label={`Foto ${i + 1}`}
+            />
+          ))}
+        </div>
+
         <div className={`search-wrap ${loaded ? 'anim-4' : ''}`}>
           <div className="search-bar">
             <select value={destinoBusqueda} onChange={e => setDestinoBusqueda(e.target.value)}>
@@ -796,7 +866,7 @@ export default function Home() {
         <div className="mosaic-grid">
           <a href="/destinos/los-roques" className="mosaic-item" style={{textDecoration:'none'}}>
             <img
-              src="/images/Los%20roques%20Penero.webp"
+              src="/images/PalafitosEnElCielo.webp"
               alt="Los Roques"
               loading="lazy"
             />
@@ -818,7 +888,7 @@ export default function Home() {
           </a>
           <a href="/destinos/canaima" className="mosaic-item" style={{textDecoration:'none'}}>
             <img
-              src="/images/Kukenan_Tepuy.jpg"
+              src="/images/UruyenI.webp"
               alt="Canaima"
               loading="lazy"
             />
@@ -982,12 +1052,15 @@ export default function Home() {
         <div className="dest-grid">
           {destinos.map((d, i) => (
             <a
-              href={`/destinos/${d.slug}`}
+              href={d.slug ? `/destinos/${d.slug}` : '/buscar'}
               className={`dest-card reveal ${i === 0 ? 'featured' : ''} d${Math.min(i+1,6)}`}
               key={i}
               onMouseMove={handleCardTilt}
               onMouseLeave={handleCardReset}
-              style={{transition:'transform 0.15s ease, box-shadow 0.4s ease'}}
+              style={{
+                transition:'transform 0.15s ease, box-shadow 0.4s ease',
+                ...(d.wide ? {gridColumn:'2/4'} : {})
+              }}
             >
               <img src={d.img} alt={d.name} loading={i > 2 ? 'lazy' : undefined} />
               <div className="dest-overlay" />
@@ -1076,6 +1149,8 @@ export default function Home() {
 
       {/* ── DARK CTA BAND ────────────────────────────────── */}
       <section className="dark-cta">
+        <div className="dark-cta-bg-img" />
+        <div className="dark-cta-glow" />
         <div className="dark-cta-inner">
           <div className="reveal">
             <h2>Venezuela te está <em>esperando.</em></h2>
