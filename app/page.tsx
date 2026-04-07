@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
 function useCounter(target: number, active: boolean, duration = 1800) {
@@ -742,7 +742,7 @@ export default function Home() {
                     <span key={i} className="hero-word" style={{animationDelay:`${0.15 + i*0.03}s`}}>{c}</span>
                   ))}
                   {' '}
-                  <em>
+                  <em style={{display:'inline-block', whiteSpace:'nowrap'}}>
                     {'posadas'.split('').map((c,i) => (
                       <span key={i} className="hero-word" style={{animationDelay:`${0.48 + i*0.03}s`}}>{c}</span>
                     ))}
@@ -794,9 +794,9 @@ export default function Home() {
       {/* ── PHOTO MOSAIC ─────────────────────────────────── */}
       <section className="mosaic-section">
         <div className="mosaic-grid">
-          <div className="mosaic-item">
+          <a href="/destinos/los-roques" className="mosaic-item" style={{textDecoration:'none'}}>
             <img
-              src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=90"
+              src="/images/Los%20roques%20Penero.webp"
               alt="Los Roques"
               loading="lazy"
             />
@@ -804,21 +804,21 @@ export default function Home() {
               <div className="mosaic-tag">Archipiélago</div>
               <div>Los Roques</div>
             </div>
-          </div>
-          <div className="mosaic-item">
+          </a>
+          <a href="/buscar" className="mosaic-item" style={{textDecoration:'none'}}>
             <img
-              src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=90"
-              alt="Posada boutique"
+              src="/images/Waku-lodge-facilities-.webp"
+              alt="Posadas auténticas"
               loading="lazy"
             />
             <div className="mosaic-label">
               <div className="mosaic-tag">Experiencia</div>
               <div>Posadas auténticas</div>
             </div>
-          </div>
-          <div className="mosaic-item">
+          </a>
+          <a href="/destinos/canaima" className="mosaic-item" style={{textDecoration:'none'}}>
             <img
-              src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=90"
+              src="/images/Kukenan_Tepuy.jpg"
               alt="Canaima"
               loading="lazy"
             />
@@ -826,7 +826,7 @@ export default function Home() {
               <div className="mosaic-tag">Gran Sabana</div>
               <div>Canaima</div>
             </div>
-          </div>
+          </a>
         </div>
       </section>
 
@@ -859,7 +859,7 @@ export default function Home() {
         <div className="split-section">
           <div className="split-photo reveal-left">
             <img
-              src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=900&q=90"
+              src="/images/lodge-canaima_01.webp"
               alt="Posada boutique en Venezuela"
               loading="lazy"
             />
@@ -878,14 +878,26 @@ export default function Home() {
               Una posada es un alojamiento íntimo, cálido y genuino — gestionado por familias locales en los destinos más extraordinarios de Venezuela.
             </p>
             <div className="feature-grid">
-              {[
-                {icon:'🏖', title:'Ubicaciones únicas', desc:'Frente al mar, en montaña o en la selva'},
-                {icon:'👨‍👩‍👧', title:'Trato familiar', desc:'Anfitriones que conocen cada rincón'},
-                {icon:'💳', title:'Pagos flexibles', desc:'USD, Bs, Zelle, Pago Móvil, Binance'},
-                {icon:'⭐', title:'Verificadas', desc:'Fotos reales, descripciones honestas'},
-              ].map((f,i) => (
+              {([
+                {
+                  icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cacao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+                  title:'Ubicaciones únicas', desc:'Frente al mar, en montaña o en la selva'
+                },
+                {
+                  icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cacao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+                  title:'Trato familiar', desc:'Anfitriones que conocen cada rincón'
+                },
+                {
+                  icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cacao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
+                  title:'Pagos flexibles', desc:'USD, Bs, Zelle, Pago Móvil, Binance'
+                },
+                {
+                  icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cacao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>,
+                  title:'Verificadas', desc:'Fotos reales, descripciones honestas'
+                },
+              ] as {icon:React.ReactNode, title:string, desc:string}[]).map((f,i) => (
                 <div className={`feature-card reveal d${i+1}`} key={i}>
-                  <div className="feature-card-icon">{f.icon}</div>
+                  <div className="feature-card-icon" style={{marginBottom:'0.6rem'}}>{f.icon}</div>
                   <div className="feature-card-title">{f.title}</div>
                   <div className="feature-card-desc">{f.desc}</div>
                 </div>
@@ -923,7 +935,7 @@ export default function Home() {
               ['Reserva y paga fácil', 'Paga en USD o bolívares con Zelle, Pago Móvil, transferencia o Binance.'],
               ['Vive la experiencia', 'Llega con todo listo y disfruta una estancia boutique sin fricción.'],
             ].map(([t, d], i) => (
-              <div className={`step-card reveal d${i+1}`} key={i}>
+              <div className={`step-card anim-${i+1}`} key={i}>
                 <div className="step-num">0{i + 1}</div>
                 <div className="step-title">{t}</div>
                 <div className="step-desc">{d}</div>
@@ -932,24 +944,24 @@ export default function Home() {
           </div>
         ) : (
           <div className="steps-grid">
-            <div className="step-card reveal d1">
+            <div className="step-card anim-1">
               <div className="step-num">01</div>
               <div className="step-title">Registra tu posada</div>
               <div className="step-desc">Alta sencilla y visual para mostrar tu espacio con el nivel que merece.</div>
             </div>
-            <div className="step-card-recommended reveal d2">
+            <div className="step-card-recommended anim-2">
               <div className="step-badge">Recomendado</div>
               <div className="step-num">02</div>
               <div className="step-title">Te ayudamos con el contenido</div>
               <div className="step-desc">Fotografía profesional y acompañamiento para presentar tu posada de forma premium.</div>
               <span className="step-optional">Servicio opcional · consulta nuestros planes</span>
             </div>
-            <div className="step-card reveal d3">
+            <div className="step-card anim-3">
               <div className="step-num">03</div>
               <div className="step-title">Empieza a recibir reservas</div>
               <div className="step-desc">Tu perfil queda activo para viajeros locales, internacionales y diáspora venezolana.</div>
             </div>
-            <div className="step-card reveal d4">
+            <div className="step-card anim-4">
               <div className="step-num">04</div>
               <div className="step-title">Cobra con flexibilidad</div>
               <div className="step-desc">Recibe pagos en USD o bolívares con Zelle, Pago Móvil, transferencia o Binance.</div>
@@ -1048,7 +1060,7 @@ export default function Home() {
           <div className="posadero-right reveal-right">
             <div className="plan-card">
               <div className="plan-label">Paquete digitalización</div>
-              <div className="plan-price">$150 <span>USD / equiv. en bolívares</span></div>
+              <div className="plan-desc" style={{marginTop:'0.2rem', marginBottom:'0.6rem', fontSize:'0.9rem', color:'var(--indigo)', fontWeight:'600'}}>Contáctanos para más información sobre precios y disponibilidad.</div>
               <div className="plan-desc">Todo lo que necesitas para empezar a recibir reservas desde cualquier parte del mundo.</div>
               <ul className="plan-items">
                 <li>Sesión fotográfica profesional</li>
