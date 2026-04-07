@@ -2,206 +2,142 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-
-const posadas: Record<string, any> = {
-  'posada-sol-roques': {
-    nombre: 'Posada Sol de Los Roques',
-    destino: 'Los Roques',
-    tipo: 'Archipiélago',
-    precio: 120,
-    habitaciones: 8,
-    rating: 4.9,
-    reviews: 47,
-    descripcion: 'Enclavada frente al mar cristalino del archipiélago de Los Roques, esta posada familiar ofrece una experiencia auténtica venezolana. Despertarás con el sonido de las olas y el olor a café recién hecho. Nuestras habitaciones tienen vista directa al mar y acceso privado a la playa de arena blanca.',
-    servicios: ['Desayuno incluido', 'Snorkel', 'Wi-Fi', 'Aire acondicionado', 'Traslado en lancha', 'Bar de playa'],
-    politicas: ['Check-in: 2:00 PM', 'Check-out: 11:00 AM', 'No se admiten mascotas', 'Cancelación gratuita 48h antes'],
-    imgs: [
-      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=80',
-      'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=80',
-      'https://images.unsplash.com/photo-1582610116397-edb318620f90?w=1200&q=80',
-      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1200&q=80',
-    ],
-    host: { nombre: 'María González', desde: '2019', idiomas: ['Español', 'Inglés'] },
-    reseñas: [
-      { autor: 'Carlos M.', pais: 'España', rating: 5, texto: 'Increíble experiencia. Las mejores aguas turquesas que he visto en mi vida. María es una anfitriona excepcional.' },
-      { autor: 'Ana R.', pais: 'Miami, EE.UU.', rating: 5, texto: 'Volví a Venezuela después de 8 años y esta posada superó todas mis expectativas. Como regresar a casa.' },
-      { autor: 'Pierre L.', pais: 'Francia', rating: 4, texto: 'Paradise on earth. The snorkeling is absolutely spectacular. Will definitely come back.' },
-    ],
-  },
-  'posada-los-andes': {
-    nombre: 'Posada Los Andes de Mérida',
-    destino: 'Mérida',
-    tipo: 'Los Andes',
-    precio: 65,
-    habitaciones: 12,
-    rating: 4.8,
-    reviews: 83,
-    descripcion: 'Ubicada en el corazón de los Andes venezolanos, esta posada colonial combina la calidez de la arquitectura tradicional con todas las comodidades modernas. Ideal para los amantes del senderismo, la naturaleza y la gastronomía andina. A pocos minutos del teleférico más alto del mundo.',
-    servicios: ['Chimenea', 'Desayuno andino', 'Wi-Fi', 'Estacionamiento', 'Tours guiados', 'Agua caliente'],
-    politicas: ['Check-in: 3:00 PM', 'Check-out: 12:00 PM', 'Se admiten mascotas pequeñas', 'Cancelación gratuita 72h antes'],
-    imgs: [
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80',
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=80',
-      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&q=80',
-      'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&q=80',
-    ],
-    host: { nombre: 'Roberto Pérez', desde: '2017', idiomas: ['Español'] },
-    reseñas: [
-      { autor: 'Luisa T.', pais: 'Bogotá, Colombia', rating: 5, texto: 'Los Andes venezolanos son mágicos y esta posada los complementa perfectamente. El desayuno andino es espectacular.' },
-      { autor: 'Miguel S.', pais: 'Caracas, Venezuela', rating: 5, texto: 'Perfecto para desconectarse. Roberto conoce cada sendero de la montaña y comparte esa pasión con los huéspedes.' },
-    ],
-  },
-}
-
-const defaultPosada = {
-  nombre: 'Posada en Venezuela',
-  destino: 'Venezuela',
-  tipo: 'Alojamiento',
-  precio: 80,
-  habitaciones: 6,
-  rating: 4.7,
-  reviews: 25,
-  descripcion: 'Una hermosa posada venezolana con todo lo que necesitas para una estadía memorable.',
-  servicios: ['Wi-Fi', 'Desayuno', 'Aire acondicionado'],
-  politicas: ['Check-in: 2:00 PM', 'Check-out: 11:00 AM'],
-  imgs: ['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80'],
-  host: { nombre: 'Anfitrión Local', desde: '2020', idiomas: ['Español'] },
-  reseñas: [],
-}
+import { useRouter } from 'next/navigation'
+import { getPosada } from '@/lib/data'
 
 export default function FichaPosada({ params }: { params: { slug: string } }) {
-  const posada = posadas[params.slug] || defaultPosada
+  const posada = getPosada(params.slug)
+  const router = useRouter()
   const [imgActiva, setImgActiva] = useState(0)
   const [fechaEntrada, setFechaEntrada] = useState('')
   const [fechaSalida, setFechaSalida] = useState('')
   const [huespedes, setHuespedes] = useState(2)
 
+  if (!posada) {
+    return (
+      <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C',gap:'1rem'}}>
+        <p style={{fontSize:'1.2rem',fontWeight:700}}>Posada no encontrada</p>
+        <Link href="/buscar" style={{color:'#E67E22',textDecoration:'none',fontSize:'0.9rem'}}>← Volver a búsqueda</Link>
+      </div>
+    )
+  }
+
   const noches = fechaEntrada && fechaSalida
     ? Math.max(0, Math.round((new Date(fechaSalida).getTime() - new Date(fechaEntrada).getTime()) / 86400000))
     : 0
-  const total = noches * posada.precio
+
+  const handleReservar = () => {
+    const qs = new URLSearchParams()
+    if (fechaEntrada) qs.set('llegada', fechaEntrada)
+    if (fechaSalida) qs.set('salida', fechaSalida)
+    qs.set('huespedes', String(huespedes))
+    router.push(`/reservar/${params.slug}?${qs.toString()}`)
+  }
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400;500&display=swap');
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'DM Sans',sans-serif; background:#0A0A08; color:#F5F0E8; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        :root{--indigo:#1A2B4C;--sand:#FDFBF7;--cacao:#E67E22;--cacao-dark:#C96510;--text:#23324A;--muted:#6B7482;--line:rgba(26,43,76,0.10);--shadow:0 8px 30px rgba(26,43,76,0.08);}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Inter',sans-serif;background:radial-gradient(circle at top left,rgba(230,126,34,0.05) 0%,transparent 30%),linear-gradient(180deg,#fffefb 0%,var(--sand) 100%);color:var(--text);}
+        .grain{position:fixed;inset:0;pointer-events:none;z-index:100;opacity:0.018;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");}
+        .nav{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;background:rgba(253,251,247,0.92);backdrop-filter:blur(18px);border-bottom:1px solid var(--line);box-shadow:0 4px 20px rgba(26,43,76,0.05);}
+        .logo{font-size:1.6rem;font-weight:800;letter-spacing:-0.04em;color:var(--indigo);text-decoration:none;}
+        .logo span{color:var(--cacao);}
+        .nav-back{font-size:0.85rem;color:var(--muted);text-decoration:none;font-weight:500;display:flex;align-items:center;gap:0.4rem;transition:color 0.2s;}
+        .nav-back:hover{color:var(--indigo);}
+        .page{max-width:1100px;margin:0 auto;padding:2rem 1.5rem 6rem;}
+        .breadcrumb{font-size:0.8rem;color:var(--muted);margin-bottom:1.5rem;display:flex;align-items:center;gap:0.5rem;}
+        .breadcrumb a{color:var(--muted);text-decoration:none;transition:color 0.2s;}
+        .breadcrumb a:hover{color:var(--indigo);}
+        .breadcrumb span{color:var(--cacao);font-weight:600;}
 
-        .nav {
-          display:flex; align-items:center; justify-content:space-between;
-          padding:1.25rem 2.5rem; border-bottom:0.5px solid rgba(245,240,232,0.08);
-          position:sticky; top:0; background:rgba(10,10,8,0.92);
-          backdrop-filter:blur(20px); z-index:50;
-        }
-        .logo { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:300; letter-spacing:0.15em; color:#F5F0E8; text-decoration:none; }
-        .logo span { color:#D4A853; }
-        .nav-back { font-size:0.72rem; color:rgba(245,240,232,0.45); text-decoration:none; letter-spacing:0.08em; display:flex; align-items:center; gap:0.4rem; transition:color 0.3s; }
-        .nav-back:hover { color:#F5F0E8; }
+        /* GALLERY */
+        .gallery{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:320px 140px;gap:0.5rem;margin-bottom:2.5rem;border-radius:24px;overflow:hidden;}
+        .gallery-main{grid-row:1/3;grid-column:1/2;overflow:hidden;cursor:pointer;}
+        .gallery-main img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s ease;}
+        .gallery-main:hover img{transform:scale(1.03);}
+        .gallery-thumb{overflow:hidden;cursor:pointer;position:relative;}
+        .gallery-thumb img{width:100%;height:100%;object-fit:cover;transition:all 0.4s ease;filter:brightness(0.88);}
+        .gallery-thumb:hover img{filter:brightness(1);transform:scale(1.04);}
+        .gallery-thumb.active img{filter:brightness(1);}
+        @media(max-width:768px){.gallery{grid-template-columns:1fr;grid-template-rows:280px 120px 120px;}.gallery-main{grid-row:1/2;}}
 
-        .page { max-width:1100px; margin:0 auto; padding:2.5rem 2rem 5rem; }
+        .layout{display:grid;grid-template-columns:1fr 340px;gap:3rem;align-items:start;}
+        @media(max-width:900px){.layout{grid-template-columns:1fr;}}
 
-        .gallery { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:340px 160px; gap:0.6rem; margin-bottom:3rem; border-radius:0; overflow:hidden; }
-        .gallery-main { grid-row:1/3; grid-column:1/2; position:relative; overflow:hidden; cursor:pointer; }
-        .gallery-main img { width:100%; height:100%; object-fit:cover; filter:brightness(0.85); transition:transform 0.6s ease; }
-        .gallery-main:hover img { transform:scale(1.03); }
-        .gallery-thumb { position:relative; overflow:hidden; cursor:pointer; }
-        .gallery-thumb img { width:100%; height:100%; object-fit:cover; filter:brightness(0.75); transition:all 0.4s ease; }
-        .gallery-thumb:hover img { filter:brightness(0.9); transform:scale(1.04); }
-        .gallery-thumb.active img { filter:brightness(0.95); }
-
-        .layout { display:grid; grid-template-columns:1fr 340px; gap:3rem; }
-        @media(max-width:900px) { .layout { grid-template-columns:1fr; } .gallery { grid-template-columns:1fr; grid-template-rows:300px 120px 120px; } .gallery-main { grid-row:1/2; } }
-
-        .ficha-left {}
-        .breadcrumb { font-size:0.7rem; color:rgba(245,240,232,0.35); margin-bottom:1rem; letter-spacing:0.05em; }
-        .breadcrumb span { color:#D4A853; }
-        .ficha-tipo { font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:#D4A853; margin-bottom:0.75rem; display:flex; align-items:center; gap:0.5rem; }
-        .ficha-tipo::before { content:''; width:1.2rem; height:0.5px; background:#D4A853; opacity:0.6; }
-        .ficha-nombre { font-family:'Cormorant Garamond',serif; font-size:2.8rem; font-weight:300; line-height:1.1; letter-spacing:-0.02em; margin-bottom:1rem; }
-        .ficha-meta { display:flex; align-items:center; gap:1.5rem; margin-bottom:2rem; flex-wrap:wrap; }
-        .ficha-rating { font-size:0.85rem; color:#D4A853; }
-        .ficha-reviews { font-size:0.8rem; color:rgba(245,240,232,0.4); }
-        .ficha-hab { font-size:0.8rem; color:rgba(245,240,232,0.4); padding-left:1.5rem; border-left:0.5px solid rgba(245,240,232,0.12); }
-
-        .section-label { font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:#D4A853; margin-bottom:1rem; display:flex; align-items:center; gap:0.6rem; }
-        .section-label::before { content:''; width:1rem; height:0.5px; background:#D4A853; opacity:0.6; }
-
-        .descripcion { font-size:0.9rem; line-height:1.9; color:rgba(245,240,232,0.65); margin-bottom:3rem; }
-
-        .servicios-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:0.6rem; margin-bottom:3rem; }
-        .servicio { padding:0.65rem 0.9rem; border:0.5px solid rgba(245,240,232,0.08); font-size:0.78rem; color:rgba(245,240,232,0.55); display:flex; align-items:center; gap:0.5rem; }
-        .servicio::before { content:''; width:4px; height:4px; border-radius:50%; background:#D4A853; flex-shrink:0; }
-
-        .host-card { display:flex; align-items:flex-start; gap:1.25rem; padding:1.5rem; border:0.5px solid rgba(245,240,232,0.08); margin-bottom:3rem; }
-        .host-avatar { width:52px; height:52px; border-radius:50%; background:rgba(212,168,83,0.15); border:0.5px solid rgba(212,168,83,0.3); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:#D4A853; flex-shrink:0; }
-        .host-nombre { font-size:0.9rem; font-weight:500; color:#F5F0E8; margin-bottom:0.3rem; }
-        .host-meta { font-size:0.75rem; color:rgba(245,240,232,0.4); line-height:1.7; }
-
-        .politicas { display:flex; flex-direction:column; gap:0.6rem; margin-bottom:3rem; }
-        .politica { font-size:0.8rem; color:rgba(245,240,232,0.5); display:flex; gap:0.75rem; align-items:flex-start; }
-        .politica::before { content:'—'; color:#D4A853; flex-shrink:0; font-size:0.75rem; }
-
-        .reseñas { display:flex; flex-direction:column; gap:1.25rem; }
-        .reseña { padding:1.25rem 1.5rem; border:0.5px solid rgba(245,240,232,0.07); }
-        .reseña-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.6rem; }
-        .reseña-autor { font-size:0.82rem; font-weight:500; color:#F5F0E8; }
-        .reseña-pais { font-size:0.72rem; color:rgba(245,240,232,0.35); }
-        .reseña-rating { font-size:0.75rem; color:#D4A853; }
-        .reseña-texto { font-size:0.82rem; color:rgba(245,240,232,0.55); line-height:1.7; font-style:italic; }
+        /* LEFT */
+        .ficha-tipo{font-size:0.72rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--cacao);font-weight:700;margin-bottom:0.6rem;}
+        .ficha-nombre{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;letter-spacing:-0.05em;color:var(--indigo);margin-bottom:0.75rem;line-height:1.1;}
+        .ficha-meta{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+        .ficha-rating{font-size:0.88rem;color:var(--cacao);font-weight:700;}
+        .ficha-reviews{font-size:0.82rem;color:var(--muted);}
+        .ficha-hab{font-size:0.82rem;color:var(--muted);padding-left:1rem;border-left:1px solid var(--line);}
+        hr{border:none;border-top:1px solid var(--line);margin:1.75rem 0;}
+        .section-label{font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--cacao);font-weight:700;margin-bottom:0.9rem;}
+        .descripcion{font-size:0.94rem;line-height:1.85;color:var(--muted);margin-bottom:1.5rem;}
+        .servicios-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0.5rem;margin-bottom:1.5rem;}
+        .servicio{padding:0.6rem 0.9rem;background:white;border:1px solid var(--line);border-radius:12px;font-size:0.82rem;color:var(--text);display:flex;align-items:center;gap:0.5rem;box-shadow:0 2px 8px rgba(26,43,76,0.04);}
+        .servicio::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cacao);flex-shrink:0;}
+        .host-card{display:flex;align-items:flex-start;gap:1.25rem;padding:1.25rem;background:white;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);margin-bottom:1.5rem;}
+        .host-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,rgba(230,126,34,0.15),rgba(230,126,34,0.05));border:2px solid rgba(230,126,34,0.2);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;color:var(--cacao);flex-shrink:0;}
+        .host-nombre{font-size:0.95rem;font-weight:700;color:var(--indigo);margin-bottom:0.25rem;}
+        .host-meta{font-size:0.8rem;color:var(--muted);line-height:1.7;}
+        .politicas{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.5rem;}
+        .politica{font-size:0.85rem;color:var(--text);display:flex;gap:0.75rem;align-items:flex-start;padding:0.55rem 0;border-bottom:1px solid rgba(26,43,76,0.05);}
+        .politica::before{content:'→';color:var(--cacao);flex-shrink:0;font-size:0.8rem;margin-top:0.05rem;}
+        .reseñas{display:flex;flex-direction:column;gap:1rem;}
+        .reseña{padding:1.25rem;background:white;border:1px solid var(--line);border-radius:16px;box-shadow:0 2px 10px rgba(26,43,76,0.04);}
+        .reseña-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:0.6rem;}
+        .reseña-autor{font-size:0.88rem;font-weight:700;color:var(--indigo);}
+        .reseña-pais{font-size:0.75rem;color:var(--muted);}
+        .reseña-rating{font-size:0.78rem;color:var(--cacao);}
+        .reseña-texto{font-size:0.85rem;color:var(--muted);line-height:1.7;font-style:italic;}
 
         /* BOOKING CARD */
-        .booking-card { position:sticky; top:6rem; border:0.5px solid rgba(212,168,83,0.2); padding:2rem; background:rgba(212,168,83,0.03); }
-        .booking-precio { font-family:'Cormorant Garamond',serif; font-size:2.4rem; font-weight:300; color:#F5F0E8; margin-bottom:0.25rem; }
-        .booking-precio span { font-size:0.8rem; font-family:'DM Sans',sans-serif; color:rgba(245,240,232,0.4); }
-        .booking-rating { font-size:0.75rem; color:#D4A853; margin-bottom:1.5rem; }
-
-        .booking-fields { display:grid; grid-template-columns:1fr 1fr; gap:0; border:0.5px solid rgba(245,240,232,0.12); margin-bottom:0.75rem; }
-        .booking-field { padding:0.75rem 1rem; }
-        .booking-field:first-child { border-right:0.5px solid rgba(245,240,232,0.12); }
-        .booking-field label { display:block; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; color:#D4A853; margin-bottom:0.4rem; }
-        .booking-field input, .booking-field select {
-          background:transparent; border:none; outline:none;
-          font-family:'DM Sans',sans-serif; font-size:0.82rem; color:#F5F0E8; width:100%;
-        }
-        .booking-field input[type="date"]::-webkit-calendar-picker-indicator { filter:invert(1) opacity(0.4); }
-        .booking-huespedes { border:0.5px solid rgba(245,240,232,0.12); margin-bottom:1.25rem; }
-
-        .btn-reservar {
-          width:100%; padding:1rem; background:#D4A853; color:#0A0A08;
-          font-size:0.78rem; letter-spacing:0.15em; text-transform:uppercase;
-          border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:500;
-          transition:all 0.3s ease; margin-bottom:1rem;
-        }
-        .btn-reservar:hover { background:#E8BC6A; }
-        .btn-whatsapp {
-          width:100%; padding:0.85rem; background:transparent;
-          border:0.5px solid rgba(245,240,232,0.15); color:rgba(245,240,232,0.6);
-          font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
-          cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.3s ease;
-        }
-        .btn-whatsapp:hover { border-color:rgba(245,240,232,0.4); color:#F5F0E8; }
-
-        .booking-desglose { border-top:0.5px solid rgba(245,240,232,0.08); padding-top:1rem; margin-top:1rem; }
-        .booking-linea { display:flex; justify-content:space-between; font-size:0.78rem; color:rgba(245,240,232,0.45); margin-bottom:0.5rem; }
-        .booking-total { display:flex; justify-content:space-between; font-size:0.88rem; color:#F5F0E8; font-weight:500; border-top:0.5px solid rgba(245,240,232,0.1); padding-top:0.75rem; margin-top:0.5rem; }
-        .booking-nota { font-size:0.65rem; color:rgba(245,240,232,0.25); text-align:center; margin-top:0.75rem; line-height:1.6; }
-
-        hr { border:none; border-top:0.5px solid rgba(245,240,232,0.07); margin:2.5rem 0; }
+        .booking-card{position:sticky;top:5.5rem;background:white;border:1px solid var(--line);border-radius:24px;padding:1.75rem;box-shadow:0 20px 60px rgba(26,43,76,0.10);}
+        .booking-precio{font-size:2rem;font-weight:800;letter-spacing:-0.05em;color:var(--indigo);margin-bottom:0.2rem;}
+        .booking-precio span{font-size:0.82rem;font-weight:400;color:var(--muted);}
+        .booking-rating{font-size:0.8rem;color:var(--muted);margin-bottom:1.25rem;}
+        .booking-rating strong{color:var(--cacao);}
+        .booking-fields{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:0.75rem;}
+        .booking-row{display:grid;grid-template-columns:1fr 1fr;}
+        .booking-field{padding:0.75rem 1rem;}
+        .booking-field:first-child{border-right:1px solid var(--line);}
+        .booking-field label{display:block;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--cacao);font-weight:700;margin-bottom:0.3rem;}
+        .booking-field input,.booking-field select{background:transparent;border:none;outline:none;font-family:'Inter',sans-serif;font-size:0.85rem;color:var(--text);width:100%;font-weight:500;}
+        .booking-huespedes{border:1px solid var(--line);border-radius:14px;padding:0.75rem 1rem;margin-bottom:1.1rem;}
+        .booking-huespedes label{display:block;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--cacao);font-weight:700;margin-bottom:0.3rem;}
+        .booking-huespedes select{background:transparent;border:none;outline:none;font-family:'Inter',sans-serif;font-size:0.85rem;color:var(--text);width:100%;font-weight:500;}
+        .btn-reservar{width:100%;padding:1rem;background:var(--cacao);color:white;font-size:0.88rem;font-weight:700;border:none;border-radius:999px;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 10px 28px rgba(230,126,34,0.28);transition:all 0.22s;margin-bottom:0.65rem;}
+        .btn-reservar:hover{background:var(--cacao-dark);transform:translateY(-1px);}
+        .btn-whatsapp{width:100%;padding:0.85rem;background:transparent;border:1px solid var(--line);color:var(--indigo);font-size:0.82rem;font-weight:600;border-radius:999px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.22s;}
+        .btn-whatsapp:hover{border-color:var(--indigo);background:rgba(26,43,76,0.03);}
+        .booking-desglose{border-top:1px solid var(--line);padding-top:1rem;margin-top:1rem;}
+        .booking-linea{display:flex;justify-content:space-between;font-size:0.82rem;color:var(--muted);margin-bottom:0.45rem;}
+        .booking-total{display:flex;justify-content:space-between;font-size:0.95rem;font-weight:800;color:var(--indigo);border-top:1px solid var(--line);padding-top:0.75rem;margin-top:0.5rem;}
+        .booking-nota{font-size:0.72rem;color:var(--muted);text-align:center;margin-top:0.85rem;line-height:1.6;}
+        .booking-badges{display:flex;gap:0.5rem;justify-content:center;margin-top:0.75rem;flex-wrap:wrap;}
+        .booking-badge{font-size:0.65rem;padding:0.25rem 0.55rem;border-radius:999px;border:1px solid var(--line);color:var(--muted);}
       `}</style>
-
+      <div className="grain" />
       <nav className="nav">
         <Link href="/" className="logo">RESER<span>-VE</span></Link>
         <Link href="/buscar" className="nav-back">← Volver a búsqueda</Link>
       </nav>
-
       <div className="page">
-        {/* GALERÍA */}
+        <div className="breadcrumb">
+          <Link href="/">Inicio</Link> /
+          <Link href="/buscar">Posadas</Link> /
+          <span>{posada.destino}</span>
+        </div>
+
         <div className="gallery">
           <div className="gallery-main">
             <img src={posada.imgs[imgActiva]} alt={posada.nombre} />
           </div>
-          {posada.imgs.slice(1, 3).map((img: string, i: number) => (
+          {posada.imgs.slice(1, 3).map((img, i) => (
             <div key={i} className={`gallery-thumb ${imgActiva === i + 1 ? 'active' : ''}`} onClick={() => setImgActiva(i + 1)}>
               <img src={img} alt={`${posada.nombre} ${i + 2}`} />
             </div>
@@ -209,13 +145,7 @@ export default function FichaPosada({ params }: { params: { slug: string } }) {
         </div>
 
         <div className="layout">
-          {/* COLUMNA IZQUIERDA */}
-          <div className="ficha-left">
-            <div className="breadcrumb">
-              <Link href="/buscar" style={{color:'inherit', textDecoration:'none'}}>Posadas</Link>
-              {' / '}
-              <span>{posada.destino}</span>
-            </div>
+          <div>
             <div className="ficha-tipo">{posada.tipo}</div>
             <h1 className="ficha-nombre">{posada.nombre}</h1>
             <div className="ficha-meta">
@@ -223,46 +153,34 @@ export default function FichaPosada({ params }: { params: { slug: string } }) {
               <span className="ficha-reviews">{posada.reviews} reseñas</span>
               <span className="ficha-hab">{posada.habitaciones} habitaciones</span>
             </div>
-
             <hr />
-
             <div className="section-label">Sobre esta posada</div>
             <p className="descripcion">{posada.descripcion}</p>
-
             <div className="section-label">Servicios incluidos</div>
             <div className="servicios-grid">
-              {posada.servicios.map((s: string) => (
-                <div className="servicio" key={s}>{s}</div>
-              ))}
+              {posada.servicios.map(s => <div className="servicio" key={s}>{s}</div>)}
             </div>
-
             <hr />
-
             <div className="section-label">Tu anfitrión</div>
             <div className="host-card">
               <div className="host-avatar">{posada.host.nombre[0]}</div>
               <div>
                 <div className="host-nombre">{posada.host.nombre}</div>
                 <div className="host-meta">
-                  Posadero desde {posada.host.desde}<br />
-                  Idiomas: {posada.host.idiomas.join(', ')}
+                  Posadero desde {posada.host.desde} · Idiomas: {posada.host.idiomas.join(', ')}
                 </div>
               </div>
             </div>
-
-            <div className="section-label">Políticas</div>
+            <div className="section-label">Políticas de la posada</div>
             <div className="politicas">
-              {posada.politicas.map((p: string) => (
-                <div className="politica" key={p}>{p}</div>
-              ))}
+              {posada.politicas.map(p => <div className="politica" key={p}>{p}</div>)}
             </div>
-
             {posada.reseñas.length > 0 && (
               <>
                 <hr />
                 <div className="section-label">Reseñas · ★ {posada.rating} · {posada.reviews} opiniones</div>
                 <div className="reseñas">
-                  {posada.reseñas.map((r: any, i: number) => (
+                  {posada.reseñas.map((r, i) => (
                     <div className="reseña" key={i}>
                       <div className="reseña-header">
                         <div>
@@ -279,37 +197,32 @@ export default function FichaPosada({ params }: { params: { slug: string } }) {
             )}
           </div>
 
-          {/* BOOKING CARD */}
           <div>
             <div className="booking-card">
               <div className="booking-precio">${posada.precio} <span>USD / noche</span></div>
-              <div className="booking-rating">★ {posada.rating} · {posada.reviews} reseñas</div>
-
+              <div className="booking-rating"><strong>★ {posada.rating}</strong> · {posada.reviews} reseñas</div>
               <div className="booking-fields">
-                <div className="booking-field">
-                  <label>Llegada</label>
-                  <input type="date" value={fechaEntrada} onChange={e => setFechaEntrada(e.target.value)} />
-                </div>
-                <div className="booking-field">
-                  <label>Salida</label>
-                  <input type="date" value={fechaSalida} onChange={e => setFechaSalida(e.target.value)} />
+                <div className="booking-row">
+                  <div className="booking-field">
+                    <label>Llegada</label>
+                    <input type="date" value={fechaEntrada} onChange={e => setFechaEntrada(e.target.value)} />
+                  </div>
+                  <div className="booking-field">
+                    <label>Salida</label>
+                    <input type="date" value={fechaSalida} onChange={e => setFechaSalida(e.target.value)} />
+                  </div>
                 </div>
               </div>
-
               <div className="booking-huespedes">
-                <div className="booking-field">
-                  <label>Huéspedes</label>
-                  <select value={huespedes} onChange={e => setHuespedes(Number(e.target.value))} style={{background:'transparent', color:'#F5F0E8'}}>
-                    {[1,2,3,4,5,6].map(n => <option key={n} value={n} style={{background:'#1a1a18'}}>{n} {n === 1 ? 'huésped' : 'huéspedes'}</option>)}
-                  </select>
-                </div>
+                <label>Huéspedes</label>
+                <select value={huespedes} onChange={e => setHuespedes(Number(e.target.value))}>
+                  {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n} {n === 1 ? 'huésped' : 'huéspedes'}</option>)}
+                </select>
               </div>
-
-              <button className="btn-reservar">
-                {noches > 0 ? `Reservar ${noches} noche${noches > 1 ? 's' : ''}` : 'Reservar ahora'}
+              <button className="btn-reservar" onClick={handleReservar}>
+                {noches > 0 ? `Reservar · ${noches} noche${noches > 1 ? 's' : ''}` : 'Reservar ahora'}
               </button>
               <button className="btn-whatsapp">Consultar por WhatsApp</button>
-
               {noches > 0 && (
                 <div className="booking-desglose">
                   <div className="booking-linea">
@@ -326,7 +239,13 @@ export default function FichaPosada({ params }: { params: { slug: string } }) {
                   </div>
                 </div>
               )}
-              <p className="booking-nota">No se te cobrará nada hasta confirmar la reserva. Pagos seguros vía Zelle o Zinli.</p>
+              <p className="booking-nota">Sin cargos hasta confirmar. El posadero acepta en 24h.</p>
+              <div className="booking-badges">
+                <span className="booking-badge">Zelle</span>
+                <span className="booking-badge">Zinli</span>
+                <span className="booking-badge">Pago Móvil</span>
+                <span className="booking-badge">Tarjeta</span>
+              </div>
             </div>
           </div>
         </div>
