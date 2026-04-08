@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { venezuelaLocations } from '@/lib/locations-ve'
+import { normalizeStr } from '@/lib/search'
 
 function useCounter(target: number, active: boolean, duration = 1800) {
   const [count, setCount] = useState(0)
@@ -25,6 +27,31 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false)
   const [activeTab, setActiveTab] = useState<'viajero' | 'posadero'>('viajero')
   const [destinoBusqueda, setDestinoBusqueda] = useState('')
+  // Search bar state
+  type SbSug = { label: string; sub: string; lat?: number; lng?: number; isStatic: boolean }
+  const [sbSuggestions, setSbSuggestions] = useState<SbSug[]>([])
+  const [sbShowSug, setSbShowSug] = useState(false)
+  const [sbSugLoading, setSbSugLoading] = useState(false)
+  const [sbOverrideLat, setSbOverrideLat] = useState<number | undefined>()
+  const [sbOverrideLng, setSbOverrideLng] = useState<number | undefined>()
+  const [sbOverrideName, setSbOverrideName] = useState<string | undefined>()
+  const [sbCheckIn, setSbCheckIn] = useState<Date | null>(null)
+  const [sbCheckOut, setSbCheckOut] = useState<Date | null>(null)
+  const [sbFlexible, setSbFlexible] = useState(false)
+  const [sbFlexType, setSbFlexType] = useState<'meses'|'semanas'>('meses')
+  const [sbFlexMonths, setSbFlexMonths] = useState<string[]>([])
+  const [sbFlexWeeks, setSbFlexWeeks] = useState(0)
+  const [sbShowDate, setSbShowDate] = useState(false)
+  const [sbShowPay, setSbShowPay] = useState(false)
+  const [sbPago, setSbPago] = useState('')
+  const [sbHover, setSbHover] = useState<Date | null>(null)
+  const [sbDateStep, setSbDateStep] = useState<'in'|'out'>('in')
+  const [sbViewMonth, setSbViewMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1) })
+  const sbSugRef = useRef<HTMLDivElement>(null)
+  const sbDateRef = useRef<HTMLDivElement>(null)
+  const sbPayRef = useRef<HTMLDivElement>(null)
+  const sbInputRef = useRef<HTMLInputElement>(null)
+  const sbNomTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [statsVisible, setStatsVisible] = useState(false)
   const [slideIdx, setSlideIdx] = useState(0)
   const [slideKey, setSlideKey] = useState(0)
@@ -107,6 +134,152 @@ export default function Home() {
     }
   }, [])
 
+  // ── Search bar helpers ────────────────────────────────────────────
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (sbSugRef.current && !sbSugRef.current.contains(e.target as Node) && e.target !== sbInputRef.current) setSbShowSug(false)
+      if (sbDateRef.current && !sbDateRef.current.contains(e.target as Node)) setSbShowDate(false)
+      if (sbPayRef.current && !sbPayRef.current.contains(e.target as Node)) setSbShowPay(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const fetchSbSuggestions = useCallback(async (q: string) => {
+    if (!q.trim()) { setSbSuggestions([]); return }
+    setSbSugLoading(true)
+    const ql = q.toLowerCase()
+    const staticMatches = venezuelaLocations
+      .filter(l => [l.nombre, ...l.aliases].some(a => a.toLowerCase().includes(ql)))
+      .slice(0, 4)
+      .map(l => ({ label: l.nombre, sub: l.region, lat: l.lat, lng: l.lng, isStatic: true }))
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`)
+      const data = await res.json()
+      const nomMatches = data.slice(0, 8).map((r: any) => {
+        const addr = r.address
+        const sub = [addr?.state, addr?.municipality || addr?.city || addr?.town || addr?.village]
+          .filter(Boolean).join(', ') || 'Venezuela'
+        return { label: r.display_name.split(',')[0].trim(), sub, lat: parseFloat(r.lat), lng: parseFloat(r.lon), isStatic: false }
+      }).filter((n: any) => !staticMatches.some(s => s.label.toLowerCase() === n.label.toLowerCase()))
+      setSbSuggestions([...staticMatches, ...nomMatches].slice(0, 8))
+    } catch {
+      setSbSuggestions(staticMatches)
+    }
+    setSbSugLoading(false)
+  }, [])
+
+  useEffect(() => {
+    if (sbNomTimer.current) clearTimeout(sbNomTimer.current)
+    if (!destinoBusqueda.trim()) { setSbSuggestions([]); return }
+    sbNomTimer.current = setTimeout(() => fetchSbSuggestions(destinoBusqueda), 350)
+    return () => { if (sbNomTimer.current) clearTimeout(sbNomTimer.current) }
+  }, [destinoBusqueda, fetchSbSuggestions])
+
+  function sbHandleDay(date: Date) {
+    const today = new Date(); today.setHours(0,0,0,0)
+    if (date < today) return
+    if (sbDateStep === 'in' || !sbCheckIn || date <= sbCheckIn) {
+      setSbCheckIn(date); setSbCheckOut(null); setSbDateStep('out')
+    } else {
+      setSbCheckOut(date); setSbDateStep('in')
+      setTimeout(() => setSbShowDate(false), 280)
+    }
+  }
+
+  function sbFmtDate(d: Date | null) {
+    if (!d) return ''
+    return d.toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })
+  }
+
+  const MONTHS_SHORT_LBL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+  const sbDateLabel = sbFlexible
+    ? sbFlexMonths.length > 0
+      ? sbFlexMonths.slice(0,2).map(m => {
+          const [y, mo] = m.split('-').map(Number)
+          const today = new Date()
+          return MONTHS_SHORT_LBL[mo-1] + (today.getFullYear() !== y ? ` ${y}` : '')
+        }).join(', ') + (sbFlexMonths.length > 2 ? '…' : '')
+      : sbFlexWeeks > 0
+        ? `${sbFlexWeeks} semana${sbFlexWeeks > 1 ? 's' : ''}`
+        : 'Fechas flexibles'
+    : sbCheckIn && sbCheckOut
+      ? `${sbFmtDate(sbCheckIn)} – ${sbFmtDate(sbCheckOut)}`
+      : sbCheckIn ? `${sbFmtDate(sbCheckIn)} – Salida` : 'Fechas'
+
+  const sbNights = sbCheckIn && sbCheckOut
+    ? Math.round((sbCheckOut.getTime() - sbCheckIn.getTime()) / 86400000) : 0
+
+  function sbAddMonths(d: Date, n: number) { const r = new Date(d); r.setMonth(r.getMonth() + n); return r }
+
+  function sbIsSameDay(a: Date, b: Date) {
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+  }
+
+  const MONTH_NAMES_SB = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+  const today0 = new Date(); today0.setHours(0,0,0,0)
+  const sbNext = sbAddMonths(sbViewMonth, 1)
+
+  function renderSbMonth(year: number, month: number) {
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const startOffset = firstDay.getDay()
+    const cells: (Date | null)[] = []
+    for (let i = 0; i < startOffset; i++) cells.push(null)
+    for (let d = 1; d <= lastDay.getDate(); d++) cells.push(new Date(year, month, d))
+    const endRange = sbCheckOut || sbHover
+    return (
+      <div className="sb-cal-month" key={`${year}-${month}`}>
+        <div className="sb-cal-mname">{MONTH_NAMES_SB[month]} {year}</div>
+        <div className="sb-cal-grid">
+          {['Do','Lu','Ma','Mi','Ju','Vi','Sá'].map(d => <div key={d} className="sb-cal-dname">{d}</div>)}
+          {cells.map((date, i) => {
+            if (!date) return <div key={`e${i}`} />
+            const isPast = date < today0
+            const isStart = sbCheckIn && sbIsSameDay(date, sbCheckIn)
+            const isEnd = sbCheckOut && sbIsSameDay(date, sbCheckOut)
+            const inRange = sbCheckIn && endRange && date > sbCheckIn && date < endRange
+            const isHovEnd = sbHover && !sbCheckOut && sbIsSameDay(date, sbHover)
+            let cls = 'sb-cal-day'
+            if (isPast) cls += ' disabled'
+            if (isStart) cls += ' start'
+            if (isEnd) cls += ' end'
+            if (inRange) cls += ' in-range'
+            if (isHovEnd && !isEnd) cls += ' hover-end'
+            if (isStart && sbCheckOut) cls += ' range-left'
+            if (isEnd && !isStart) cls += ' range-right'
+            return (
+              <button key={date.toISOString()} className={cls} disabled={!!isPast}
+                onClick={() => sbHandleDay(date)}
+                onMouseEnter={() => { if (sbCheckIn && !sbCheckOut) setSbHover(date) }}
+                onMouseLeave={() => setSbHover(null)}>
+                {date.getDate()}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  function sbHandleSearch() {
+    const params = new URLSearchParams()
+    if (destinoBusqueda) params.set('q', destinoBusqueda)
+    if (sbOverrideLat !== undefined) params.set('overrideLat', String(sbOverrideLat))
+    if (sbOverrideLng !== undefined) params.set('overrideLng', String(sbOverrideLng))
+    if (sbOverrideName)              params.set('overrideName', sbOverrideName)
+    if (sbFlexible) {
+      params.set('flexible', '1')
+      if (sbFlexMonths.length > 0) params.set('flexMonths', sbFlexMonths.join(','))
+      if (sbFlexWeeks > 0)         params.set('flexWeeks',  String(sbFlexWeeks))
+    } else {
+      if (sbCheckIn)  params.set('checkIn',  sbCheckIn.toISOString().split('T')[0])
+      if (sbCheckOut) params.set('checkOut', sbCheckOut.toISOString().split('T')[0])
+    }
+    if (sbPago) params.set('pago', sbPago)
+    router.push(`/buscar?${params.toString()}`)
+  }
+
   const destinos: { name: string; slug: string | null; tag: string; count: string; img: string; wide?: boolean }[] = [
     { name: 'Los Roques', slug: 'los-roques', tag: 'Archipiélago', count: '12 posadas', img: '/images/Archipielago.webp' },
     { name: 'Mérida', slug: 'merida', tag: 'Los Andes', count: '9 posadas', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&q=90' },
@@ -120,7 +293,7 @@ export default function Home() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Inter:wght@300;400;500;600;700;800&display=swap');
+        /* fonts loaded via next/font in layout.tsx */
 
         :root {
           --indigo: #1A2B4C;
@@ -250,7 +423,7 @@ export default function Home() {
           min-height:100dvh; position:relative;
           display:flex; flex-direction:column;
           align-items:center; justify-content:center;
-          overflow:hidden; padding:7rem 1.5rem 3rem;
+          overflow:visible; padding:7rem 1.5rem 3rem;
         }
         /* ─── HERO SLIDESHOW ─── */
         .hero-slideshow { position:absolute; inset:0; overflow:hidden; }
@@ -337,47 +510,104 @@ export default function Home() {
         }
         .btn-secondary:hover { background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.75); transform:translateY(-2px); }
 
-        /* ─── SEARCH BAR ─── */
-        .search-wrap {
-          position:relative; z-index:3;
-          width:100%; max-width:1100px; margin:2.5rem auto 0;
+        /* ─── SEARCH BAR (Airbnb-style) ─── */
+        .search-wrap { position:relative; z-index:500; width:100%; max-width:880px; margin:2rem auto 0; }
+        .sb-bar {
+          display:flex; align-items:stretch;
+          background:rgba(255,255,255,0.97); border:1px solid rgba(255,255,255,0.7);
+          backdrop-filter:blur(28px); border-radius:20px; padding:0.5rem;
+          box-shadow:0 28px 80px rgba(15,27,48,0.30),0 0 0 1px rgba(255,255,255,0.5);
+          gap:0;
         }
-        .search-bar {
-          max-width:820px;
-          padding:0.6rem;
-          display:grid;
-          grid-template-columns:1.6fr 1fr 1fr auto;
-          gap:0.5rem;
-          background:rgba(255,255,255,0.96);
-          border:1px solid rgba(255,255,255,0.6);
-          backdrop-filter:blur(24px);
-          box-shadow:0 24px 80px rgba(15,27,48,0.28), 0 0 0 1px rgba(255,255,255,0.4);
-          border-radius:20px;
+        .sb-seg {
+          flex:1; position:relative; display:flex; flex-direction:column;
+          justify-content:center; padding:0.7rem 1rem; border-right:1.5px solid rgba(26,43,76,0.09);
+          cursor:pointer; transition:background 0.18s; border-radius:12px; min-width:0;
         }
-        .search-bar select, .search-bar input {
-          width:100%; min-width:0; border:1px solid transparent; background:white;
-          color:var(--indigo); padding:0.88rem 1rem; border-radius:12px;
-          outline:none; font-size:0.9rem; font-family:'Inter',sans-serif;
-          transition:border-color 0.2s, box-shadow 0.2s; cursor:pointer;
-          box-sizing:border-box; -webkit-appearance:none; appearance:none;
+        .sb-seg:last-of-type { border-right:none; }
+        .sb-seg:hover { background:rgba(26,43,76,0.03); }
+        .sb-seg.open { background:rgba(230,126,34,0.07); }
+        .sb-seg-lbl { font-size:0.62rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(26,43,76,0.5); margin-bottom:0.18rem; }
+        .sb-seg-val { font-size:0.88rem; font-weight:500; color:#1A2B4C; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sb-seg-val.ph { color:rgba(26,43,76,0.4); font-weight:400; }
+        .sb-input { border:none; outline:none; font-size:0.88rem; font-family:inherit; font-weight:500; color:#1A2B4C; background:transparent; width:100%; padding:0; }
+        .sb-input::placeholder { color:rgba(26,43,76,0.4); font-weight:400; }
+        .sb-go {
+          flex-shrink:0; display:flex; align-items:center; gap:0.45rem;
+          padding:0 1.2rem; margin:0.3rem 0.3rem 0.3rem 0.5rem; border-radius:14px;
+          background:var(--cacao); color:white; border:none;
+          font-size:0.88rem; font-weight:700; font-family:inherit;
+          cursor:pointer; transition:all 0.2s; white-space:nowrap;
+          box-shadow:0 6px 20px rgba(230,126,34,0.3); min-height:44px;
         }
-        .search-bar input[type="date"]::-webkit-calendar-picker-indicator {
-          opacity:0.5; cursor:pointer; margin-left:auto;
+        .sb-go:hover { background:var(--cacao-dark); transform:translateY(-1px); }
+        /* Dropdowns */
+        .sb-suggest, .sb-date-panel, .sb-pay-panel {
+          position:absolute; top:calc(100% + 10px); left:0;
+          background:white; border:1.5px solid rgba(26,43,76,0.09);
+          border-radius:18px; box-shadow:0 16px 52px rgba(26,43,76,0.16);
+          z-index:600; overflow:visible;
         }
-        .search-bar select:focus, .search-bar input:focus {
-          border-color:rgba(230,126,34,0.4); box-shadow:0 0 0 3px rgba(230,126,34,0.1);
+        .sb-suggest { min-width:240px; }
+        .sb-sug-item { display:flex; align-items:center; gap:0.7rem; padding:0.8rem 1rem; font-size:0.88rem; color:#1A2B4C; cursor:pointer; transition:background 0.14s; }
+        .sb-sug-item:hover { background:rgba(26,43,76,0.04); }
+        .sb-sug-reg { font-size:0.72rem; color:rgba(26,43,76,0.45); margin-left:auto; padding-left:0.4rem; white-space:nowrap; }
+        /* Date panel */
+        .sb-date-panel { padding:1.1rem; min-width:min(640px,92vw); left:50%; transform:translateX(-50%); }
+        .sb-date-modes { display:flex; gap:0.4rem; background:rgba(26,43,76,0.05); border-radius:999px; padding:0.28rem; margin-bottom:1rem; }
+        .sb-mode-btn { flex:1; padding:0.45rem; border-radius:999px; font-size:0.82rem; font-weight:600; font-family:inherit; border:none; background:transparent; color:rgba(26,43,76,0.5); cursor:pointer; transition:all 0.18s; }
+        .sb-mode-btn.on { background:white; color:#1A2B4C; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+        .sb-cal-nav { display:flex; margin-bottom:0.7rem; }
+        .sb-cal-nav-spacer { flex:1; }
+        .sb-cal-nav-btn { width:30px; height:30px; border-radius:50%; border:1.5px solid rgba(26,43,76,0.12); background:white; color:#1A2B4C; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.18s; }
+        .sb-cal-nav-btn:hover { background:#1A2B4C; color:white; border-color:#1A2B4C; }
+        .sb-cal-months { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+        @media(max-width:560px){ .sb-cal-months{grid-template-columns:1fr;} }
+        .sb-cal-month { }
+        .sb-cal-mname { font-size:0.87rem; font-weight:700; color:#1A2B4C; text-align:center; margin-bottom:0.65rem; }
+        .sb-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+        .sb-cal-dname { font-size:0.65rem; font-weight:600; color:rgba(26,43,76,0.4); text-align:center; padding:0.2rem 0; }
+        .sb-cal-day { aspect-ratio:1; border-radius:50%; border:none; background:transparent; font-size:0.8rem; font-weight:500; color:#1A2B4C; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.14s; }
+        .sb-cal-day:hover:not(.disabled) { background:rgba(26,43,76,0.07); }
+        .sb-cal-day.disabled { color:rgba(26,43,76,0.2); cursor:default; }
+        .sb-cal-day.start,.sb-cal-day.end { background:#1A2B4C !important; color:white !important; font-weight:700; }
+        .sb-cal-day.in-range { background:rgba(26,43,76,0.08); border-radius:0; }
+        .sb-cal-day.range-left { border-radius:50% 0 0 50%; }
+        .sb-cal-day.range-right { border-radius:0 50% 50% 0; }
+        .sb-cal-day.hover-end { background:rgba(26,43,76,0.05); border-radius:50%; }
+        .sb-date-footer { display:flex; align-items:center; justify-content:space-between; margin-top:0.9rem; padding-top:0.9rem; border-top:1px solid rgba(26,43,76,0.08); }
+        .sb-date-summary { font-size:0.82rem; color:rgba(26,43,76,0.55); }
+        .sb-date-clear { font-size:0.8rem; font-weight:600; color:#1A2B4C; background:none; border:none; cursor:pointer; font-family:inherit; text-decoration:underline; }
+        /* Payment panel */
+        .sb-pay-panel { min-width:210px; right:0; left:auto; }
+        .sb-pay-opt { display:flex; align-items:center; justify-content:space-between; padding:0.8rem 1.1rem; font-size:0.87rem; font-weight:500; color:#1A2B4C; cursor:pointer; transition:background 0.14s; gap:0.5rem; }
+        .sb-pay-opt:hover { background:rgba(26,43,76,0.04); }
+        .sb-pay-opt.sel { color:var(--cacao); font-weight:700; }
+        .sb-pay-check { color:var(--cacao); }
+        /* Flexible picker */
+        .sb-flex-tabs{display:flex;gap:0.35rem;background:rgba(26,43,76,0.05);border-radius:999px;padding:0.25rem;margin-bottom:0.9rem;}
+        .sb-flex-tab{flex:1;padding:0.43rem;border-radius:999px;font-size:0.8rem;font-weight:600;font-family:inherit;border:none;background:transparent;color:rgba(26,43,76,0.5);cursor:pointer;transition:all 0.17s;}
+        .sb-flex-tab.on{background:white;color:#1A2B4C;box-shadow:0 2px 7px rgba(0,0,0,0.08);}
+        .sb-flex-hint{font-size:0.79rem;color:rgba(26,43,76,0.5);margin-bottom:0.75rem;}
+        .sb-flex-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.48rem;margin-bottom:0.75rem;}
+        @media(max-width:480px){.sb-flex-grid{grid-template-columns:repeat(3,1fr);}}
+        .sb-flex-month{border:1.5px solid rgba(26,43,76,0.1);border-radius:12px;padding:0.6rem 0.4rem;cursor:pointer;background:white;font-family:inherit;transition:all 0.17s;display:flex;flex-direction:column;align-items:center;gap:0.12rem;}
+        .sb-flex-month:hover{border-color:#1A2B4C;}
+        .sb-flex-month.on{border-color:#1A2B4C;background:#1A2B4C;}
+        .sb-flex-month.on .sb-flex-mname,.sb-flex-month.on .sb-flex-myear{color:white;}
+        .sb-flex-mname{font-size:0.85rem;font-weight:700;color:#1A2B4C;}
+        .sb-flex-myear{font-size:0.67rem;color:rgba(26,43,76,0.4);}
+        .sb-flex-weeks{display:flex;gap:0.45rem;flex-wrap:wrap;}
+        .sb-flex-chip{padding:0.48rem 1rem;border-radius:999px;border:1.5px solid rgba(26,43,76,0.1);background:white;font-size:0.81rem;font-weight:600;font-family:inherit;color:rgba(26,43,76,0.5);cursor:pointer;transition:all 0.17s;}
+        .sb-flex-chip:hover{border-color:#1A2B4C;color:#1A2B4C;}
+        .sb-flex-chip.on{background:#1A2B4C;color:white;border-color:#1A2B4C;}
+        @media(max-width:780px){
+          .sb-bar { flex-direction:column; border-radius:22px; }
+          .sb-seg { border-right:none; border-bottom:1.5px solid rgba(26,43,76,0.08); border-radius:0; }
+          .sb-seg:last-of-type { border-bottom:none; }
+          .sb-go { margin:0.4rem; border-radius:14px; padding:0.85rem; justify-content:center; }
+          .sb-date-panel { left:0; transform:none; min-width:calc(100vw - 2.5rem); }
         }
-        .search-bar select option { background:white; color:var(--indigo); }
-        .search-btn {
-          border:none; padding:0.88rem 1.5rem; border-radius:12px;
-          font-size:0.9rem; font-weight:700; cursor:pointer; white-space:nowrap;
-          background:var(--cacao); color:white;
-          box-shadow:0 8px 22px rgba(230,126,34,0.25); transition:all 0.22s;
-          font-family:'Inter',sans-serif; min-height:44px;
-        }
-        .search-btn:hover { background:var(--cacao-dark); transform:translateY(-1px); }
-        @media(max-width:900px){ .search-bar{grid-template-columns:1fr 1fr;} }
-        @media(max-width:600px){ .search-bar{grid-template-columns:1fr; max-width:100%;} .search-wrap{margin-top:1.5rem;} }
 
         /* ─── PHOTO MOSAIC ─── */
         .mosaic-section { padding:0; overflow:hidden; }
@@ -808,8 +1038,8 @@ export default function Home() {
         <div className="hero-content">
           <div className="hero-panel">
             <div className={`hero-badges ${loaded ? 'anim-0' : ''}`}>
+              <span className="hero-badge">Boutique</span>
               <span className="hero-badge">Venezuela</span>
-              <span className="hero-badge">Autenticidad garantizada</span>
             </div>
             <h1 className={`hero-h1 ${loaded ? 'anim-1' : ''}`}>
               {loaded ? (
@@ -852,28 +1082,177 @@ export default function Home() {
         </div>
 
         <div className={`search-wrap ${loaded ? 'anim-4' : ''}`}>
-          <div className="search-bar">
-            <select value={destinoBusqueda} onChange={e => setDestinoBusqueda(e.target.value)}>
-              <option value="">¿A dónde vas?</option>
-              <option value="Los Roques">Los Roques</option>
-              <option value="Mérida">Mérida</option>
-              <option value="Mochima">Mochima</option>
-              <option value="Morrocoy">Morrocoy</option>
-              <option value="Canaima">Canaima</option>
-              <option value="Isla Margarita">Isla Margarita</option>
-            </select>
-            <input type="date" />
-            <select>
-              <option>Método de pago</option>
-              <option>Zelle</option>
-              <option>Pago Móvil</option>
-              <option>Transferencia</option>
-              <option>Binance</option>
-            </select>
-            <button className="search-btn" onClick={() => {
-              const url = destinoBusqueda ? `/buscar?destino=${encodeURIComponent(destinoBusqueda)}` : '/buscar'
-              router.push(url)
-            }}>Buscar</button>
+          <div className="sb-bar">
+
+            {/* Location */}
+            <div className="sb-seg" style={{ flex: '1.6' }}>
+              <div className="sb-seg-lbl">Destino</div>
+              <input
+                ref={sbInputRef}
+                className="sb-input"
+                placeholder="¿A dónde vas?"
+                value={destinoBusqueda}
+                onChange={e => { setDestinoBusqueda(e.target.value); setSbShowSug(true); setSbOverrideLat(undefined); setSbOverrideLng(undefined); setSbOverrideName(undefined) }}
+                onFocus={() => setSbShowSug(true)}
+                autoComplete="off"
+              />
+              {sbShowSug && (destinoBusqueda.length > 0) && (
+                <div className="sb-suggest" ref={sbSugRef}>
+                  {sbSugLoading && sbSuggestions.length === 0 && (
+                    <div className="sb-sug-item" style={{color:'rgba(26,43,76,0.45)',fontSize:'0.82rem'}}>
+                      Buscando en Venezuela…
+                    </div>
+                  )}
+                  {sbSuggestions.map((s, i) => (
+                    <div key={i} className="sb-sug-item"
+                      onMouseDown={() => {
+                        setDestinoBusqueda(s.label)
+                        setSbOverrideLat(s.lat); setSbOverrideLng(s.lng); setSbOverrideName(s.label)
+                        setSbShowSug(false)
+                      }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="rgba(26,43,76,0.45)" style={{flexShrink:0}}>
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      </svg>
+                      <span style={{flex:1,minWidth:0}}>
+                        <span style={{display:'block',fontWeight:500}}>{s.label}</span>
+                        <span style={{fontSize:'0.71rem',color:'rgba(26,43,76,0.45)'}}>{s.sub}</span>
+                      </span>
+                      {s.isStatic && (
+                        <span style={{fontSize:'0.6rem',fontWeight:700,padding:'0.12rem 0.38rem',borderRadius:'999px',background:'rgba(230,126,34,0.1)',color:'#E67E22',flexShrink:0}}>
+                          Popular
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  {!sbSugLoading && sbSuggestions.length === 0 && destinoBusqueda.length > 1 && (
+                    <div className="sb-sug-item" style={{color:'rgba(26,43,76,0.45)',fontSize:'0.82rem'}}>
+                      Sin resultados para &quot;{destinoBusqueda}&quot;
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Dates */}
+            <div
+              className={`sb-seg ${sbShowDate ? 'open' : ''}`}
+              style={{ flex: '1.3' }}
+              ref={sbDateRef}
+              onClick={() => { setSbShowDate(v => !v); setSbShowPay(false) }}
+            >
+              <div className="sb-seg-lbl">Fechas</div>
+              <div className={`sb-seg-val ${!sbCheckIn && !sbFlexible ? 'ph' : ''}`}>{sbDateLabel}</div>
+
+              {sbShowDate && (
+                <div className="sb-date-panel" onClick={e => e.stopPropagation()}>
+                  <div className="sb-date-modes">
+                    <button className={`sb-mode-btn ${!sbFlexible ? 'on' : ''}`} onClick={() => { setSbFlexible(false); setSbFlexMonths([]); setSbFlexWeeks(0) }}>Fechas exactas</button>
+                    <button className={`sb-mode-btn ${sbFlexible ? 'on' : ''}`} onClick={() => { setSbFlexible(true); setSbCheckIn(null); setSbCheckOut(null) }}>Fechas flexibles</button>
+                  </div>
+                  {!sbFlexible ? (
+                    <>
+                      <div className="sb-cal-nav">
+                        <button className="sb-cal-nav-btn" onClick={() => setSbViewMonth(m => sbAddMonths(m, -1))}>‹</button>
+                        <div className="sb-cal-nav-spacer" />
+                        <button className="sb-cal-nav-btn" onClick={() => setSbViewMonth(m => sbAddMonths(m, 1))}>›</button>
+                      </div>
+                      <div className="sb-cal-months">
+                        {renderSbMonth(sbViewMonth.getFullYear(), sbViewMonth.getMonth())}
+                        {renderSbMonth(sbNext.getFullYear(), sbNext.getMonth())}
+                      </div>
+                      <div className="sb-date-footer">
+                        <span className="sb-date-summary">
+                          {sbNights > 0 ? `${sbNights} noche${sbNights > 1 ? 's' : ''}: ${sbFmtDate(sbCheckIn)} – ${sbFmtDate(sbCheckOut)}`
+                            : sbDateStep === 'in' ? 'Selecciona entrada' : 'Selecciona salida'}
+                        </span>
+                        <button className="sb-date-clear" onClick={() => { setSbCheckIn(null); setSbCheckOut(null); setSbDateStep('in') }}>Borrar</button>
+                      </div>
+                    </>
+                  ) : (
+                    /* Flexible picker — Airbnb style */
+                    (() => {
+                      const today = new Date()
+                      const MONTHS_SHORT_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+                      const upcoming18 = Array.from({length:18},(_,i)=>{
+                        const d=new Date(today.getFullYear(),today.getMonth()+i,1)
+                        const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
+                        return {key,label:MONTHS_SHORT_ES[d.getMonth()],year:d.getFullYear()}
+                      })
+                      return (
+                        <>
+                          <div className="sb-flex-tabs">
+                            <button className={`sb-flex-tab${sbFlexType==='meses'?' on':''}`} onClick={()=>setSbFlexType('meses')}>Meses</button>
+                            <button className={`sb-flex-tab${sbFlexType==='semanas'?' on':''}`} onClick={()=>setSbFlexType('semanas')}>Semanas</button>
+                          </div>
+                          {sbFlexType==='meses' ? (
+                            <>
+                              <p className="sb-flex-hint">¿En qué mes quieres viajar?</p>
+                              <div className="sb-flex-grid">
+                                {upcoming18.map(({key,label,year})=>(
+                                  <button key={key}
+                                    className={`sb-flex-month${sbFlexMonths.includes(key)?' on':''}`}
+                                    onClick={()=>setSbFlexMonths(prev=>prev.includes(key)?prev.filter(m=>m!==key):[...prev,key])}>
+                                    <span className="sb-flex-mname">{label}</span>
+                                    <span className="sb-flex-myear">{year}</span>
+                                  </button>
+                                ))}
+                              </div>
+                              {sbFlexMonths.length>0 && (
+                                <button style={{fontSize:'0.76rem',fontWeight:600,color:'rgba(26,43,76,0.55)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}
+                                  onClick={()=>setSbFlexMonths([])}>Borrar selección</button>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <p className="sb-flex-hint">¿Cuánto tiempo quieres quedarte?</p>
+                              <div className="sb-flex-weeks">
+                                {([{v:0,l:'Cualquier semana'},{v:1,l:'1 semana'},{v:2,l:'2 semanas'},{v:3,l:'3 semanas'},{v:4,l:'4 semanas'}] as const).map(({v,l})=>(
+                                  <button key={v} className={`sb-flex-chip${sbFlexWeeks===v?' on':''}`} onClick={()=>setSbFlexWeeks(v as number)}>{l}</button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </>
+                      )
+                    })()
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Payment */}
+            <div
+              className={`sb-seg ${sbShowPay ? 'open' : ''}`}
+              ref={sbPayRef}
+              onClick={() => { setSbShowPay(v => !v); setSbShowDate(false) }}
+            >
+              <div className="sb-seg-lbl">Pago</div>
+              <div className={`sb-seg-val ${!sbPago ? 'ph' : ''}`}>{sbPago || 'Cualquier opción'}</div>
+              {sbShowPay && (
+                <div className="sb-pay-panel" onClick={e => e.stopPropagation()}>
+                  {[
+                    { v: '', l: 'Cualquier opción' },
+                    { v: 'Zelle', l: 'Zelle' },
+                    { v: 'Transferencia', l: 'Transferencia bancaria' },
+                    { v: 'Efectivo USD', l: 'Efectivo USD' },
+                    { v: 'Efectivo Bs', l: 'Efectivo Bs' },
+                    { v: 'Tarjeta', l: 'Tarjeta de crédito' },
+                  ].map(({ v, l }) => (
+                    <div key={v} className={`sb-pay-opt ${sbPago === v ? 'sel' : ''}`}
+                      onMouseDown={() => { setSbPago(v); setSbShowPay(false) }}>
+                      {l}
+                      {sbPago === v && <span className="sb-pay-check">✓</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Go */}
+            <button className="sb-go" onClick={sbHandleSearch}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Buscar
+            </button>
           </div>
         </div>
       </section>
@@ -951,7 +1330,7 @@ export default function Home() {
               loading="lazy"
             />
             <div className="split-photo-badge">
-              <div className="split-photo-badge-title">Waku Lodge · Canaima</div>
+              <div className="split-photo-badge-title">Posada La Brisa · Los Roques</div>
               <div className="split-photo-badge-sub">★ 4.9 · 48 reseñas · desde $120/noche</div>
             </div>
           </div>

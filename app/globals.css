@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Leaflet map tiles */
+@import 'leaflet/dist/leaflet.css';
+
+/* ── Leaflet tile fix ──────────────────────────────────────────────────────
+   The global `* { border-radius: inherit }` rule cascades into every tile
+   <img> inside the map, which rounds tile corners and creates gaps.
+   Reset everything inside .leaflet-container to prevent this.
+───────────────────────────────────────────────────────────────────────── */
+.leaflet-container,
+.leaflet-container *,
+.leaflet-container img,
+.leaflet-container canvas,
+.leaflet-container path,
+.leaflet-container svg {
+  border-radius: 0 !important;
+  outline: none;
+}
+/* Keep marker icons round if needed — override individually */
+.leaflet-marker-icon { border-radius: 0 !important; }
+
 * {
   box-sizing: border-box;
   margin: 0;
