@@ -8,6 +8,7 @@ type Props = {
   results: SearchResult[]
   allPosadas: Posada[]
   searchKey: string
+  mobileVisible?: boolean         // true when the mobile Mapa tab is active
   hoveredSlug: string | null
   onHover: (slug: string | null) => void
   onSelect: (slug: string) => void
@@ -16,7 +17,7 @@ type Props = {
 }
 
 export default function MapView({
-  results, allPosadas, searchKey,
+  results, allPosadas, searchKey, mobileVisible,
   hoveredSlug, onHover, onSelect,
   onViewportChange, onUserPan,
 }: Props) {
@@ -41,6 +42,27 @@ export default function MapView({
   // Reset pan-lock whenever a brand-new search fires
   useEffect(() => { userHasPannedRef.current = false }, [searchKey])
 
+  // When the mobile Mapa tab becomes visible, Leaflet's container was hidden
+  // (display:none → fixed). Force a size recalculation and re-fit.
+  useEffect(() => {
+    if (!mobileVisible) return
+    const map = mapRef.current
+    if (!map) return
+    // rAF ensures the CSS transition has committed before measuring
+    requestAnimationFrame(() => {
+      map.invalidateSize({ animate: false })
+      // Re-fit so tiles cover the new full-screen size
+      const L = LRef.current
+      if (!L) return
+      const targets = resultsRef.current.length > 0
+        ? resultsRef.current.map(r => r.posada)
+        : allPosadasRef.current
+      if (targets.length > 0 && !userHasPannedRef.current) {
+        fitBounds(L, map, targets)
+      }
+    })
+  }, [mobileVisible]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Init map once ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
@@ -58,6 +80,8 @@ export default function MapView({
         scrollWheelZoom: true,
         doubleClickZoom: true,
         dragging: true,
+        touchZoom: true,
+        bounceAtZoomLimits: false,
       })
       mapRef.current = map
 
@@ -229,7 +253,15 @@ export default function MapView({
           backdrop-filter: blur(4px);
         }
       `}</style>
-      <div ref={containerRef} style={{ width: '100%', height: '100%', borderRadius: 'inherit' }} />
+      <div
+        ref={containerRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          borderRadius: 'inherit',
+          touchAction: 'none',   // let Leaflet handle all touch events, no browser scroll interference
+        }}
+      />
     </>
   )
 }
