@@ -381,6 +381,8 @@ function BuscarContent() {
   const [hoveredSlug,    setHoveredSlug]    = useState<string|null>(null)
   const [selectedPosada, setSelectedPosada] = useState<Posada|null>(null)
   const [mobileTab,      setMobileTab]      = useState<'lista'|'mapa'>('lista')
+  // Slugs currently visible in the map viewport (for Airbnb-style pan behaviour)
+  const [viewportSlugs,  setViewportSlugs]  = useState<string[]|null>(null)
 
   const inputRef  = useRef<HTMLInputElement>(null)
   const dateRef   = useRef<HTMLDivElement>(null)
@@ -418,28 +420,23 @@ function BuscarContent() {
       .slice(0,4)
       .map(l=>({ label:l.nombre, sub:l.region, lat:l.lat, lng:l.lng, isStatic:true }))
 
-    // 2) Nominatim (all Venezuela)
+    // 2) Nominatim via server-side proxy (no CORS / rate-limit issues)
     try {
-      const url = `https://nominatim.openstreetmap.org/search?` +
-        `q=${encodeURIComponent(q+', Venezuela')}` +
-        `&countrycodes=ve&format=json&limit=6&addressdetails=1&accept-language=es`
-      const res = await fetch(url, { headers: { 'Accept': 'application/json' } })
+      const res  = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`)
       const data: NominatimResult[] = await res.json()
 
       const nomMatches = data
-        .filter(r => r.address?.country?.toLowerCase().includes('venezuela') || r.display_name.toLowerCase().includes('venezuela'))
-        .slice(0,6)
+        .slice(0, 8)
         .map(r => {
           const addr = r.address
-          const sub = [addr?.state, addr?.municipality].filter(Boolean).join(', ') || 'Venezuela'
-          // Short label: first part of display_name
+          const sub  = [addr?.state, addr?.municipality || addr?.city || addr?.town || addr?.village]
+            .filter(Boolean).join(', ') || 'Venezuela'
           const label = r.display_name.split(',')[0].trim()
-          return { label, sub, lat:parseFloat(r.lat), lng:parseFloat(r.lon), isStatic:false }
+          return { label, sub, lat: parseFloat(r.lat), lng: parseFloat(r.lon), isStatic: false }
         })
-        // Deduplicate against static
-        .filter(n=>!staticMatches.some(s=>s.label.toLowerCase()===n.label.toLowerCase()))
+        .filter(n => !staticMatches.some(s => s.label.toLowerCase() === n.label.toLowerCase()))
 
-      setSuggestions([...staticMatches, ...nomMatches].slice(0,8))
+      setSuggestions([...staticMatches, ...nomMatches].slice(0, 8))
     } catch {
       setSuggestions(staticMatches)
     }
@@ -487,7 +484,21 @@ function BuscarContent() {
 
   // Search
   const opts: SearchOptions = { query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName }
-  const results = searchPosadas(posadas, opts)
+  const searchResults = searchPosadas(posadas, opts)
+
+  // Merge viewport posadas (Airbnb pan-to-see behaviour):
+  // when user pans the map, show posadas now in view even if not in search results
+  const results = (() => {
+    if (!viewportSlugs || viewportSlugs.length === 0) return searchResults
+    const inSearch = new Set(searchResults.map(r => r.posada.slug))
+    const extra = posadas
+      .filter(p => viewportSlugs.includes(p.slug) && !inSearch.has(p.slug))
+      .filter(p => p.precio <= precioMax)
+      .filter(p => !metodoPago || p.metodoPago.some(m => m.toLowerCase().includes(metodoPago.toLowerCase())))
+      .map(p => ({ posada: p, distanceKm: null as number | null, isProximity: true }))
+    return [...searchResults, ...extra]
+  })()
+
   const isProximity = results.some(r=>r.isProximity)
   const resolvedLoc = overrideName || (query ? resolveLocation(query)?.location.nombre : undefined)
 
@@ -883,13 +894,15 @@ function BuscarContent() {
         <div className={`map-col${mobileTab==='mapa'?' show':''}`}>
           <div className="map-inner">
             <MapView
-              results={results}
+              results={searchResults}
+              allPosadas={posadas}
               hoveredSlug={hoveredSlug}
               onHover={setHoveredSlug}
               onSelect={slug=>{
                 const p=posadas.find(x=>x.slug===slug)
                 if (p) setSelectedPosada(p)
               }}
+              onViewportChange={slugs => setViewportSlugs(slugs)}
             />
           </div>
         </div>

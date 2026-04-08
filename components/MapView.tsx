@@ -1,53 +1,71 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
+import type { Posada } from '@/lib/data'
 import type { SearchResult } from '@/lib/search'
 
 type Props = {
-  results: SearchResult[]
+  results: SearchResult[]        // search-filtered results (shown prominently)
+  allPosadas: Posada[]           // ALL posadas (shown as dim markers when in view)
   hoveredSlug: string | null
   onHover: (slug: string | null) => void
   onSelect: (slug: string) => void
+  onViewportChange?: (slugsInView: string[]) => void
 }
 
-export default function MapView({ results, hoveredSlug, onHover, onSelect }: Props) {
+export default function MapView({ results, allPosadas, hoveredSlug, onHover, onSelect, onViewportChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<any>(null)
-  const markersRef = useRef<Map<string, any>>(new Map())
-  const LRef = useRef<any>(null)
+  const mapRef       = useRef<any>(null)
+  const markersRef   = useRef<Map<string, any>>(new Map())
+  const LRef         = useRef<any>(null)
+  const onViewportChangeRef = useRef(onViewportChange)
 
+  useEffect(() => { onViewportChangeRef.current = onViewportChange }, [onViewportChange])
+
+  // ── Init map once ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
 
-    // Dynamically import Leaflet (needs window)
     import('leaflet').then(L => {
       LRef.current = L
 
-      // Fix default marker icon paths broken by Webpack
       delete (L.Icon.Default.prototype as any)._getIconUrl
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      })
 
       const map = L.map(containerRef.current!, {
         center: [8.0, -66.5],
         zoom: 6,
         zoomControl: false,
         attributionControl: false,
+        preferCanvas: false,
       })
       mapRef.current = map
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-      }).addTo(map)
+      // ── CartoDB Positron — minimal, matches our palette ────────────────
+      L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        {
+          subdomains: 'abcd',
+          maxZoom: 20,
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+        }
+      ).addTo(map)
 
-      L.control.zoom({ position: 'topright' }).addTo(map)
-      L.control.attribution({ position: 'bottomright', prefix: '© OpenStreetMap' }).addTo(map)
+      L.control.zoom({ position: 'bottomright' }).addTo(map)
+      L.control.attribution({ position: 'bottomleft', prefix: '© OSM · CARTO' }).addTo(map)
 
-      addMarkers(L, map, results)
-      fitBounds(L, map, results)
+      // ── Emit visible slugs on move ─────────────────────────────────────
+      function emitVisible() {
+        if (!onViewportChangeRef.current) return
+        const bounds = map.getBounds()
+        const visible: string[] = []
+        markersRef.current.forEach((_, slug) => {
+          const marker = markersRef.current.get(slug)
+          if (marker && bounds.contains(marker.getLatLng())) visible.push(slug)
+        })
+        onViewportChangeRef.current(visible)
+      }
+
+      map.on('moveend zoomend', emitVisible)
     })
 
     return () => {
@@ -59,149 +77,126 @@ export default function MapView({ results, hoveredSlug, onHover, onSelect }: Pro
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Update markers when results change
+  // ── Rebuild markers when results or allPosadas change ────────────────────
   useEffect(() => {
-    const L = LRef.current
+    const L   = LRef.current
     const map = mapRef.current
     if (!L || !map) return
 
-    // Remove old markers
     markersRef.current.forEach(m => m.remove())
     markersRef.current.clear()
 
-    addMarkers(L, map, results)
-    if (results.length > 0) fitBounds(L, map, results)
-  }, [results]) // eslint-disable-line react-hooks/exhaustive-deps
+    const resultSlugs = new Set(results.map(r => r.posada.slug))
 
-  // Highlight hovered marker
+    // 1. Draw "ghost" markers for all posadas NOT in current results
+    allPosadas.forEach(posada => {
+      if (resultSlugs.has(posada.slug)) return // drawn in step 2
+      const icon = makePriceIcon(L, posada.precio, 'ghost')
+      const marker = L.marker([posada.lat, posada.lng], { icon, zIndexOffset: 0 }).addTo(map)
+      marker.on('mouseover', () => onHover(posada.slug))
+      marker.on('mouseout',  () => onHover(null))
+      marker.on('click',     () => onSelect(posada.slug))
+      markersRef.current.set(posada.slug, marker)
+    })
+
+    // 2. Draw active markers for search results (on top)
+    results.forEach(({ posada, isProximity }) => {
+      const icon = makePriceIcon(L, posada.precio, isProximity ? 'proximity' : 'active')
+      const marker = L.marker([posada.lat, posada.lng], { icon, zIndexOffset: 500 }).addTo(map)
+      marker.on('mouseover', () => onHover(posada.slug))
+      marker.on('mouseout',  () => onHover(null))
+      marker.on('click',     () => onSelect(posada.slug))
+      markersRef.current.set(posada.slug, marker)
+    })
+
+    // Fit to results if any, else fit all
+    fitBounds(L, map, results.length > 0 ? results.map(r => r.posada) : allPosadas)
+  }, [results, allPosadas]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Highlight hovered marker ──────────────────────────────────────────────
   useEffect(() => {
     markersRef.current.forEach((marker, slug) => {
       const el = marker.getElement()
       if (!el) return
       if (slug === hoveredSlug) {
-        el.classList.add('map-marker-hovered')
+        el.classList.add('mkr-hov')
         marker.setZIndexOffset(1000)
       } else {
-        el.classList.remove('map-marker-hovered')
-        marker.setZIndexOffset(0)
+        el.classList.remove('mkr-hov')
+        marker.setZIndexOffset(markersRef.current.has(slug) ? 500 : 0)
       }
     })
   }, [hoveredSlug])
 
-  function createPriceIcon(L: any, precio: number, isProximity: boolean) {
-    const label = `$${precio}`
-    return L.divIcon({
-      className: '',
-      html: `<div class="map-price-marker${isProximity ? ' proximity' : ''}">${label}</div>`,
-      iconSize: [56, 28],
-      iconAnchor: [28, 14],
-    })
-  }
-
-  function addMarkers(L: any, map: any, results: SearchResult[]) {
-    results.forEach(({ posada, isProximity }) => {
-      const icon = createPriceIcon(L, posada.precio, isProximity)
-      const marker = L.marker([posada.lat, posada.lng], { icon })
-        .addTo(map)
-
-      marker.on('mouseover', () => onHover(posada.slug))
-      marker.on('mouseout', () => onHover(null))
-      marker.on('click', () => onSelect(posada.slug))
-
-      // Popup
-      marker.bindPopup(`
-        <div class="map-popup">
-          <img src="${posada.imgs[0]}" alt="${posada.nombre}" />
-          <div class="map-popup-body">
-            <div class="map-popup-name">${posada.nombre}</div>
-            <div class="map-popup-meta">★ ${posada.rating} · $${posada.precio}/noche</div>
-          </div>
-        </div>
-      `, { maxWidth: 200, className: 'map-popup-wrap' })
-
-      markersRef.current.set(posada.slug, marker)
-    })
-  }
-
-  function fitBounds(L: any, map: any, results: SearchResult[]) {
-    if (results.length === 0) return
-    if (results.length === 1) {
-      map.setView([results[0].posada.lat, results[0].posada.lng], 10)
-      return
-    }
-    const coords = results.map(r => [r.posada.lat, r.posada.lng] as [number, number])
-    const bounds = L.latLngBounds(coords)
-    map.fitBounds(bounds, { padding: [48, 48] })
-  }
-
   return (
     <>
       <style>{`
-        .map-price-marker {
+        .mkr {
           background: #1A2B4C;
           color: white;
-          font-family: 'Inter', sans-serif;
+          font-family: 'Inter', system-ui, sans-serif;
           font-size: 12px;
           font-weight: 700;
-          padding: 5px 9px;
+          padding: 5px 10px;
           border-radius: 999px;
-          border: 2px solid white;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          border: 2.5px solid white;
+          box-shadow: 0 2px 10px rgba(26,43,76,0.28);
           white-space: nowrap;
           cursor: pointer;
-          transition: all 0.18s ease;
+          transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
           transform-origin: bottom center;
+          letter-spacing: -0.01em;
         }
-        .map-price-marker.proximity {
+        .mkr.ghost {
+          background: rgba(122,134,153,0.55);
+          border-color: rgba(255,255,255,0.7);
+          box-shadow: 0 1px 5px rgba(0,0,0,0.12);
+          font-size: 11px;
+          padding: 4px 8px;
+        }
+        .mkr.proximity {
           background: #7A8699;
         }
-        .map-marker-hovered .map-price-marker {
+        .mkr-hov .mkr {
           background: #E67E22 !important;
-          transform: scale(1.15);
-          box-shadow: 0 4px 16px rgba(230,126,34,0.5);
-          z-index: 999 !important;
+          transform: scale(1.18) translateY(-2px);
+          box-shadow: 0 6px 20px rgba(230,126,34,0.45) !important;
         }
-        .map-popup-wrap .leaflet-popup-content-wrapper {
-          border-radius: 16px;
-          padding: 0;
-          overflow: hidden;
-          box-shadow: 0 12px 40px rgba(0,0,0,0.2);
-        }
-        .map-popup-wrap .leaflet-popup-content {
-          margin: 0;
-          width: 200px !important;
-        }
-        .map-popup-wrap .leaflet-popup-tip-container { display: none; }
-        .map-popup img {
-          width: 100%;
-          height: 100px;
-          object-fit: cover;
-          display: block;
-        }
-        .map-popup-body {
-          padding: 10px 12px;
-        }
-        .map-popup-name {
-          font-family: 'Inter', sans-serif;
-          font-size: 12px;
+        /* Leaflet zoom buttons */
+        .leaflet-control-zoom a {
+          border-radius: 8px !important;
+          color: #1A2B4C !important;
           font-weight: 700;
-          color: #1A2B4C;
-          line-height: 1.3;
-          margin-bottom: 3px;
         }
-        .map-popup-meta {
-          font-family: 'Inter', sans-serif;
-          font-size: 11px;
-          color: #7A8699;
-        }
-        .leaflet-container {
-          font-family: 'Inter', sans-serif;
+        /* Attribution */
+        .leaflet-control-attribution {
+          font-size: 9px !important;
+          background: rgba(255,255,255,0.7) !important;
+          backdrop-filter: blur(4px);
         }
       `}</style>
-      <div
-        ref={containerRef}
-        style={{ width: '100%', height: '100%', borderRadius: 'inherit' }}
-      />
+      <div ref={containerRef} style={{ width: '100%', height: '100%', borderRadius: 'inherit' }} />
     </>
   )
+}
+
+function makePriceIcon(L: any, precio: number, variant: 'active' | 'proximity' | 'ghost') {
+  const cls = variant === 'active' ? 'mkr' : `mkr ${variant}`
+  return L.divIcon({
+    className: '',
+    html: `<div class="${cls}">$${precio}</div>`,
+    iconSize:   [0, 0],
+    iconAnchor: [0, 0],
+    popupAnchor:[0, -10],
+  })
+}
+
+function fitBounds(L: any, map: any, posadas: Posada[]) {
+  if (posadas.length === 0) return
+  if (posadas.length === 1) {
+    map.setView([posadas[0].lat, posadas[0].lng], 11)
+    return
+  }
+  const bounds = L.latLngBounds(posadas.map(p => [p.lat, p.lng]))
+  map.fitBounds(bounds, { padding: [52, 52], maxZoom: 12 })
 }
