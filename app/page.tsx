@@ -1330,7 +1330,7 @@ export default function Home() {
               loading="lazy"
             />
             <div className="split-photo-badge">
-              <div className="split-photo-badge-title">Posada La Brisa · Los Roques</div>
+              <div className="split-photo-badge-title">Waku Lodge · Canaima</div>
               <div className="split-photo-badge-sub">★ 4.9 · 48 reseñas · desde $120/noche</div>
             </div>
           </div>
