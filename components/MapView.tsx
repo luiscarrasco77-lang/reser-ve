@@ -1,34 +1,39 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import type { Posada } from '@/lib/data'
 import type { SearchResult } from '@/lib/search'
 
 type Props = {
-  results: SearchResult[]        // search-filtered results (shown prominently)
-  allPosadas: Posada[]           // ALL posadas (shown as dim markers when in view)
+  results: SearchResult[]
+  allPosadas: Posada[]
   hoveredSlug: string | null
   onHover: (slug: string | null) => void
   onSelect: (slug: string) => void
   onViewportChange?: (slugsInView: string[]) => void
+  onUserPan?: () => void
 }
 
-export default function MapView({ results, allPosadas, hoveredSlug, onHover, onSelect, onViewportChange }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const mapRef       = useRef<any>(null)
-  const markersRef   = useRef<Map<string, any>>(new Map())
-  const LRef         = useRef<any>(null)
+export default function MapView({
+  results, allPosadas, hoveredSlug, onHover, onSelect, onViewportChange, onUserPan,
+}: Props) {
+  const containerRef       = useRef<HTMLDivElement>(null)
+  const mapRef             = useRef<any>(null)
+  const markersRef         = useRef<Map<string, any>>(new Map())
+  const LRef               = useRef<any>(null)
+  const programmaticRef    = useRef(false)   // true during fitBounds so moveend ignores it
   const onViewportChangeRef = useRef(onViewportChange)
+  const onUserPanRef        = useRef(onUserPan)
 
   useEffect(() => { onViewportChangeRef.current = onViewportChange }, [onViewportChange])
+  useEffect(() => { onUserPanRef.current = onUserPan }, [onUserPan])
 
-  // ── Init map once ─────────────────────────────────────────────────────────
+  // ── Init map ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
 
     import('leaflet').then(L => {
       LRef.current = L
-
       delete (L.Icon.Default.prototype as any)._getIconUrl
 
       const map = L.map(containerRef.current!, {
@@ -36,48 +41,45 @@ export default function MapView({ results, allPosadas, hoveredSlug, onHover, onS
         zoom: 6,
         zoomControl: false,
         attributionControl: false,
-        preferCanvas: false,
       })
       mapRef.current = map
 
-      // ── CartoDB Positron — minimal, matches our palette ────────────────
+      // CartoDB Positron – minimal, clean, matches brand palette
       L.tileLayer(
         'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-        {
-          subdomains: 'abcd',
-          maxZoom: 20,
-          attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-        }
+        { subdomains: 'abcd', maxZoom: 20 }
       ).addTo(map)
 
       L.control.zoom({ position: 'bottomright' }).addTo(map)
-      L.control.attribution({ position: 'bottomleft', prefix: '© OSM · CARTO' }).addTo(map)
+      L.control.attribution({
+        position: 'bottomleft',
+        prefix: '<a href="https://www.openstreetmap.org/copyright">OSM</a> · <a href="https://carto.com">CARTO</a>',
+      }).addTo(map)
 
-      // ── Emit visible slugs on move ─────────────────────────────────────
       function emitVisible() {
         if (!onViewportChangeRef.current) return
         const bounds = map.getBounds()
         const visible: string[] = []
-        markersRef.current.forEach((_, slug) => {
-          const marker = markersRef.current.get(slug)
-          if (marker && bounds.contains(marker.getLatLng())) visible.push(slug)
+        markersRef.current.forEach((marker, slug) => {
+          if (bounds.contains(marker.getLatLng())) visible.push(slug)
         })
         onViewportChangeRef.current(visible)
       }
 
-      map.on('moveend zoomend', emitVisible)
+      map.on('moveend zoomend', () => {
+        if (!programmaticRef.current) {
+          onUserPanRef.current?.()
+        }
+        emitVisible()
+      })
     })
 
     return () => {
-      if (mapRef.current) {
-        mapRef.current.remove()
-        mapRef.current = null
-        markersRef.current.clear()
-      }
+      if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; markersRef.current.clear() }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Rebuild markers when results or allPosadas change ────────────────────
+  // ── Rebuild markers ───────────────────────────────────────────────────────
   useEffect(() => {
     const L   = LRef.current
     const map = mapRef.current
@@ -88,42 +90,51 @@ export default function MapView({ results, allPosadas, hoveredSlug, onHover, onS
 
     const resultSlugs = new Set(results.map(r => r.posada.slug))
 
-    // 1. Draw "ghost" markers for all posadas NOT in current results
+    // Ghost markers for all posadas not in results
     allPosadas.forEach(posada => {
-      if (resultSlugs.has(posada.slug)) return // drawn in step 2
-      const icon = makePriceIcon(L, posada.precio, 'ghost')
-      const marker = L.marker([posada.lat, posada.lng], { icon, zIndexOffset: 0 }).addTo(map)
+      if (resultSlugs.has(posada.slug)) return
+      const marker = L.marker([posada.lat, posada.lng], {
+        icon: makeIcon(L, posada.precio, 'ghost'),
+        zIndexOffset: 0,
+        interactive: true,
+      }).addTo(map)
       marker.on('mouseover', () => onHover(posada.slug))
       marker.on('mouseout',  () => onHover(null))
       marker.on('click',     () => onSelect(posada.slug))
       markersRef.current.set(posada.slug, marker)
     })
 
-    // 2. Draw active markers for search results (on top)
+    // Active markers for search results (on top)
     results.forEach(({ posada, isProximity }) => {
-      const icon = makePriceIcon(L, posada.precio, isProximity ? 'proximity' : 'active')
-      const marker = L.marker([posada.lat, posada.lng], { icon, zIndexOffset: 500 }).addTo(map)
+      const marker = L.marker([posada.lat, posada.lng], {
+        icon: makeIcon(L, posada.precio, isProximity ? 'proximity' : 'active'),
+        zIndexOffset: 500,
+        interactive: true,
+      }).addTo(map)
       marker.on('mouseover', () => onHover(posada.slug))
       marker.on('mouseout',  () => onHover(null))
       marker.on('click',     () => onSelect(posada.slug))
       markersRef.current.set(posada.slug, marker)
     })
 
-    // Fit to results if any, else fit all
-    fitBounds(L, map, results.length > 0 ? results.map(r => r.posada) : allPosadas)
+    // Fit bounds (programmatic — suppress onUserPan)
+    const targets = results.length > 0 ? results.map(r => r.posada) : allPosadas
+    if (targets.length > 0) {
+      programmaticRef.current = true
+      fitBounds(L, map, targets)
+      setTimeout(() => { programmaticRef.current = false }, 800)
+    }
   }, [results, allPosadas]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Highlight hovered marker ──────────────────────────────────────────────
+  // ── Hover highlight ───────────────────────────────────────────────────────
   useEffect(() => {
     markersRef.current.forEach((marker, slug) => {
       const el = marker.getElement()
       if (!el) return
       if (slug === hoveredSlug) {
-        el.classList.add('mkr-hov')
-        marker.setZIndexOffset(1000)
+        el.classList.add('mkr-hov'); marker.setZIndexOffset(1000)
       } else {
-        el.classList.remove('mkr-hov')
-        marker.setZIndexOffset(markersRef.current.has(slug) ? 500 : 0)
+        el.classList.remove('mkr-hov'); marker.setZIndexOffset(0)
       }
     })
   }, [hoveredSlug])
@@ -131,48 +142,61 @@ export default function MapView({ results, allPosadas, hoveredSlug, onHover, onS
   return (
     <>
       <style>{`
+        /* Pill marker */
+        .mkr-anchor {
+          position: absolute; left: 0; top: 0;
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+        }
         .mkr {
+          position: relative;
+          pointer-events: all;
+          display: inline-flex;
+          align-items: center;
           background: #1A2B4C;
           color: white;
           font-family: 'Inter', system-ui, sans-serif;
           font-size: 12px;
           font-weight: 700;
-          padding: 5px 10px;
+          padding: 5px 11px;
           border-radius: 999px;
           border: 2.5px solid white;
-          box-shadow: 0 2px 10px rgba(26,43,76,0.28);
+          box-shadow: 0 2px 10px rgba(26,43,76,0.30);
           white-space: nowrap;
           cursor: pointer;
           transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
-          transform-origin: bottom center;
           letter-spacing: -0.01em;
         }
         .mkr.ghost {
-          background: rgba(122,134,153,0.55);
-          border-color: rgba(255,255,255,0.7);
-          box-shadow: 0 1px 5px rgba(0,0,0,0.12);
+          background: rgba(122,134,153,0.48);
+          border-color: rgba(255,255,255,0.75);
           font-size: 11px;
           padding: 4px 8px;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.10);
         }
-        .mkr.proximity {
-          background: #7A8699;
-        }
+        .mkr.proximity { background: #7A8699; }
         .mkr-hov .mkr {
           background: #E67E22 !important;
-          transform: scale(1.18) translateY(-2px);
-          box-shadow: 0 6px 20px rgba(230,126,34,0.45) !important;
+          transform: scale(1.2);
+          box-shadow: 0 5px 18px rgba(230,126,34,0.50) !important;
         }
-        /* Leaflet zoom buttons */
+        .mkr-hov .mkr.ghost {
+          background: #E67E22 !important;
+        }
+        /* Zoom controls */
         .leaflet-control-zoom a {
           border-radius: 8px !important;
           color: #1A2B4C !important;
-          font-weight: 700;
+          font-weight: 600 !important;
+          border-color: rgba(26,43,76,0.15) !important;
         }
+        .leaflet-control-zoom a:hover { background: #f0f4f8 !important; }
         /* Attribution */
         .leaflet-control-attribution {
           font-size: 9px !important;
-          background: rgba(255,255,255,0.7) !important;
+          background: rgba(255,255,255,0.72) !important;
           backdrop-filter: blur(4px);
+          border-radius: 6px 0 0 0 !important;
         }
       `}</style>
       <div ref={containerRef} style={{ width: '100%', height: '100%', borderRadius: 'inherit' }} />
@@ -180,23 +204,20 @@ export default function MapView({ results, allPosadas, hoveredSlug, onHover, onS
   )
 }
 
-function makePriceIcon(L: any, precio: number, variant: 'active' | 'proximity' | 'ghost') {
+function makeIcon(L: any, precio: number, variant: 'active' | 'proximity' | 'ghost') {
   const cls = variant === 'active' ? 'mkr' : `mkr ${variant}`
   return L.divIcon({
     className: '',
-    html: `<div class="${cls}">$${precio}</div>`,
-    iconSize:   [0, 0],
+    // Wrap in absolute-positioned div so marker is centred on lat/lng without needing iconAnchor arithmetic
+    html: `<div class="mkr-anchor"><div class="${cls}">$${precio}</div></div>`,
+    iconSize: [1, 1],
     iconAnchor: [0, 0],
-    popupAnchor:[0, -10],
   })
 }
 
 function fitBounds(L: any, map: any, posadas: Posada[]) {
   if (posadas.length === 0) return
-  if (posadas.length === 1) {
-    map.setView([posadas[0].lat, posadas[0].lng], 11)
-    return
-  }
+  if (posadas.length === 1) { map.setView([posadas[0].lat, posadas[0].lng], 11); return }
   const bounds = L.latLngBounds(posadas.map(p => [p.lat, p.lng]))
-  map.fitBounds(bounds, { padding: [52, 52], maxZoom: 12 })
+  map.fitBounds(bounds, { padding: [56, 56], maxZoom: 12 })
 }

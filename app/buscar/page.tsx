@@ -351,11 +351,17 @@ const PAY_OPTS = [
 function BuscarContent() {
   const searchParams = useSearchParams()
 
-  // Location
+  // Location — pick up override coords passed from landing page search
   const [query,       setQuery]       = useState(searchParams.get('q') || '')
-  const [overrideLat, setOverrideLat] = useState<number|undefined>(undefined)
-  const [overrideLng, setOverrideLng] = useState<number|undefined>(undefined)
-  const [overrideName,setOverrideName]= useState<string|undefined>(undefined)
+  const [overrideLat, setOverrideLat] = useState<number|undefined>(
+    searchParams.get('overrideLat') ? parseFloat(searchParams.get('overrideLat')!) : undefined
+  )
+  const [overrideLng, setOverrideLng] = useState<number|undefined>(
+    searchParams.get('overrideLng') ? parseFloat(searchParams.get('overrideLng')!) : undefined
+  )
+  const [overrideName,setOverrideName]= useState<string|undefined>(
+    searchParams.get('overrideName') || undefined
+  )
 
   // Dates
   const [dateMode, setDateMode] = useState<'exactas'|'flexibles'>('exactas')
@@ -508,7 +514,7 @@ function BuscarContent() {
         :root{--indigo:#1A2B4C;--cacao:#E67E22;--cacao-dark:#C96510;--sand:#FDFBF7;--muted:#7A8699;--line:rgba(26,43,76,0.09);--sh:0 4px 24px rgba(26,43,76,0.10);--shl:0 16px 52px rgba(26,43,76,0.16);}
         *{margin:0;padding:0;box-sizing:border-box;}
         html,body{font-family:var(--font-inter),'Inter',sans-serif;background:var(--sand);color:var(--indigo);}
-        .nav{position:sticky;top:0;z-index:80;display:flex;align-items:center;justify-content:space-between;padding:0.9rem 1.75rem;background:white;border-bottom:1px solid var(--line);}
+        .nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0.9rem 1.75rem;background:white;border-bottom:1px solid var(--line);}
         .logo{font-size:1.5rem;font-weight:800;letter-spacing:-0.04em;color:var(--indigo);text-decoration:none;}
         .logo span{color:var(--cacao);}
         .nav-links{display:flex;align-items:center;gap:1rem;}
@@ -516,7 +522,7 @@ function BuscarContent() {
         .nav-link:hover{color:var(--indigo);}
         .nav-cta{padding:0.58rem 1rem;border-radius:999px;font-size:0.82rem;font-weight:600;text-decoration:none;background:var(--cacao);color:white;}
         @media(max-width:768px){.nav-links{display:none;}}
-        .sb-wrap{background:white;border-bottom:1px solid var(--line);padding:0.8rem 1.75rem;position:sticky;top:57px;z-index:70;}
+        .sb-wrap{background:white;border-bottom:1px solid var(--line);padding:0.8rem 1.75rem;position:sticky;top:57px;z-index:190;}
         .sb-bar{display:flex;align-items:stretch;border:1.5px solid var(--line);border-radius:16px;background:white;box-shadow:var(--sh);max-width:860px;margin:0 auto;overflow:visible;position:relative;}
         .sb-seg{flex:1;position:relative;display:flex;flex-direction:column;justify-content:center;padding:0.62rem 1rem;border-right:1.5px solid var(--line);cursor:pointer;transition:background 0.17s;min-width:0;}
         .sb-seg:last-of-type{border-right:none;}
@@ -535,6 +541,8 @@ function BuscarContent() {
         @media(max-width:680px){.sb-bar{flex-direction:column;border-radius:18px;}.sb-seg{border-right:none;border-bottom:1.5px solid var(--line);}.sb-seg:last-of-type{border-bottom:none;}.sb-go{margin:0.38rem;justify-content:center;}}
         /* Suggestion dropdown */
         .sb-drop{position:absolute;top:calc(100% + 9px);left:0;background:white;border:1.5px solid var(--line);border-radius:16px;box-shadow:var(--shl);z-index:300;overflow:hidden;min-width:260px;max-height:340px;overflow-y:auto;}
+        /* Ensure dropdowns always clear the map below */
+        .sb-bar{overflow:visible!important;}
         .sb-sug-row{display:flex;align-items:center;gap:0.65rem;padding:0.72rem 1rem;font-size:0.85rem;color:var(--indigo);cursor:pointer;transition:background 0.12s;}
         .sb-sug-row:hover{background:rgba(26,43,76,0.04);}
         .sb-sug-icon{font-size:0.85rem;flex-shrink:0;}
@@ -599,7 +607,7 @@ function BuscarContent() {
         /* Layout */
         .page-wrap{display:flex;height:calc(100dvh - 57px - 62px);}
         .list-col{width:52%;min-width:310px;overflow-y:auto;padding:1.05rem 1.2rem 5rem;scrollbar-width:thin;scrollbar-color:rgba(26,43,76,0.15) transparent;}
-        .map-col{flex:1;padding:0.65rem;background:var(--sand);}
+        .map-col{flex:1;padding:0.65rem;background:var(--sand);position:relative;z-index:0;isolation:isolate;}
         .map-inner{width:100%;height:100%;border-radius:20px;overflow:hidden;box-shadow:var(--sh);}
         @media(max-width:860px){.page-wrap{height:auto;flex-direction:column;}.list-col{width:100%;overflow-y:visible;padding:1rem 1rem 5rem;}.map-col{display:none;height:60vw;max-height:460px;}.map-col.show{display:block;}.list-col.hide{display:none;}}
         .m-tabs{display:none;position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--indigo);border-radius:999px;padding:0.32rem;gap:0.18rem;box-shadow:0 8px 28px rgba(26,43,76,0.35);z-index:50;}
@@ -753,7 +761,7 @@ function BuscarContent() {
                 )}
                 {suggestions.map((s,i)=>(
                   <div key={i} className="sb-sug-row" onMouseDown={()=>selectSuggestion(s)}>
-                    <span className="sb-sug-icon">📍</span>
+                    <span className="sb-sug-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="#7A8699"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></span>
                     <div className="sb-sug-main">
                       <div className="sb-sug-name">{s.label}</div>
                       <div className="sb-sug-sub">{s.sub}</div>
@@ -879,7 +887,7 @@ function BuscarContent() {
                     <div className="c-foot">
                       <div className="c-dist">
                         {distanceKm!==null
-                          ? <><span style={{color:'var(--cacao)'}}>📍</span>{distanceKm<10?`${Math.round(distanceKm*10)/10}`:`${Math.round(distanceKm)}`} km{isProx?' (zona cercana)':''}</>
+                          ? <><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--cacao)" style={{flexShrink:0}}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>{distanceKm<10?`${Math.round(distanceKm*10)/10}`:`${Math.round(distanceKm)}`} km{isProx?' (zona cercana)':''}</>
                           : <span>{p.destino}</span>}
                       </div>
                       <span className="c-cta">Ver detalles →</span>
@@ -903,6 +911,10 @@ function BuscarContent() {
                 if (p) setSelectedPosada(p)
               }}
               onViewportChange={slugs => setViewportSlugs(slugs)}
+              onUserPan={()=>{
+                // When user pans the map, clear the location filter — show what's in view
+                setQuery(''); setOverrideLat(undefined); setOverrideLng(undefined); setOverrideName(undefined)
+              }}
             />
           </div>
         </div>

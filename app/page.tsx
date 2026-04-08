@@ -27,11 +27,20 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false)
   const [activeTab, setActiveTab] = useState<'viajero' | 'posadero'>('viajero')
   const [destinoBusqueda, setDestinoBusqueda] = useState('')
-  const [sbSuggestions, setSbSuggestions] = useState<string[]>([])
+  // Search bar state
+  type SbSug = { label: string; sub: string; lat?: number; lng?: number; isStatic: boolean }
+  const [sbSuggestions, setSbSuggestions] = useState<SbSug[]>([])
   const [sbShowSug, setSbShowSug] = useState(false)
+  const [sbSugLoading, setSbSugLoading] = useState(false)
+  const [sbOverrideLat, setSbOverrideLat] = useState<number | undefined>()
+  const [sbOverrideLng, setSbOverrideLng] = useState<number | undefined>()
+  const [sbOverrideName, setSbOverrideName] = useState<string | undefined>()
   const [sbCheckIn, setSbCheckIn] = useState<Date | null>(null)
   const [sbCheckOut, setSbCheckOut] = useState<Date | null>(null)
   const [sbFlexible, setSbFlexible] = useState(false)
+  const [sbFlexType, setSbFlexType] = useState<'meses'|'semanas'>('meses')
+  const [sbFlexMonths, setSbFlexMonths] = useState<string[]>([])
+  const [sbFlexWeeks, setSbFlexWeeks] = useState(0)
   const [sbShowDate, setSbShowDate] = useState(false)
   const [sbShowPay, setSbShowPay] = useState(false)
   const [sbPago, setSbPago] = useState('')
@@ -42,6 +51,7 @@ export default function Home() {
   const sbDateRef = useRef<HTMLDivElement>(null)
   const sbPayRef = useRef<HTMLDivElement>(null)
   const sbInputRef = useRef<HTMLInputElement>(null)
+  const sbNomTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [statsVisible, setStatsVisible] = useState(false)
   const [slideIdx, setSlideIdx] = useState(0)
   const [slideKey, setSlideKey] = useState(0)
@@ -135,14 +145,36 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  const fetchSbSuggestions = useCallback(async (q: string) => {
+    if (!q.trim()) { setSbSuggestions([]); return }
+    setSbSugLoading(true)
+    const ql = q.toLowerCase()
+    const staticMatches = venezuelaLocations
+      .filter(l => [l.nombre, ...l.aliases].some(a => a.toLowerCase().includes(ql)))
+      .slice(0, 4)
+      .map(l => ({ label: l.nombre, sub: l.region, lat: l.lat, lng: l.lng, isStatic: true }))
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`)
+      const data = await res.json()
+      const nomMatches = data.slice(0, 8).map((r: any) => {
+        const addr = r.address
+        const sub = [addr?.state, addr?.municipality || addr?.city || addr?.town || addr?.village]
+          .filter(Boolean).join(', ') || 'Venezuela'
+        return { label: r.display_name.split(',')[0].trim(), sub, lat: parseFloat(r.lat), lng: parseFloat(r.lon), isStatic: false }
+      }).filter((n: any) => !staticMatches.some(s => s.label.toLowerCase() === n.label.toLowerCase()))
+      setSbSuggestions([...staticMatches, ...nomMatches].slice(0, 8))
+    } catch {
+      setSbSuggestions(staticMatches)
+    }
+    setSbSugLoading(false)
+  }, [])
+
   useEffect(() => {
+    if (sbNomTimer.current) clearTimeout(sbNomTimer.current)
     if (!destinoBusqueda.trim()) { setSbSuggestions([]); return }
-    const q = destinoBusqueda.toLowerCase()
-    const matches = venezuelaLocations
-      .filter(l => [l.nombre, ...l.aliases].some(a => a.toLowerCase().includes(q)))
-      .slice(0, 6).map(l => l.nombre)
-    setSbSuggestions(matches)
-  }, [destinoBusqueda])
+    sbNomTimer.current = setTimeout(() => fetchSbSuggestions(destinoBusqueda), 350)
+    return () => { if (sbNomTimer.current) clearTimeout(sbNomTimer.current) }
+  }, [destinoBusqueda, fetchSbSuggestions])
 
   function sbHandleDay(date: Date) {
     const today = new Date(); today.setHours(0,0,0,0)
@@ -160,9 +192,20 @@ export default function Home() {
     return d.toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })
   }
 
-  const sbDateLabel = sbFlexible ? 'Fechas flexibles' : sbCheckIn && sbCheckOut
-    ? `${sbFmtDate(sbCheckIn)} – ${sbFmtDate(sbCheckOut)}`
-    : sbCheckIn ? `${sbFmtDate(sbCheckIn)} – Salida` : 'Fechas'
+  const MONTHS_SHORT_LBL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+  const sbDateLabel = sbFlexible
+    ? sbFlexMonths.length > 0
+      ? sbFlexMonths.slice(0,2).map(m => {
+          const [y, mo] = m.split('-').map(Number)
+          const today = new Date()
+          return MONTHS_SHORT_LBL[mo-1] + (today.getFullYear() !== y ? ` ${y}` : '')
+        }).join(', ') + (sbFlexMonths.length > 2 ? '…' : '')
+      : sbFlexWeeks > 0
+        ? `${sbFlexWeeks} semana${sbFlexWeeks > 1 ? 's' : ''}`
+        : 'Fechas flexibles'
+    : sbCheckIn && sbCheckOut
+      ? `${sbFmtDate(sbCheckIn)} – ${sbFmtDate(sbCheckOut)}`
+      : sbCheckIn ? `${sbFmtDate(sbCheckIn)} – Salida` : 'Fechas'
 
   const sbNights = sbCheckIn && sbCheckOut
     ? Math.round((sbCheckOut.getTime() - sbCheckIn.getTime()) / 86400000) : 0
@@ -222,9 +265,17 @@ export default function Home() {
   function sbHandleSearch() {
     const params = new URLSearchParams()
     if (destinoBusqueda) params.set('q', destinoBusqueda)
-    if (sbFlexible) params.set('flexible', '1')
-    if (sbCheckIn) params.set('checkIn', sbCheckIn.toISOString().split('T')[0])
-    if (sbCheckOut) params.set('checkOut', sbCheckOut.toISOString().split('T')[0])
+    if (sbOverrideLat !== undefined) params.set('overrideLat', String(sbOverrideLat))
+    if (sbOverrideLng !== undefined) params.set('overrideLng', String(sbOverrideLng))
+    if (sbOverrideName)              params.set('overrideName', sbOverrideName)
+    if (sbFlexible) {
+      params.set('flexible', '1')
+      if (sbFlexMonths.length > 0) params.set('flexMonths', sbFlexMonths.join(','))
+      if (sbFlexWeeks > 0)         params.set('flexWeeks',  String(sbFlexWeeks))
+    } else {
+      if (sbCheckIn)  params.set('checkIn',  sbCheckIn.toISOString().split('T')[0])
+      if (sbCheckOut) params.set('checkOut', sbCheckOut.toISOString().split('T')[0])
+    }
     if (sbPago) params.set('pago', sbPago)
     router.push(`/buscar?${params.toString()}`)
   }
@@ -533,6 +584,23 @@ export default function Home() {
         .sb-pay-opt:hover { background:rgba(26,43,76,0.04); }
         .sb-pay-opt.sel { color:var(--cacao); font-weight:700; }
         .sb-pay-check { color:var(--cacao); }
+        /* Flexible picker */
+        .sb-flex-tabs{display:flex;gap:0.35rem;background:rgba(26,43,76,0.05);border-radius:999px;padding:0.25rem;margin-bottom:0.9rem;}
+        .sb-flex-tab{flex:1;padding:0.43rem;border-radius:999px;font-size:0.8rem;font-weight:600;font-family:inherit;border:none;background:transparent;color:rgba(26,43,76,0.5);cursor:pointer;transition:all 0.17s;}
+        .sb-flex-tab.on{background:white;color:#1A2B4C;box-shadow:0 2px 7px rgba(0,0,0,0.08);}
+        .sb-flex-hint{font-size:0.79rem;color:rgba(26,43,76,0.5);margin-bottom:0.75rem;}
+        .sb-flex-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.48rem;margin-bottom:0.75rem;}
+        @media(max-width:480px){.sb-flex-grid{grid-template-columns:repeat(3,1fr);}}
+        .sb-flex-month{border:1.5px solid rgba(26,43,76,0.1);border-radius:12px;padding:0.6rem 0.4rem;cursor:pointer;background:white;font-family:inherit;transition:all 0.17s;display:flex;flex-direction:column;align-items:center;gap:0.12rem;}
+        .sb-flex-month:hover{border-color:#1A2B4C;}
+        .sb-flex-month.on{border-color:#1A2B4C;background:#1A2B4C;}
+        .sb-flex-month.on .sb-flex-mname,.sb-flex-month.on .sb-flex-myear{color:white;}
+        .sb-flex-mname{font-size:0.85rem;font-weight:700;color:#1A2B4C;}
+        .sb-flex-myear{font-size:0.67rem;color:rgba(26,43,76,0.4);}
+        .sb-flex-weeks{display:flex;gap:0.45rem;flex-wrap:wrap;}
+        .sb-flex-chip{padding:0.48rem 1rem;border-radius:999px;border:1.5px solid rgba(26,43,76,0.1);background:white;font-size:0.81rem;font-weight:600;font-family:inherit;color:rgba(26,43,76,0.5);cursor:pointer;transition:all 0.17s;}
+        .sb-flex-chip:hover{border-color:#1A2B4C;color:#1A2B4C;}
+        .sb-flex-chip.on{background:#1A2B4C;color:white;border-color:#1A2B4C;}
         @media(max-width:780px){
           .sb-bar { flex-direction:column; border-radius:22px; }
           .sb-seg { border-right:none; border-bottom:1.5px solid rgba(26,43,76,0.08); border-radius:0; }
@@ -1024,23 +1092,43 @@ export default function Home() {
                 className="sb-input"
                 placeholder="¿A dónde vas?"
                 value={destinoBusqueda}
-                onChange={e => { setDestinoBusqueda(e.target.value); setSbShowSug(true) }}
+                onChange={e => { setDestinoBusqueda(e.target.value); setSbShowSug(true); setSbOverrideLat(undefined); setSbOverrideLng(undefined); setSbOverrideName(undefined) }}
                 onFocus={() => setSbShowSug(true)}
                 autoComplete="off"
               />
-              {sbShowSug && sbSuggestions.length > 0 && (
+              {sbShowSug && (destinoBusqueda.length > 0) && (
                 <div className="sb-suggest" ref={sbSugRef}>
-                  {sbSuggestions.map(s => {
-                    const loc = venezuelaLocations.find(l => l.nombre === s)
-                    return (
-                      <div key={s} className="sb-sug-item"
-                        onMouseDown={() => { setDestinoBusqueda(s); setSbShowSug(false) }}>
-                        <span>📍</span>
-                        <span>{s}</span>
-                        {loc && <span className="sb-sug-reg">{loc.region}</span>}
-                      </div>
-                    )
-                  })}
+                  {sbSugLoading && sbSuggestions.length === 0 && (
+                    <div className="sb-sug-item" style={{color:'rgba(26,43,76,0.45)',fontSize:'0.82rem'}}>
+                      Buscando en Venezuela…
+                    </div>
+                  )}
+                  {sbSuggestions.map((s, i) => (
+                    <div key={i} className="sb-sug-item"
+                      onMouseDown={() => {
+                        setDestinoBusqueda(s.label)
+                        setSbOverrideLat(s.lat); setSbOverrideLng(s.lng); setSbOverrideName(s.label)
+                        setSbShowSug(false)
+                      }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="rgba(26,43,76,0.45)" style={{flexShrink:0}}>
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      </svg>
+                      <span style={{flex:1,minWidth:0}}>
+                        <span style={{display:'block',fontWeight:500}}>{s.label}</span>
+                        <span style={{fontSize:'0.71rem',color:'rgba(26,43,76,0.45)'}}>{s.sub}</span>
+                      </span>
+                      {s.isStatic && (
+                        <span style={{fontSize:'0.6rem',fontWeight:700,padding:'0.12rem 0.38rem',borderRadius:'999px',background:'rgba(230,126,34,0.1)',color:'#E67E22',flexShrink:0}}>
+                          Popular
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  {!sbSugLoading && sbSuggestions.length === 0 && destinoBusqueda.length > 1 && (
+                    <div className="sb-sug-item" style={{color:'rgba(26,43,76,0.45)',fontSize:'0.82rem'}}>
+                      Sin resultados para &quot;{destinoBusqueda}&quot;
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1058,10 +1146,10 @@ export default function Home() {
               {sbShowDate && (
                 <div className="sb-date-panel" onClick={e => e.stopPropagation()}>
                   <div className="sb-date-modes">
-                    <button className={`sb-mode-btn ${!sbFlexible ? 'on' : ''}`} onClick={() => setSbFlexible(false)}>Fechas exactas</button>
-                    <button className={`sb-mode-btn ${sbFlexible ? 'on' : ''}`} onClick={() => { setSbFlexible(true); setSbCheckIn(null); setSbCheckOut(null); setTimeout(() => setSbShowDate(false), 150) }}>Fechas flexibles</button>
+                    <button className={`sb-mode-btn ${!sbFlexible ? 'on' : ''}`} onClick={() => { setSbFlexible(false); setSbFlexMonths([]); setSbFlexWeeks(0) }}>Fechas exactas</button>
+                    <button className={`sb-mode-btn ${sbFlexible ? 'on' : ''}`} onClick={() => { setSbFlexible(true); setSbCheckIn(null); setSbCheckOut(null) }}>Fechas flexibles</button>
                   </div>
-                  {!sbFlexible && (
+                  {!sbFlexible ? (
                     <>
                       <div className="sb-cal-nav">
                         <button className="sb-cal-nav-btn" onClick={() => setSbViewMonth(m => sbAddMonths(m, -1))}>‹</button>
@@ -1080,6 +1168,53 @@ export default function Home() {
                         <button className="sb-date-clear" onClick={() => { setSbCheckIn(null); setSbCheckOut(null); setSbDateStep('in') }}>Borrar</button>
                       </div>
                     </>
+                  ) : (
+                    /* Flexible picker — Airbnb style */
+                    (() => {
+                      const today = new Date()
+                      const MONTHS_SHORT_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+                      const upcoming18 = Array.from({length:18},(_,i)=>{
+                        const d=new Date(today.getFullYear(),today.getMonth()+i,1)
+                        const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
+                        return {key,label:MONTHS_SHORT_ES[d.getMonth()],year:d.getFullYear()}
+                      })
+                      return (
+                        <>
+                          <div className="sb-flex-tabs">
+                            <button className={`sb-flex-tab${sbFlexType==='meses'?' on':''}`} onClick={()=>setSbFlexType('meses')}>Meses</button>
+                            <button className={`sb-flex-tab${sbFlexType==='semanas'?' on':''}`} onClick={()=>setSbFlexType('semanas')}>Semanas</button>
+                          </div>
+                          {sbFlexType==='meses' ? (
+                            <>
+                              <p className="sb-flex-hint">¿En qué mes quieres viajar?</p>
+                              <div className="sb-flex-grid">
+                                {upcoming18.map(({key,label,year})=>(
+                                  <button key={key}
+                                    className={`sb-flex-month${sbFlexMonths.includes(key)?' on':''}`}
+                                    onClick={()=>setSbFlexMonths(prev=>prev.includes(key)?prev.filter(m=>m!==key):[...prev,key])}>
+                                    <span className="sb-flex-mname">{label}</span>
+                                    <span className="sb-flex-myear">{year}</span>
+                                  </button>
+                                ))}
+                              </div>
+                              {sbFlexMonths.length>0 && (
+                                <button style={{fontSize:'0.76rem',fontWeight:600,color:'rgba(26,43,76,0.55)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}
+                                  onClick={()=>setSbFlexMonths([])}>Borrar selección</button>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <p className="sb-flex-hint">¿Cuánto tiempo quieres quedarte?</p>
+                              <div className="sb-flex-weeks">
+                                {([{v:0,l:'Cualquier semana'},{v:1,l:'1 semana'},{v:2,l:'2 semanas'},{v:3,l:'3 semanas'},{v:4,l:'4 semanas'}] as const).map(({v,l})=>(
+                                  <button key={v} className={`sb-flex-chip${sbFlexWeeks===v?' on':''}`} onClick={()=>setSbFlexWeeks(v as number)}>{l}</button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </>
+                      )
+                    })()
                   )}
                 </div>
               )}
