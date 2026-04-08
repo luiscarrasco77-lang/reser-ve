@@ -614,7 +614,27 @@ function BuscarContent() {
         .list-col{width:52%;min-width:310px;overflow-y:auto;padding:1.05rem 1.2rem 5rem;scrollbar-width:thin;scrollbar-color:rgba(26,43,76,0.15) transparent;}
         .map-col{flex:1;padding:0.65rem;background:var(--sand);position:relative;z-index:0;isolation:isolate;}
         .map-inner{width:100%;height:100%;border-radius:20px;overflow:hidden;box-shadow:var(--sh);}
-        @media(max-width:860px){.page-wrap{height:auto;flex-direction:column;}.list-col{width:100%;overflow-y:visible;padding:1rem 1rem 5rem;}.map-col{display:none;height:60vw;max-height:460px;}.map-col.show{display:block;}.list-col.hide{display:none;}}
+
+        /* ── Mobile: full-screen map tab ─────────────────────────────────── */
+        @media(max-width:860px){
+          /* list view */
+          .page-wrap{height:auto;flex-direction:column;}
+          .list-col{width:100%;overflow-y:visible;padding:1rem 1rem 5rem;}
+          /* map col hidden by default; fills the screen when active */
+          .map-col{
+            display:none;
+            position:fixed;
+            inset:0;
+            padding:0;
+            z-index:10;
+            background:white;
+          }
+          .map-col.show{display:block;}
+          .map-inner{border-radius:0;box-shadow:none;}
+          .list-col.hide{display:none;}
+        }
+
+        /* Floating Lista/Mapa toggle */
         .m-tabs{display:none;position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--indigo);border-radius:999px;padding:0.32rem;gap:0.18rem;box-shadow:0 8px 28px rgba(26,43,76,0.35);z-index:50;}
         .m-tab{padding:0.52rem 1.15rem;border-radius:999px;font-size:0.81rem;font-weight:600;font-family:inherit;border:none;cursor:pointer;transition:all 0.18s;color:rgba(255,255,255,0.52);background:transparent;display:flex;align-items:center;gap:0.3rem;}
         .m-tab.on{background:white;color:var(--indigo);}
@@ -905,11 +925,30 @@ function BuscarContent() {
         </div>
 
         <div className={`map-col${mobileTab==='mapa'?' show':''}`}>
+          {/* Back button visible only on mobile map view */}
+          <button
+            onClick={()=>setMobileTab('lista')}
+            style={{
+              display:'none',position:'absolute',top:'0.9rem',left:'0.9rem',zIndex:20,
+              background:'white',border:'none',borderRadius:'999px',
+              padding:'0.5rem 0.9rem',fontSize:'0.82rem',fontWeight:700,
+              color:'var(--indigo)',boxShadow:'0 2px 12px rgba(0,0,0,0.18)',
+              cursor:'pointer',fontFamily:'inherit',
+              alignItems:'center',gap:'0.35rem',
+            }}
+            className="map-back-btn"
+            aria-label="Volver a la lista"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Lista
+          </button>
+          <style>{`.map-back-btn{display:none!important;} @media(max-width:860px){.map-back-btn{display:flex!important;}}`}</style>
           <div className="map-inner">
             <MapView
               results={searchResults}
               allPosadas={posadas}
               searchKey={searchKey}
+              mobileVisible={mobileTab === 'mapa'}
               hoveredSlug={hoveredSlug}
               onHover={setHoveredSlug}
               onSelect={slug=>{
