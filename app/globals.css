@@ -21,6 +21,8 @@
 }
 /* Keep marker icons round if needed — override individually */
 .leaflet-marker-icon { border-radius: 0 !important; }
+/* Our price-pill markers need their own radius back */
+.leaflet-container .mkr { border-radius: 999px !important; }
 
 * {
   box-sizing: border-box;
