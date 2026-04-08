@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense, useCallback } from 'react'
+import { useState, useEffect, useRef, Suspense, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -488,13 +488,18 @@ function BuscarContent() {
 
   const sliderPct = ((precioMax-40)/(200-40))*100
 
-  // Search
-  const opts: SearchOptions = { query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName }
-  const searchResults = searchPosadas(posadas, opts)
+  // Stable opts reference — only recalculate when search params actually change
+  // This breaks the infinite re-render loop caused by searchPosadas returning a new array every render
+  const searchResults = useMemo(
+    () => searchPosadas(posadas, { query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName }),
+    [query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName] // eslint-disable-line react-hooks/exhaustive-deps
+  )
 
-  // Merge viewport posadas (Airbnb pan-to-see behaviour):
-  // when user pans the map, show posadas now in view even if not in search results
-  const results = (() => {
+  // searchKey changes only when the USER issues a new search (not on viewport pan)
+  const searchKey = `${query}|${overrideLat}|${overrideLng}|${sort}|${metodoPago}|${precioMax}`
+
+  // Merge viewport posadas (Airbnb pan-to-see behaviour)
+  const results = useMemo(() => {
     if (!viewportSlugs || viewportSlugs.length === 0) return searchResults
     const inSearch = new Set(searchResults.map(r => r.posada.slug))
     const extra = posadas
@@ -503,7 +508,7 @@ function BuscarContent() {
       .filter(p => !metodoPago || p.metodoPago.some(m => m.toLowerCase().includes(metodoPago.toLowerCase())))
       .map(p => ({ posada: p, distanceKm: null as number | null, isProximity: true }))
     return [...searchResults, ...extra]
-  })()
+  }, [searchResults, viewportSlugs, precioMax, metodoPago]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isProximity = results.some(r=>r.isProximity)
   const resolvedLoc = overrideName || (query ? resolveLocation(query)?.location.nombre : undefined)
@@ -904,6 +909,7 @@ function BuscarContent() {
             <MapView
               results={searchResults}
               allPosadas={posadas}
+              searchKey={searchKey}
               hoveredSlug={hoveredSlug}
               onHover={setHoveredSlug}
               onSelect={slug=>{
@@ -912,7 +918,6 @@ function BuscarContent() {
               }}
               onViewportChange={slugs => setViewportSlugs(slugs)}
               onUserPan={()=>{
-                // When user pans the map, clear the location filter — show what's in view
                 setQuery(''); setOverrideLat(undefined); setOverrideLng(undefined); setOverrideName(undefined)
               }}
             />
