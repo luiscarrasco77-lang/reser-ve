@@ -372,7 +372,7 @@ export default function Home() {
           min-height:100dvh; position:relative;
           display:flex; flex-direction:column;
           align-items:center; justify-content:center;
-          overflow:hidden; padding:7rem 1.5rem 3rem;
+          overflow:visible; padding:7rem 1.5rem 3rem;
         }
         /* ─── HERO SLIDESHOW ─── */
         .hero-slideshow { position:absolute; inset:0; overflow:hidden; }
@@ -460,7 +460,7 @@ export default function Home() {
         .btn-secondary:hover { background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.75); transform:translateY(-2px); }
 
         /* ─── SEARCH BAR (Airbnb-style) ─── */
-        .search-wrap { position:relative; z-index:10; width:100%; max-width:880px; margin:2rem auto 0; }
+        .search-wrap { position:relative; z-index:500; width:100%; max-width:880px; margin:2rem auto 0; }
         .sb-bar {
           display:flex; align-items:stretch;
           background:rgba(255,255,255,0.97); border:1px solid rgba(255,255,255,0.7);
@@ -495,7 +495,7 @@ export default function Home() {
           position:absolute; top:calc(100% + 10px); left:0;
           background:white; border:1.5px solid rgba(26,43,76,0.09);
           border-radius:18px; box-shadow:0 16px 52px rgba(26,43,76,0.16);
-          z-index:300; overflow:hidden;
+          z-index:600; overflow:visible;
         }
         .sb-suggest { min-width:240px; }
         .sb-sug-item { display:flex; align-items:center; gap:0.7rem; padding:0.8rem 1rem; font-size:0.88rem; color:#1A2B4C; cursor:pointer; transition:background 0.14s; }

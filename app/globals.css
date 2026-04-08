@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Leaflet map tiles */
+@import 'leaflet/dist/leaflet.css';
+
 * {
   box-sizing: border-box;
   margin: 0;
