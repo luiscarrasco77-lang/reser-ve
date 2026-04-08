@@ -96,6 +96,10 @@ export type SearchOptions = {
   metodoPago?: string // '' = any
   precioMax?: number
   sort?: 'rating' | 'precio' | 'distancia'
+  // Override lat/lng from external geocoder (e.g. Nominatim) — bypasses static list
+  overrideLat?: number
+  overrideLng?: number
+  overrideName?: string // display name for the resolved location
 }
 
 // ─── Main search function ────────────────────────────────────────────────────
@@ -103,7 +107,11 @@ export function searchPosadas(posadas: Posada[], opts: SearchOptions): SearchRes
   const { query = '', metodoPago = '', precioMax = 999, sort = 'rating' } = opts
 
   let results: SearchResult[]
-  const locationMatch = resolveLocation(query)
+
+  // Use override coords (from Nominatim) if provided, otherwise fall back to static list
+  const locationMatch = (opts.overrideLat !== undefined && opts.overrideLng !== undefined)
+    ? { location: { id: 'override', nombre: opts.overrideName || query, lat: opts.overrideLat, lng: opts.overrideLng, region: '', aliases: [] }, score: 100 }
+    : resolveLocation(query)
 
   if (!query.trim()) {
     // No query — return everything

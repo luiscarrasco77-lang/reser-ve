@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -13,15 +13,17 @@ const MapView = dynamic(() => import('@/components/MapView'), {
   loading: () => (
     <div style={{ width: '100%', height: '100%', background: '#e8edf0', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center', color: '#7A8699', fontFamily: 'inherit', fontSize: '0.9rem' }}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#7A8699" strokeWidth="1.5" style={{ marginBottom: '0.5rem', display: 'block', margin: '0 auto 0.5rem' }}><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#7A8699" strokeWidth="1.5" style={{ display: 'block', margin: '0 auto 0.5rem' }}><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
         Cargando mapa…
       </div>
     </div>
   ),
 })
 
-const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
-const DAYS   = ['Do','Lu','Ma','Mi','Ju','Vi','Sá']
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+const DAYS = ['Do','Lu','Ma','Mi','Ju','Vi','Sá']
 
 function fmtDate(d: Date | null) {
   if (!d) return ''
@@ -32,6 +34,7 @@ function isSameDay(a: Date, b: Date) {
 }
 function addMonths(d: Date, n: number) { const r=new Date(d); r.setMonth(r.getMonth()+n); return r }
 
+// ─── Calendar (exact dates) ───────────────────────────────────────────────────
 function Calendar({
   checkIn, checkOut, onCheckIn, onCheckOut, compact=false,
 }: {
@@ -63,7 +66,7 @@ function Calendar({
     const end = checkOut || hover
     return (
       <div className="cal-col" key={`${year}-${month}`}>
-        <div className="cal-mname">{MONTHS[month]} {year}</div>
+        <div className="cal-mname">{MONTHS_ES[month]} {year}</div>
         <div className="cal-grid">
           {DAYS.map(d=><div key={d} className="cal-dname">{d}</div>)}
           {cells.map((date,i)=>{
@@ -122,6 +125,83 @@ function Calendar({
   )
 }
 
+// ─── Flexible dates picker (Airbnb-style) ────────────────────────────────────
+function FlexiblePicker({
+  flexType, onFlexType,
+  flexMonths, onFlexMonths,
+  flexWeeks, onFlexWeeks,
+}: {
+  flexType: 'meses'|'semanas'
+  onFlexType: (t:'meses'|'semanas')=>void
+  flexMonths: string[]
+  onFlexMonths: (m:string[])=>void
+  flexWeeks: number
+  onFlexWeeks: (w:number)=>void
+}) {
+  // Build upcoming 18 months
+  const today = new Date()
+  const upcoming: {key:string;label:string;year:number;month:number}[] = []
+  for (let i=0;i<18;i++) {
+    const d = addMonths(new Date(today.getFullYear(),today.getMonth(),1), i)
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
+    upcoming.push({ key, label: MONTHS_SHORT[d.getMonth()], year: d.getFullYear(), month: d.getMonth() })
+  }
+
+  function toggleMonth(key: string) {
+    onFlexMonths(flexMonths.includes(key) ? flexMonths.filter(m=>m!==key) : [...flexMonths, key])
+  }
+
+  const WEEK_OPTS = [
+    {v:1,l:'1 semana'},
+    {v:2,l:'2 semanas'},
+    {v:3,l:'3 semanas'},
+    {v:4,l:'4 semanas'},
+  ]
+
+  return (
+    <div className="flex-picker">
+      {/* Type tabs */}
+      <div className="flex-tabs">
+        <button className={`flex-tab${flexType==='meses'?' on':''}`} onClick={()=>onFlexType('meses')}>Meses</button>
+        <button className={`flex-tab${flexType==='semanas'?' on':''}`} onClick={()=>onFlexType('semanas')}>Semanas</button>
+      </div>
+
+      {flexType==='meses' && (
+        <>
+          <p className="flex-hint">¿En qué mes quieres viajar?</p>
+          <div className="flex-months-grid">
+            {upcoming.map(({key,label,year})=>(
+              <button key={key} className={`flex-month${flexMonths.includes(key)?' on':''}`}
+                onClick={()=>toggleMonth(key)}>
+                <span className="flex-month-name">{label}</span>
+                <span className="flex-month-year">{year}</span>
+              </button>
+            ))}
+          </div>
+          {flexMonths.length>0 && (
+            <div className="flex-clear-row">
+              <button className="flex-clear" onClick={()=>onFlexMonths([])}>Borrar selección</button>
+            </div>
+          )}
+        </>
+      )}
+
+      {flexType==='semanas' && (
+        <>
+          <p className="flex-hint">¿Cuánto tiempo quieres quedarte?</p>
+          <div className="flex-weeks-row">
+            <button className={`flex-week-chip${flexWeeks===0?' on':''}`} onClick={()=>onFlexWeeks(0)}>Cualquier semana</button>
+            {WEEK_OPTS.map(({v,l})=>(
+              <button key={v} className={`flex-week-chip${flexWeeks===v?' on':''}`} onClick={()=>onFlexWeeks(v)}>{l}</button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ─── Posada Detail Drawer ─────────────────────────────────────────────────────
 function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }) {
   const router = useRouter()
   const [imgIdx,   setImgIdx]   = useState(0)
@@ -149,7 +229,6 @@ function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }
       <button className="drw-close" onClick={onClose} aria-label="Cerrar">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-
       <div className="drw-gal">
         <img src={posada.imgs[imgIdx]} alt={posada.nombre} className="drw-img" key={imgIdx}/>
         <div className="drw-dots">
@@ -161,7 +240,6 @@ function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }
         {imgIdx<posada.imgs.length-1 && <button className="drw-arrow right" onClick={()=>setImgIdx(i=>i+1)}>›</button>}
         <div className="drw-tipo-badge">{posada.tipo}</div>
       </div>
-
       <div className="drw-body">
         <div className="drw-header">
           <div style={{flex:1,minWidth:0}}>
@@ -179,15 +257,11 @@ function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }
             <span className="drw-unit">/noche</span>
           </div>
         </div>
-
         <div className="drw-tags">
           {posada.tags.map(t=><span key={t} className="drw-tag">{t}</span>)}
         </div>
-
         <p className="drw-desc">{posada.descripcion}</p>
-
         <div className="drw-div"/>
-
         <div className="drw-sec-title">Selecciona tus fechas</div>
         <div className="drw-dates-bar" onClick={()=>setShowDates(v=>!v)}>
           <div className="drw-date-seg">
@@ -208,9 +282,7 @@ function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }
             <Calendar checkIn={checkIn} checkOut={checkOut} onCheckIn={setCheckIn} onCheckOut={setCheckOut} compact/>
           </div>
         )}
-
         <div className="drw-div"/>
-
         <div className="drw-sec-title">Método de pago</div>
         <div className="drw-pay-sel" onClick={()=>setShowPago(v=>!v)}>
           <span className={pago?'':'ph'}>{pago||'Selecciona un método'}</span>
@@ -228,16 +300,13 @@ function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }
         <div className="drw-accepted">
           {posada.metodoPago.map(m=><span key={m} className="drw-pay-badge">{m}</span>)}
         </div>
-
         <div className="drw-div"/>
-
         {nights>0 && (
           <div className="drw-price-summary">
             <div className="dps-row"><span>${posada.precio} × {nights} noche{nights>1?'s':''}</span><span>${total}</span></div>
             <div className="dps-total"><span>Total estimado</span><span>${total} USD</span></div>
           </div>
         )}
-
         <div className="drw-ctas">
           <button className="drw-btn-res" onClick={handleReserve}>
             {nights>0 ? `Reservar · $${total} USD` : 'Reservar ahora'}
@@ -246,7 +315,6 @@ function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }
             Ver todos los detalles →
           </Link>
         </div>
-
         <div className="drw-host">
           <div className="drw-avatar">{posada.host.nombre[0]}</div>
           <div>
@@ -259,6 +327,17 @@ function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }
   )
 }
 
+// ─── Nominatim suggestion type ────────────────────────────────────────────────
+type NominatimResult = {
+  place_id: number
+  display_name: string
+  lat: string
+  lon: string
+  type: string
+  address?: { state?: string; country?: string; municipality?: string; city?: string; town?: string; village?: string }
+}
+
+// ─── Payment filter options ───────────────────────────────────────────────────
 const PAY_OPTS = [
   {value:'',label:'Cualquier opción'},
   {value:'Zelle',label:'Zelle'},
@@ -268,31 +347,48 @@ const PAY_OPTS = [
   {value:'Tarjeta',label:'Tarjeta de crédito'},
 ]
 
+// ─── Main ─────────────────────────────────────────────────────────────────────
 function BuscarContent() {
   const searchParams = useSearchParams()
 
-  const [query,      setQuery]      = useState(searchParams.get('q') || '')
-  const [checkIn,    setCheckIn]    = useState<Date|null>(null)
-  const [checkOut,   setCheckOut]   = useState<Date|null>(null)
-  const [flexible,   setFlexible]   = useState(!!searchParams.get('flexible'))
+  // Location
+  const [query,       setQuery]       = useState(searchParams.get('q') || '')
+  const [overrideLat, setOverrideLat] = useState<number|undefined>(undefined)
+  const [overrideLng, setOverrideLng] = useState<number|undefined>(undefined)
+  const [overrideName,setOverrideName]= useState<string|undefined>(undefined)
+
+  // Dates
+  const [dateMode, setDateMode] = useState<'exactas'|'flexibles'>('exactas')
+  const [checkIn,  setCheckIn]  = useState<Date|null>(null)
+  const [checkOut, setCheckOut] = useState<Date|null>(null)
+  // Flexible
+  const [flexType,   setFlexType]   = useState<'meses'|'semanas'>('meses')
+  const [flexMonths, setFlexMonths] = useState<string[]>([])
+  const [flexWeeks,  setFlexWeeks]  = useState(0)
+
+  // Filters
   const [metodoPago, setMetodoPago] = useState(searchParams.get('pago') || '')
   const [precioMax,  setPrecioMax]  = useState(200)
   const [sort,       setSort]       = useState<'rating'|'precio'|'distancia'>('rating')
 
+  // UI state
   const [showDate,    setShowDate]    = useState(false)
   const [showPay,     setShowPay]     = useState(false)
-  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [suggestions, setSuggestions] = useState<Array<{label:string;sub:string;lat?:number;lng?:number;isStatic:boolean}>>([])
   const [showSug,     setShowSug]     = useState(false)
+  const [sugLoading,  setSugLoading]  = useState(false)
 
   const [hoveredSlug,    setHoveredSlug]    = useState<string|null>(null)
   const [selectedPosada, setSelectedPosada] = useState<Posada|null>(null)
   const [mobileTab,      setMobileTab]      = useState<'lista'|'mapa'>('lista')
 
-  const inputRef = useRef<HTMLInputElement>(null)
-  const dateRef  = useRef<HTMLDivElement>(null)
-  const payRef   = useRef<HTMLDivElement>(null)
-  const sugRef   = useRef<HTMLDivElement>(null)
+  const inputRef  = useRef<HTMLInputElement>(null)
+  const dateRef   = useRef<HTMLDivElement>(null)
+  const payRef    = useRef<HTMLDivElement>(null)
+  const sugRef    = useRef<HTMLDivElement>(null)
+  const nomTimer  = useRef<ReturnType<typeof setTimeout>|null>(null)
 
+  // Close panels on outside click
   useEffect(()=>{
     function h(e:MouseEvent){
       if (dateRef.current && !dateRef.current.contains(e.target as Node)) setShowDate(false)
@@ -303,33 +399,97 @@ function BuscarContent() {
     return ()=>document.removeEventListener('mousedown',h)
   },[])
 
+  // Escape key closes drawer
   useEffect(()=>{
-    if (!query.trim()){setSuggestions([]);return}
-    const q=query.toLowerCase()
-    setSuggestions(
-      venezuelaLocations
-        .filter(l=>[l.nombre,...l.aliases].some(a=>a.toLowerCase().includes(q)))
-        .slice(0,6).map(l=>l.nombre)
-    )
-  },[query])
-
-  useEffect(()=>{
-    function h(e:KeyboardEvent){ if(e.key==='Escape') setSelectedPosada(null) }
+    const h=(e:KeyboardEvent)=>{ if(e.key==='Escape') setSelectedPosada(null) }
     document.addEventListener('keydown',h)
     return ()=>document.removeEventListener('keydown',h)
   },[])
 
-  const opts: SearchOptions = { query, metodoPago, precioMax, sort }
-  const results = searchPosadas(posadas, opts)
-  const isProximity = results.some(r=>r.isProximity)
-  const resolvedLoc = query ? resolveLocation(query) : null
+  // Autocomplete: static list + Nominatim
+  const fetchSuggestions = useCallback(async (q: string) => {
+    if (!q.trim()) { setSuggestions([]); return }
+    setSugLoading(true)
 
-  const dateLabel = flexible
-    ? 'Fechas flexibles'
+    // 1) Static matches
+    const ql = q.toLowerCase()
+    const staticMatches = venezuelaLocations
+      .filter(l=>[l.nombre,...l.aliases].some(a=>a.toLowerCase().includes(ql)))
+      .slice(0,4)
+      .map(l=>({ label:l.nombre, sub:l.region, lat:l.lat, lng:l.lng, isStatic:true }))
+
+    // 2) Nominatim (all Venezuela)
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?` +
+        `q=${encodeURIComponent(q+', Venezuela')}` +
+        `&countrycodes=ve&format=json&limit=6&addressdetails=1&accept-language=es`
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } })
+      const data: NominatimResult[] = await res.json()
+
+      const nomMatches = data
+        .filter(r => r.address?.country?.toLowerCase().includes('venezuela') || r.display_name.toLowerCase().includes('venezuela'))
+        .slice(0,6)
+        .map(r => {
+          const addr = r.address
+          const sub = [addr?.state, addr?.municipality].filter(Boolean).join(', ') || 'Venezuela'
+          // Short label: first part of display_name
+          const label = r.display_name.split(',')[0].trim()
+          return { label, sub, lat:parseFloat(r.lat), lng:parseFloat(r.lon), isStatic:false }
+        })
+        // Deduplicate against static
+        .filter(n=>!staticMatches.some(s=>s.label.toLowerCase()===n.label.toLowerCase()))
+
+      setSuggestions([...staticMatches, ...nomMatches].slice(0,8))
+    } catch {
+      setSuggestions(staticMatches)
+    }
+    setSugLoading(false)
+  }, [])
+
+  useEffect(()=>{
+    if (nomTimer.current) clearTimeout(nomTimer.current)
+    if (!query.trim()) { setSuggestions([]); return }
+    nomTimer.current = setTimeout(()=>fetchSuggestions(query), 350)
+    return ()=>{ if(nomTimer.current) clearTimeout(nomTimer.current) }
+  }, [query, fetchSuggestions])
+
+  function selectSuggestion(s:{label:string;sub:string;lat?:number;lng?:number}) {
+    setQuery(s.label)
+    if (s.lat!==undefined && s.lng!==undefined) {
+      setOverrideLat(s.lat); setOverrideLng(s.lng); setOverrideName(s.label)
+    } else {
+      setOverrideLat(undefined); setOverrideLng(undefined); setOverrideName(undefined)
+    }
+    setShowSug(false)
+  }
+
+  function clearLocation() {
+    setQuery(''); setOverrideLat(undefined); setOverrideLng(undefined); setOverrideName(undefined)
+    setSuggestions([])
+  }
+
+  // Date label
+  const isFlexible = dateMode==='flexibles'
+  const dateLabel = isFlexible
+    ? flexMonths.length>0
+      ? flexMonths.slice(0,2).map(m=>{
+          const [y,mo]=m.split('-').map(Number)
+          return MONTHS_SHORT[mo-1]+(new Date().getFullYear()!==y?` ${y}`:'')
+        }).join(', ')+(flexMonths.length>2?'…':'')
+      : flexType==='semanas' && flexWeeks>0
+        ? `${flexWeeks} semana${flexWeeks>1?'s':''}`
+        : 'Fechas flexibles'
     : checkIn&&checkOut ? `${fmtDate(checkIn)} – ${fmtDate(checkOut)}`
-    : checkIn ? `${fmtDate(checkIn)} – Salida` : 'Fechas'
+    : checkIn ? `${fmtDate(checkIn)} – Salida`
+    : 'Fechas'
 
   const sliderPct = ((precioMax-40)/(200-40))*100
+
+  // Search
+  const opts: SearchOptions = { query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName }
+  const results = searchPosadas(posadas, opts)
+  const isProximity = results.some(r=>r.isProximity)
+  const resolvedLoc = overrideName || (query ? resolveLocation(query)?.location.nombre : undefined)
 
   return (
     <>
@@ -354,24 +514,36 @@ function BuscarContent() {
         .sb-lbl{font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.14rem;}
         .sb-val{font-size:0.86rem;font-weight:500;color:var(--indigo);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
         .sb-ph{color:var(--muted)!important;font-weight:400!important;}
-        .sb-txt{border:none;outline:none;font-size:0.86rem;font-family:inherit;font-weight:500;color:var(--indigo);background:transparent;width:100%;padding:0;}
+        .sb-loc-row{display:flex;align-items:center;gap:0.4rem;}
+        .sb-txt{border:none;outline:none;font-size:0.86rem;font-family:inherit;font-weight:500;color:var(--indigo);background:transparent;flex:1;padding:0;min-width:0;}
         .sb-txt::placeholder{color:var(--muted);font-weight:400;}
+        .sb-clear{background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.9rem;padding:0 0.1rem;flex-shrink:0;display:flex;align-items:center;transition:color 0.15s;}
+        .sb-clear:hover{color:var(--indigo);}
         .sb-go{flex-shrink:0;display:flex;align-items:center;gap:0.42rem;padding:0 1.05rem;margin:0.32rem;border-radius:12px;background:var(--cacao);color:white;border:none;font-size:0.86rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.18s;white-space:nowrap;min-height:40px;}
         .sb-go:hover{background:var(--cacao-dark);}
         @media(max-width:680px){.sb-bar{flex-direction:column;border-radius:18px;}.sb-seg{border-right:none;border-bottom:1.5px solid var(--line);}.sb-seg:last-of-type{border-bottom:none;}.sb-go{margin:0.38rem;justify-content:center;}}
-        .sb-drop{position:absolute;top:calc(100% + 9px);left:0;background:white;border:1.5px solid var(--line);border-radius:16px;box-shadow:var(--shl);z-index:300;overflow:hidden;min-width:230px;}
-        .sb-sug-row{display:flex;align-items:center;gap:0.65rem;padding:0.75rem 1rem;font-size:0.86rem;color:var(--indigo);cursor:pointer;transition:background 0.13s;}
+        /* Suggestion dropdown */
+        .sb-drop{position:absolute;top:calc(100% + 9px);left:0;background:white;border:1.5px solid var(--line);border-radius:16px;box-shadow:var(--shl);z-index:300;overflow:hidden;min-width:260px;max-height:340px;overflow-y:auto;}
+        .sb-sug-row{display:flex;align-items:center;gap:0.65rem;padding:0.72rem 1rem;font-size:0.85rem;color:var(--indigo);cursor:pointer;transition:background 0.12s;}
         .sb-sug-row:hover{background:rgba(26,43,76,0.04);}
-        .sb-sug-reg{font-size:0.71rem;color:var(--muted);margin-left:auto;padding-left:0.35rem;white-space:nowrap;}
-        .sb-date-drop{position:absolute;top:calc(100% + 9px);left:50%;transform:translateX(-50%);background:white;border:1.5px solid var(--line);border-radius:20px;box-shadow:var(--shl);z-index:300;padding:1.05rem;min-width:min(620px,90vw);}
-        @media(max-width:620px){.sb-date-drop{left:0;transform:none;min-width:calc(100vw - 2rem);}}
+        .sb-sug-icon{font-size:0.85rem;flex-shrink:0;}
+        .sb-sug-main{flex:1;min-width:0;}
+        .sb-sug-name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .sb-sug-sub{font-size:0.71rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .sb-sug-badge{font-size:0.6rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:999px;background:rgba(230,126,34,0.12);color:var(--cacao);flex-shrink:0;}
+        .sb-sug-loading{padding:0.8rem 1rem;font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:0.5rem;}
+        /* Date picker panel */
+        .sb-date-drop{position:absolute;top:calc(100% + 9px);left:50%;transform:translateX(-50%);background:white;border:1.5px solid var(--line);border-radius:20px;box-shadow:var(--shl);z-index:300;padding:1.05rem;min-width:min(640px,90vw);}
+        @media(max-width:640px){.sb-date-drop{left:0;transform:none;min-width:calc(100vw - 2rem);}}
         .sb-modes{display:flex;gap:0.32rem;background:rgba(26,43,76,0.05);border-radius:999px;padding:0.24rem;margin-bottom:0.9rem;}
         .sb-mode{flex:1;padding:0.43rem;border-radius:999px;font-size:0.8rem;font-weight:600;font-family:inherit;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all 0.17s;}
         .sb-mode.on{background:white;color:var(--indigo);box-shadow:0 2px 7px rgba(0,0,0,0.08);}
+        /* Payment dropdown */
         .sb-pay-drop{position:absolute;top:calc(100% + 9px);right:0;left:auto;background:white;border:1.5px solid var(--line);border-radius:16px;box-shadow:var(--shl);z-index:300;min-width:210px;overflow:hidden;}
         .sb-pay-row{display:flex;align-items:center;justify-content:space-between;padding:0.76rem 1.1rem;font-size:0.86rem;font-weight:500;color:var(--indigo);cursor:pointer;transition:background 0.13s;gap:0.45rem;}
         .sb-pay-row:hover{background:rgba(26,43,76,0.04);}
         .sb-pay-row.sel{color:var(--cacao);font-weight:700;}
+        /* Calendar */
         .cal-wrap{padding:0.15rem 0;}
         .cal-nav{display:flex;align-items:center;margin-bottom:0.62rem;}
         .cal-nav-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);background:white;color:var(--indigo);font-size:0.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.16s;flex-shrink:0;}
@@ -393,6 +565,27 @@ function BuscarContent() {
         .cal-footer{display:flex;align-items:center;justify-content:space-between;margin-top:0.85rem;padding-top:0.85rem;border-top:1px solid var(--line);}
         .cal-summary{font-size:0.8rem;color:var(--muted);}
         .cal-clear{font-size:0.78rem;font-weight:600;color:var(--indigo);background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;}
+        /* Flexible picker */
+        .flex-picker{padding:0.1rem 0;}
+        .flex-tabs{display:flex;gap:0.35rem;background:rgba(26,43,76,0.05);border-radius:999px;padding:0.25rem;margin-bottom:0.9rem;}
+        .flex-tab{flex:1;padding:0.45rem;border-radius:999px;font-size:0.81rem;font-weight:600;font-family:inherit;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all 0.17s;}
+        .flex-tab.on{background:white;color:var(--indigo);box-shadow:0 2px 7px rgba(0,0,0,0.08);}
+        .flex-hint{font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;}
+        .flex-months-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;margin-bottom:0.75rem;}
+        @media(max-width:480px){.flex-months-grid{grid-template-columns:repeat(3,1fr);}}
+        .flex-month{border:1.5px solid var(--line);border-radius:12px;padding:0.62rem 0.5rem;cursor:pointer;background:white;font-family:inherit;transition:all 0.17s;display:flex;flex-direction:column;align-items:center;gap:0.15rem;}
+        .flex-month:hover{border-color:var(--indigo);}
+        .flex-month.on{border-color:var(--indigo);background:var(--indigo);}
+        .flex-month.on .flex-month-name,.flex-month.on .flex-month-year{color:white;}
+        .flex-month-name{font-size:0.86rem;font-weight:700;color:var(--indigo);}
+        .flex-month-year{font-size:0.68rem;color:var(--muted);}
+        .flex-clear-row{display:flex;justify-content:flex-end;}
+        .flex-clear{font-size:0.78rem;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;}
+        .flex-weeks-row{display:flex;gap:0.5rem;flex-wrap:wrap;}
+        .flex-week-chip{padding:0.5rem 1rem;border-radius:999px;border:1.5px solid var(--line);background:white;font-size:0.82rem;font-weight:600;font-family:inherit;color:var(--muted);cursor:pointer;transition:all 0.17s;}
+        .flex-week-chip:hover{border-color:var(--indigo);color:var(--indigo);}
+        .flex-week-chip.on{background:var(--indigo);color:white;border-color:var(--indigo);}
+        /* Layout */
         .page-wrap{display:flex;height:calc(100dvh - 57px - 62px);}
         .list-col{width:52%;min-width:310px;overflow-y:auto;padding:1.05rem 1.2rem 5rem;scrollbar-width:thin;scrollbar-color:rgba(26,43,76,0.15) transparent;}
         .map-col{flex:1;padding:0.65rem;background:var(--sand);}
@@ -402,6 +595,7 @@ function BuscarContent() {
         .m-tab{padding:0.52rem 1.15rem;border-radius:999px;font-size:0.81rem;font-weight:600;font-family:inherit;border:none;cursor:pointer;transition:all 0.18s;color:rgba(255,255,255,0.52);background:transparent;display:flex;align-items:center;gap:0.3rem;}
         .m-tab.on{background:white;color:var(--indigo);}
         @media(max-width:860px){.m-tabs{display:flex;}}
+        /* Price */
         .price-box{background:white;border:1.5px solid var(--line);border-radius:14px;padding:0.88rem 1.1rem;margin-bottom:1rem;}
         .price-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.52rem;}
         .price-lbl{font-size:0.69rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);}
@@ -413,6 +607,7 @@ function BuscarContent() {
         .slider::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--cacao);border:3px solid white;box-shadow:0 2px 7px rgba(230,126,34,0.35);cursor:pointer;}
         .slider::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--cacao);border:3px solid white;box-shadow:0 2px 7px rgba(230,126,34,0.35);}
         .price-ends{display:flex;justify-content:space-between;font-size:0.66rem;color:var(--muted);margin-top:0.1rem;}
+        /* Results */
         .res-hdr{margin-bottom:0.88rem;}
         .res-count{font-size:0.82rem;color:var(--muted);margin-bottom:0.62rem;}
         .res-count strong{color:var(--indigo);font-weight:700;}
@@ -421,10 +616,12 @@ function BuscarContent() {
         .sort-chip{padding:0.3rem 0.72rem;border-radius:999px;font-size:0.76rem;font-weight:600;font-family:inherit;border:1.5px solid var(--line);background:white;color:var(--muted);cursor:pointer;transition:all 0.16s;}
         .sort-chip.on{background:var(--indigo);color:white;border-color:var(--indigo);}
         .sort-chip:hover:not(.on){border-color:rgba(26,43,76,0.2);color:var(--indigo);}
+        /* Proximity */
         .prox-box{display:flex;align-items:flex-start;gap:0.68rem;background:rgba(230,126,34,0.07);border:1.5px solid rgba(230,126,34,0.2);border-radius:13px;padding:0.82rem 0.95rem;margin-bottom:0.95rem;}
         .prox-icon{font-size:1.15rem;flex-shrink:0;}
         .prox-txt p{font-size:0.86rem;font-weight:600;color:var(--indigo);margin-bottom:0.13rem;}
         .prox-txt span{font-size:0.78rem;color:var(--muted);}
+        /* Cards */
         .cards{display:flex;flex-direction:column;gap:0.85rem;}
         .card{background:white;border:1.5px solid var(--line);border-radius:17px;overflow:hidden;display:flex;box-shadow:var(--sh);transition:all 0.24s;cursor:pointer;}
         .card:hover,.card.hov{box-shadow:var(--shl);transform:translateY(-2px);border-color:rgba(230,126,34,0.25);}
@@ -450,6 +647,7 @@ function BuscarContent() {
         .empty{text-align:center;padding:3.5rem 1.5rem;}
         .empty p{font-size:1.02rem;font-weight:700;color:var(--indigo);margin-bottom:0.32rem;}
         .empty span{font-size:0.84rem;color:var(--muted);}
+        /* Drawer */
         .drw-overlay{position:fixed;inset:0;background:rgba(15,27,48,0.48);z-index:400;backdrop-filter:blur(4px);display:flex;justify-content:flex-end;}
         @media(max-width:660px){.drw-overlay{align-items:flex-end;}}
         .drw{background:white;width:min(450px,96vw);height:100dvh;display:flex;flex-direction:column;box-shadow:-20px 0 80px rgba(0,0,0,0.18);animation:drwIn 0.28s cubic-bezier(0.16,1,0.3,1) both;overflow:hidden;position:relative;}
@@ -512,53 +710,73 @@ function BuscarContent() {
         .drw-host-info{font-size:0.74rem;color:var(--muted);margin-top:0.12rem;}
       `}</style>
 
+      {/* NAV */}
       <nav className="nav">
         <Link href="/" className="logo">RESER<span>-VE</span></Link>
         <div className="nav-links">
-          <Link href="/buscar" className="nav-link">Destinos</Link>
+          <Link href="/#destinos" className="nav-link">Destinos</Link>
           <Link href="/registro-posada" className="nav-link">Posaderos</Link>
           <Link href="/#como-funciona" className="nav-link">Cómo funciona</Link>
           <Link href="/registro-posada" className="nav-cta">Registra tu posada</Link>
         </div>
       </nav>
 
+      {/* SEARCH BAR */}
       <div className="sb-wrap">
         <div className="sb-bar">
+          {/* Location */}
           <div className="sb-seg" style={{flex:'1.6'}}>
             <div className="sb-lbl">Destino</div>
-            <input ref={inputRef} className="sb-txt" placeholder="¿A dónde vas?" value={query}
-              onChange={e=>{setQuery(e.target.value);setShowSug(true)}}
-              onFocus={()=>setShowSug(true)} autoComplete="off"/>
-            {showSug && suggestions.length>0 && (
+            <div className="sb-loc-row">
+              <input ref={inputRef} className="sb-txt" placeholder="¿A dónde vas?" value={query}
+                onChange={e=>{setQuery(e.target.value);setOverrideLat(undefined);setOverrideLng(undefined);setShowSug(true)}}
+                onFocus={()=>setShowSug(true)} autoComplete="off"/>
+              {query && <button className="sb-clear" onClick={clearLocation} aria-label="Borrar">✕</button>}
+            </div>
+            {showSug && (query.length>0) && (
               <div className="sb-drop" ref={sugRef}>
-                {suggestions.map(s=>{
-                  const loc=venezuelaLocations.find(l=>l.nombre===s)
-                  return (
-                    <div key={s} className="sb-sug-row" onMouseDown={()=>{setQuery(s);setShowSug(false)}}>
-                      <span>📍</span><span>{s}</span>
-                      {loc&&<span className="sb-sug-reg">{loc.region}</span>}
+                {sugLoading && suggestions.length===0 && (
+                  <div className="sb-sug-loading">
+                    <span>⟳</span> Buscando en Venezuela…
+                  </div>
+                )}
+                {suggestions.map((s,i)=>(
+                  <div key={i} className="sb-sug-row" onMouseDown={()=>selectSuggestion(s)}>
+                    <span className="sb-sug-icon">📍</span>
+                    <div className="sb-sug-main">
+                      <div className="sb-sug-name">{s.label}</div>
+                      <div className="sb-sug-sub">{s.sub}</div>
                     </div>
-                  )
-                })}
+                    {s.isStatic && <span className="sb-sug-badge">Popular</span>}
+                  </div>
+                ))}
+                {!sugLoading && suggestions.length===0 && query.length>1 && (
+                  <div className="sb-sug-loading">Sin resultados para "{query}"</div>
+                )}
               </div>
             )}
           </div>
 
+          {/* Dates */}
           <div className={`sb-seg${showDate?' open':''}`} style={{flex:'1.3'}} ref={dateRef}
             onClick={()=>{setShowDate(v=>!v);setShowPay(false)}}>
             <div className="sb-lbl">Fechas</div>
-            <div className={`sb-val${!checkIn&&!flexible?' sb-ph':''}`}>{dateLabel}</div>
+            <div className={`sb-val${!checkIn&&!isFlexible?' sb-ph':''}`}>{dateLabel}</div>
             {showDate && (
               <div className="sb-date-drop" onClick={e=>e.stopPropagation()}>
                 <div className="sb-modes">
-                  <button className={`sb-mode${!flexible?' on':''}`} onClick={()=>setFlexible(false)}>Fechas exactas</button>
-                  <button className={`sb-mode${flexible?' on':''}`} onClick={()=>{setFlexible(true);setCheckIn(null);setCheckOut(null);setTimeout(()=>setShowDate(false),140)}}>Fechas flexibles</button>
+                  <button className={`sb-mode${dateMode==='exactas'?' on':''}`} onClick={()=>setDateMode('exactas')}>Fechas exactas</button>
+                  <button className={`sb-mode${dateMode==='flexibles'?' on':''}`} onClick={()=>setDateMode('flexibles')}>Fechas flexibles</button>
                 </div>
-                {!flexible && <Calendar checkIn={checkIn} checkOut={checkOut} onCheckIn={setCheckIn} onCheckOut={setCheckOut}/>}
+                {dateMode==='exactas'
+                  ? <Calendar checkIn={checkIn} checkOut={checkOut} onCheckIn={setCheckIn} onCheckOut={setCheckOut}/>
+                  : <FlexiblePicker flexType={flexType} onFlexType={setFlexType} flexMonths={flexMonths} onFlexMonths={setFlexMonths} flexWeeks={flexWeeks} onFlexWeeks={setFlexWeeks}/>
+                }
               </div>
             )}
           </div>
 
+          {/* Payment */}
           <div className={`sb-seg${showPay?' open':''}`} ref={payRef}
             onClick={()=>{setShowPay(v=>!v);setShowDate(false)}}>
             <div className="sb-lbl">Pago</div>
@@ -582,6 +800,7 @@ function BuscarContent() {
         </div>
       </div>
 
+      {/* MAIN */}
       <div className="page-wrap">
         <div className={`list-col${mobileTab==='mapa'?' hide':''}`}>
           <div className="price-box">
@@ -599,7 +818,7 @@ function BuscarContent() {
           <div className="res-hdr">
             <p className="res-count">
               <strong>{results.length}</strong> posada{results.length!==1?'s':''} encontrada{results.length!==1?'s':''}
-              {query&&resolvedLoc&&` cerca de ${resolvedLoc.location.nombre}`}
+              {resolvedLoc&&` cerca de ${resolvedLoc}`}
             </p>
             <div className="sort-row">
               <span className="sort-lbl">Ordenar:</span>
@@ -614,7 +833,7 @@ function BuscarContent() {
               <div className="prox-icon">🧭</div>
               <div className="prox-txt">
                 <p>No hay posadas exactas en "{query}"</p>
-                <span>Mostrando las más cercanas{resolvedLoc?` a ${resolvedLoc.location.nombre}`:''}</span>
+                <span>Mostrando las más cercanas{resolvedLoc?` a ${resolvedLoc}`:''}</span>
               </div>
             </div>
           )}
