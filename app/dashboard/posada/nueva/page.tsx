@@ -69,18 +69,21 @@ export default function NuevaPosadaPage() {
   async function handleImageUpload(files: FileList | null) {
     if (!files || files.length === 0) return
     setUploadingImg(true)
+    setError('')
     const uploaded: string[] = []
     for (const file of Array.from(files)) {
       const fd = new FormData()
       fd.append('file', file)
       try {
         const res = await fetch('/api/upload', { method: 'POST', body: fd })
-        if (res.ok) {
-          const { url } = await res.json()
-          uploaded.push(url)
+        const data = await res.json()
+        if (res.ok && data.url) {
+          uploaded.push(data.url)
+        } else {
+          setError(`Error al subir ${file.name}: ${data.error ?? 'Error desconocido'}`)
         }
-      } catch {
-        // skip failed uploads
+      } catch (e) {
+        setError(`Error de conexión al subir ${file.name}`)
       }
     }
     setImgs(prev => [...prev, ...uploaded])
