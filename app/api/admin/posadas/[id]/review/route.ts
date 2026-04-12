@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db'
 import { posadas, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { auth } from '@/auth'
+import { emailHostPosadaApproved, emailHostPosadaRejected } from '@/lib/email'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const { id } = await params
-  const { action, notes } = await req.json() // action: 'approve' | 'reject'
+  const { action, notes } = await req.json()
 
   if (action !== 'approve' && action !== 'reject') {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
@@ -27,7 +28,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // TODO: send email notification to host (integrate Resend when ready)
+  // Send email to host (fire-and-forget)
+  if (updated.hostId) {
+    db.select({ email: users.email, name: users.name })
+      .from(users).where(eq(users.id, updated.hostId))
+      .then(([host]) => {
+        if (!host) return
+        if (action === 'approve') {
+          emailHostPosadaApproved({ hostEmail: host.email, hostName: host.name, posadaNombre: updated.nombre, slug: updated.slug })
+        } else {
+          emailHostPosadaRejected({ hostEmail: host.email, hostName: host.name, posadaNombre: updated.nombre, notes: notes ?? 'Revisa los requisitos de RESER-VE.' })
+        }
+      }).catch(() => {})
+  }
 
   return NextResponse.json({ ok: true, status: newStatus, posada: updated })
 }

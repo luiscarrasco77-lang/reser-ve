@@ -29,6 +29,7 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false)
   const [activeTab, setActiveTab] = useState<'viajero' | 'posadero'>('viajero')
   const [destinoBusqueda, setDestinoBusqueda] = useState('')
+  const [mobOpen, setMobOpen] = useState(false)
   // Search bar state
   type SbSug = { label: string; sub: string; lat?: number; lng?: number; isStatic: boolean; isRegion?: boolean; regionId?: string }
   const [sbSuggestions, setSbSuggestions] = useState<SbSug[]>([])
@@ -444,7 +445,18 @@ export default function Home() {
           animation:pulseShadow 3s ease-in-out infinite;
         }
         .nav-cta:hover { background:var(--cacao-dark); transform:translateY(-1px); animation:none; box-shadow:0 14px 35px rgba(230,126,34,0.38); }
-        @media(max-width:768px){.nav-links{display:none;} .nav{padding:1rem;} .nav.scrolled{padding:0.75rem 1rem;}}
+        .mob-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:0.3rem;color:inherit;}
+        .mob-menu-btn svg{display:block;}
+        .mob-drawer{position:fixed;inset:0;z-index:300;pointer-events:none;}
+        .mob-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.45);opacity:0;transition:opacity 0.25s;}
+        .mob-panel{position:absolute;top:0;right:0;bottom:0;width:min(300px,85vw);background:#FDFBF7;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.16,1,0.3,1);display:flex;flex-direction:column;padding:1.5rem;}
+        .mob-drawer.open{pointer-events:all;}
+        .mob-drawer.open .mob-overlay{opacity:1;}
+        .mob-drawer.open .mob-panel{transform:translateX(0);}
+        .mob-close{align-self:flex-end;background:none;border:none;cursor:pointer;padding:0.25rem;color:var(--indigo);margin-bottom:1.5rem;}
+        .mob-link{font-size:1rem;font-weight:600;color:var(--indigo);text-decoration:none;padding:0.85rem 0;border-bottom:1px solid rgba(26,43,76,0.07);display:block;}
+        .mob-link:last-of-type{border-bottom:none;}
+        @media(max-width:768px){.nav-links{display:none;} .nav{padding:1rem;} .nav.scrolled{padding:0.75rem 1rem;} .mob-menu-btn{display:block;}}
 
         /* ─── HERO ─── */
         .hero {
@@ -1059,7 +1071,30 @@ export default function Home() {
           <a href="#como-funciona" className="nav-link">Cómo funciona</a>
           <NavUser dark={scrollY < 60} />
         </div>
+        <button className="mob-menu-btn" onClick={() => setMobOpen(true)} aria-label="Menú">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={scrollY < 60 ? 'white' : '#1A2B4C'} strokeWidth="2.2" strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
       </nav>
+
+      {/* Mobile drawer */}
+      <div className={`mob-drawer${mobOpen ? ' open' : ''}`}>
+        <div className="mob-overlay" onClick={() => setMobOpen(false)} />
+        <div className="mob-panel">
+          <button className="mob-close" onClick={() => setMobOpen(false)} aria-label="Cerrar">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A2B4C" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <a href="/buscar" className="mob-link" onClick={() => setMobOpen(false)}>Destinos</a>
+          <a href="/posaderos" className="mob-link" onClick={() => setMobOpen(false)}>Posaderos</a>
+          <a href="/vision" className="mob-link" onClick={() => setMobOpen(false)}>Por qué posadas?</a>
+          <a href="#como-funciona" className="mob-link" onClick={() => setMobOpen(false)}>Cómo funciona</a>
+          <a href="/faq" className="mob-link" onClick={() => setMobOpen(false)}>Preguntas frecuentes</a>
+          <div style={{marginTop:'1.5rem'}}>
+            <NavUser dark={false} />
+          </div>
+        </div>
+      </div>
 
       {/* ── HERO ─────────────────────────────────────────── */}
       <section className="hero">
