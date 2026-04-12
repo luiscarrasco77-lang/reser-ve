@@ -562,7 +562,7 @@ function BuscarContent() {
         .sb-go:hover{background:var(--cacao-dark);}
         @media(max-width:680px){.sb-bar{flex-direction:column;border-radius:18px;}.sb-seg{border-right:none;border-bottom:1.5px solid var(--line);}.sb-seg:last-of-type{border-bottom:none;}.sb-go{margin:0.38rem;justify-content:center;}}
         /* Suggestion dropdown */
-        .sb-drop{position:absolute;top:calc(100% + 9px);left:0;background:white;border:1.5px solid var(--line);border-radius:16px;box-shadow:var(--shl);z-index:300;overflow:hidden;min-width:260px;max-height:400px;overflow-y:auto;}
+        .sb-drop{position:absolute;top:calc(100% + 9px);left:0;background:white;border:1.5px solid var(--line);border-radius:16px;box-shadow:var(--shl);z-index:300;overflow:hidden;min-width:300px;max-height:380px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(26,43,76,0.15) transparent;}
         /* Ensure dropdowns always clear the map below */
         .sb-bar{overflow:visible!important;}
         .sb-sug-row{display:flex;align-items:center;gap:0.65rem;padding:0.72rem 1rem;font-size:0.85rem;color:var(--indigo);cursor:pointer;transition:background 0.12s;}
@@ -778,7 +778,7 @@ function BuscarContent() {
         <Link href="/" className="logo">RESER<span>-VE</span></Link>
         <div className="nav-links">
           <Link href="/#destinos" className="nav-link">Destinos</Link>
-          <Link href="/registro-posada" className="nav-link">Posaderos</Link>
+          <Link href="/posaderos" className="nav-link">Posaderos</Link>
           <Link href="/#como-funciona" className="nav-link">Cómo funciona</Link>
           <Link href="/registro-posada" className="nav-cta">Registra tu posada</Link>
         </div>

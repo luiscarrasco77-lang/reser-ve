@@ -573,9 +573,9 @@ export default function Home() {
           position:absolute; top:calc(100% + 10px); left:0;
           background:white; border:1.5px solid rgba(26,43,76,0.09);
           border-radius:18px; box-shadow:0 16px 52px rgba(26,43,76,0.16);
-          z-index:600; overflow:visible;
+          z-index:600; overflow:hidden;
         }
-        .sb-suggest { min-width:240px; }
+        .sb-suggest { min-width:300px; max-height:380px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:rgba(26,43,76,0.15) transparent; }
         .sb-sug-item { display:flex; align-items:center; gap:0.7rem; padding:0.8rem 1rem; font-size:0.88rem; color:#1A2B4C; cursor:pointer; transition:background 0.14s; }
         .sb-sug-item:hover { background:rgba(26,43,76,0.04); }
         .sb-sug-reg { font-size:0.72rem; color:rgba(26,43,76,0.45); margin-left:auto; padding-left:0.4rem; white-space:nowrap; }
@@ -1053,7 +1053,7 @@ export default function Home() {
         </a>
         <div className="nav-links">
           <a href="/buscar" className="nav-link">Destinos</a>
-          <a href="/registro-posada" className="nav-link">Posaderos</a>
+          <a href="/posaderos" className="nav-link">Posaderos</a>
           <a href="#como-funciona" className="nav-link">Cómo funciona</a>
           <a href="/registro-posada" className="nav-cta">Registra tu posada</a>
         </div>
@@ -1675,14 +1675,14 @@ export default function Home() {
             <a href="/registro-posada">Registra tu posada</a>
             <a href="#como-funciona">Cómo funciona</a>
             <a href="#">Paquete digitalización</a>
-            <a href="#">Preguntas frecuentes</a>
+            <a href="/faq">Preguntas frecuentes</a>
           </div>
           <div className="footer-col">
             <h4>Contacto</h4>
             <a href="#">hola@reser-ve.com</a>
             <a href="#">WhatsApp</a>
             <a href="#">Instagram</a>
-            <a href="#">Dos Locos de Viaje</a>
+            <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer">Dos Locos de Viaje</a>
           </div>
         </div>
         <div className="footer-bottom">
