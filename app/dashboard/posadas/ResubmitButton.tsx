@@ -3,14 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function ResubmitButton({ posadaId, status }: { posadaId: number; status: string }) {
+export default function ResubmitButton({ slug, status }: { slug: string; status: string }) {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const router = useRouter()
 
   async function resubmit() {
     setLoading(true)
-    const res = await fetch(`/api/posadas/${posadaId}`, {
+    const res = await fetch(`/api/posadas/${slug}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'resubmit' }),

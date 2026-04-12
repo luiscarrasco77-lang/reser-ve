@@ -117,7 +117,7 @@ export default async function MisPosadasPage() {
                         </a>
                       )}
                       {(p.status === 'rejected' || p.status === 'draft') && (
-                        <ResubmitButton posadaId={p.id} status={p.status} />
+                        <ResubmitButton slug={p.slug} status={p.status} />
                       )}
                     </div>
                   </div>
