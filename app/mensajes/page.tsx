@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import NavUser from '@/components/NavUser'
@@ -17,7 +17,7 @@ type Conversation = {
   lastMessage: { body: string; senderName: string } | null
 }
 
-export default function MensajesPage() {
+function MensajesInner() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -41,7 +41,7 @@ export default function MensajesPage() {
       .catch(() => setLoading(false))
   }, [status])
 
-  // Auto-open new support conversation if redirected from landing
+  // Auto-open new support form if redirected from landing with ?type=support
   useEffect(() => {
     if (searchParams.get('type') === 'support') setShowNew(true)
   }, [searchParams])
@@ -62,11 +62,95 @@ export default function MensajesPage() {
   }
 
   const role = (session?.user as any)?.role
-  const userId = parseInt((session?.user as any)?.id ?? '0')
   const filtered = filter === 'all' ? conversations : conversations.filter(c => c.type === filter)
 
-  if (status === 'loading') return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'Inter,sans-serif', color: '#7A8699' }}>Cargando…</div>
+  if (status === 'loading') return <div style={{ padding: '3rem', textAlign: 'center', color: '#7A8699', fontFamily: 'Inter,sans-serif' }}>Cargando…</div>
 
+  return (
+    <main className="main">
+      <div className="page-title">Mensajes</div>
+      <div className="page-sub">
+        {role === 'admin'
+          ? 'Todos los mensajes de la plataforma'
+          : 'Tus conversaciones con posaderos y el equipo RESER-VE'}
+      </div>
+
+      <button className="new-btn" onClick={() => setShowNew(v => !v)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Contactar al equipo RESER-VE
+      </button>
+
+      {showNew && (
+        <div className="new-form">
+          <div style={{ fontWeight: 700, marginBottom: '1rem', color: 'var(--indigo)' }}>Nuevo mensaje — Servicio al cliente</div>
+          <label className="form-label">Asunto</label>
+          <input className="form-input" placeholder="¿En qué podemos ayudarte?" value={newSubject} onChange={e => setNewSubject(e.target.value)} />
+          <label className="form-label">Mensaje</label>
+          <textarea className="form-textarea" placeholder="Cuéntanos tu consulta o problema…" value={newBody} onChange={e => setNewBody(e.target.value)} />
+          <div className="form-actions">
+            <button className="btn-primary" disabled={creating || !newSubject.trim() || !newBody.trim()} onClick={createConversation}>
+              {creating ? 'Enviando…' : 'Enviar mensaje'}
+            </button>
+            <button className="btn-ghost" onClick={() => setShowNew(false)}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      <div className="tabs">
+        {(['all', 'booking', 'support'] as const).map(t => (
+          <button key={t} className={`tab${filter === t ? ' active' : ''}`} onClick={() => setFilter(t)}>
+            {t === 'all' ? 'Todos' : t === 'booking' ? 'Reservas' : 'Servicio al cliente'}
+            {t !== 'all' && <span style={{ marginLeft: 4, opacity: 0.7 }}>({conversations.filter(c => c.type === t).length})</span>}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="empty">Cargando mensajes…</div>
+      ) : filtered.length === 0 ? (
+        <div className="empty">
+          {filter === 'all' ? 'No tienes conversaciones aún.' : filter === 'booking' ? 'No hay conversaciones de reserva.' : 'No hay tickets de soporte.'}
+        </div>
+      ) : (
+        <div className="conv-list">
+          {filtered.map(conv => (
+            <a key={conv.id} href={`/mensajes/${conv.id}`} className={`conv-card${conv.unread > 0 ? ' unread' : ''}`}>
+              <div className="conv-top">
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                    <span className={`conv-badge ${conv.type === 'booking' ? 'badge-booking' : 'badge-support'}`}>
+                      {conv.type === 'booking' ? '🏠 Reserva' : '💬 Soporte'}
+                    </span>
+                    {conv.posadaNombre && (
+                      <span style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>{conv.posadaNombre}</span>
+                    )}
+                  </div>
+                  <div className="conv-subject">{conv.subject}</div>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--muted)', marginTop: '0.2rem' }}>
+                    {conv.type === 'booking'
+                      ? `${conv.userName} ↔ ${conv.hostName ?? 'Posadero'}`
+                      : role === 'admin' ? `De: ${conv.userName}` : 'Con equipo RESER-VE'}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
+                  <span className="conv-meta">{new Date(conv.lastMessageAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })}</span>
+                  {conv.unread > 0 && <span className="unread-dot">{conv.unread}</span>}
+                </div>
+              </div>
+              {conv.lastMessage && (
+                <div className="conv-preview">
+                  <strong>{conv.lastMessage.senderName}:</strong> {conv.lastMessage.body}
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
+      )}
+    </main>
+  )
+}
+
+export default function MensajesPage() {
   return (
     <>
       <style>{`
@@ -79,7 +163,7 @@ export default function MensajesPage() {
         .main{max-width:820px;margin:0 auto;padding:2.5rem 1.5rem;}
         .page-title{font-family:'Playfair Display',Georgia,serif;font-size:1.8rem;font-weight:700;margin-bottom:0.3rem;}
         .page-sub{font-size:0.9rem;color:var(--muted);margin-bottom:2rem;}
-        .tabs{display:flex;gap:0.4rem;margin-bottom:1.5rem;}
+        .tabs{display:flex;gap:0.4rem;margin-bottom:1.5rem;flex-wrap:wrap;}
         .tab{padding:0.45rem 1rem;border-radius:999px;font-size:0.82rem;font-weight:600;font-family:inherit;border:1.5px solid var(--line);background:white;cursor:pointer;transition:all 0.15s;color:var(--muted);}
         .tab.active{background:var(--indigo);color:white;border-color:var(--indigo);}
         .conv-list{display:flex;flex-direction:column;gap:0.75rem;}
@@ -115,86 +199,9 @@ export default function MensajesPage() {
         <NavUser />
       </nav>
 
-      <main className="main">
-        <div className="page-title">Mensajes</div>
-        <div className="page-sub">
-          {role === 'admin'
-            ? 'Todos los mensajes de la plataforma'
-            : 'Tus conversaciones con posaderos y el equipo RESER-VE'}
-        </div>
-
-        <button className="new-btn" onClick={() => setShowNew(v => !v)}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nuevo mensaje al equipo RESER-VE
-        </button>
-
-        {showNew && (
-          <div className="new-form">
-            <div style={{ fontWeight: 700, marginBottom: '1rem', color: 'var(--indigo)' }}>Contactar al equipo RESER-VE</div>
-            <label className="form-label">Asunto</label>
-            <input className="form-input" placeholder="¿En qué podemos ayudarte?" value={newSubject} onChange={e => setNewSubject(e.target.value)} />
-            <label className="form-label">Mensaje</label>
-            <textarea className="form-textarea" placeholder="Cuéntanos tu consulta o problema…" value={newBody} onChange={e => setNewBody(e.target.value)} />
-            <div className="form-actions">
-              <button className="btn-primary" disabled={creating || !newSubject.trim() || !newBody.trim()} onClick={createConversation}>
-                {creating ? 'Enviando…' : 'Enviar mensaje'}
-              </button>
-              <button className="btn-ghost" onClick={() => setShowNew(false)}>Cancelar</button>
-            </div>
-          </div>
-        )}
-
-        <div className="tabs">
-          {(['all', 'booking', 'support'] as const).map(t => (
-            <button key={t} className={`tab${filter === t ? ' active' : ''}`} onClick={() => setFilter(t)}>
-              {t === 'all' ? 'Todos' : t === 'booking' ? 'Reservas' : 'Servicio al cliente'}
-              {t !== 'all' && <span style={{ marginLeft: 4, opacity: 0.7 }}>({conversations.filter(c => c.type === t).length})</span>}
-            </button>
-          ))}
-        </div>
-
-        {loading ? (
-          <div className="empty">Cargando mensajes…</div>
-        ) : filtered.length === 0 ? (
-          <div className="empty">
-            {filter === 'all' ? 'No tienes conversaciones aún.' : `No hay conversaciones de tipo ${filter === 'booking' ? 'reserva' : 'soporte'}.`}
-          </div>
-        ) : (
-          <div className="conv-list">
-            {filtered.map(conv => (
-              <a key={conv.id} href={`/mensajes/${conv.id}`} className={`conv-card${conv.unread > 0 ? ' unread' : ''}`}>
-                <div className="conv-top">
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                      <span className={`conv-badge ${conv.type === 'booking' ? 'badge-booking' : 'badge-support'}`}>
-                        {conv.type === 'booking' ? '🏠 Reserva' : '💬 Soporte'}
-                      </span>
-                      {conv.posadaNombre && (
-                        <span style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>{conv.posadaNombre}</span>
-                      )}
-                    </div>
-                    <div className="conv-subject">{conv.subject}</div>
-                    <div style={{ fontSize: '0.76rem', color: 'var(--muted)', marginTop: '0.2rem' }}>
-                      {conv.type === 'booking'
-                        ? `${conv.userName} ↔ ${conv.hostName ?? 'Posadero'}`
-                        : role === 'admin' ? `De: ${conv.userName}` : 'Con equipo RESER-VE'}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
-                    <span className="conv-meta">{new Date(conv.lastMessageAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })}</span>
-                    {conv.unread > 0 && <span className="unread-dot">{conv.unread}</span>}
-                  </div>
-                </div>
-                {conv.lastMessage && (
-                  <div className="conv-preview">
-                    <strong>{conv.lastMessage.senderName}:</strong> {conv.lastMessage.body}
-                  </div>
-                )}
-              </a>
-            ))}
-          </div>
-        )}
-      </main>
+      <Suspense fallback={<div style={{ padding: '3rem', textAlign: 'center', color: '#7A8699' }}>Cargando…</div>}>
+        <MensajesInner />
+      </Suspense>
     </>
   )
 }
