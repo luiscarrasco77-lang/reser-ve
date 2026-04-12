@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
+import { emailWelcome } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   const { name, email, password, role = 'traveler' } = await req.json()
@@ -14,6 +15,9 @@ export async function POST(req: NextRequest) {
 
   const passwordHash = await bcrypt.hash(password, 12)
   const [user] = await db.insert(users).values({ name, email, passwordHash, role }).returning()
+
+  // Fire-and-forget welcome email
+  emailWelcome({ email: user.email, name: user.name, role: user.role }).catch(() => {})
 
   return NextResponse.json({ id: user.id, name: user.name, email: user.email, role: user.role }, { status: 201 })
 }

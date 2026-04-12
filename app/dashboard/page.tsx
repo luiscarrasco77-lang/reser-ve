@@ -1,8 +1,8 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import { getDb } from '@/lib/db'
-import { bookings, posadas } from '@/lib/db/schema'
-import { eq, count, sum } from 'drizzle-orm'
+import { bookings, posadas, users } from '@/lib/db/schema'
+import { eq, inArray } from 'drizzle-orm'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -40,6 +40,13 @@ export default async function DashboardPage() {
   const recentBookings = allBookings
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
+
+  // Enrich with guest names
+  const guestIds = [...new Set(recentBookings.map(b => b.guestId))]
+  const guestList = guestIds.length > 0
+    ? await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(inArray(users.id, guestIds))
+    : []
+  const guestMap = Object.fromEntries(guestList.map(u => [u.id, u]))
 
   const statusColor: Record<string, string> = {
     pending: '#f59e0b',
@@ -139,17 +146,21 @@ export default async function DashboardPage() {
             <>
               <div className="table-head">
                 <span>Posada</span>
-                <span>Huésped ID</span>
+                <span>Huésped</span>
                 <span>Check-in / Check-out</span>
                 <span>Total</span>
                 <span>Estado</span>
               </div>
               {recentBookings.map(b => {
                 const posada = hostPosadas.find(p => p.id === b.posadaId)
+                const guest = guestMap[b.guestId]
                 return (
                   <div key={b.id} className="table-row">
                     <span style={{fontWeight:600}}>{posada?.nombre ?? '—'}</span>
-                    <span style={{color:'var(--muted)',fontSize:'0.8rem'}}>#{b.guestId}</span>
+                    <div>
+                      <div style={{fontSize:'0.85rem',fontWeight:600}}>{guest?.name ?? `#${b.guestId}`}</div>
+                      {guest?.email && <div style={{fontSize:'0.75rem',color:'var(--muted)'}}>{guest.email}</div>}
+                    </div>
                     <span style={{color:'var(--muted)'}}>{b.checkIn} → {b.checkOut}</span>
                     <span style={{fontWeight:700}}>${b.totalPrice}</span>
                     <span>
@@ -171,6 +182,10 @@ export default async function DashboardPage() {
           </a>
           <a href="/dashboard/reservas" className="action-btn action-btn-secondary">
             Ver todas las reservas
+          </a>
+          <a href="/mensajes" className="action-btn action-btn-secondary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Mensajes
           </a>
         </div>
       </main>

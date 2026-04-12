@@ -20,6 +20,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: {
+          prompt: 'select_account',
+        },
+      },
     }),
     CredentialsProvider({
       name: 'credentials',
@@ -40,11 +45,32 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
+      // On initial sign-in, user object is present
       if (user) {
-        token.id = user.id
+        token.id = (user as any).id ?? user.id
         token.role = (user as any).role
       }
+      // For OAuth sign-ins (Google), role may not be on the user object
+      // Look it up from DB using the email in the token
+      if (!token.role && token.email && process.env.DATABASE_URL) {
+        try {
+          const db = getDb()
+          const [u] = await db
+            .select({ id: users.id, role: users.role })
+            .from(users)
+            .where(eq(users.email, token.email))
+          if (u) {
+            token.id = String(u.id)
+            token.role = u.role
+          }
+        } catch {
+          // Non-blocking — fallback to traveler
+          token.role = 'traveler'
+        }
+      }
+      // Default role if still missing
+      if (!token.role) token.role = 'traveler'
       return token
     },
     async session({ session, token }) {

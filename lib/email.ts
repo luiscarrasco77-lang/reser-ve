@@ -218,6 +218,59 @@ export async function emailHostPosadaApproved(opts: {
   })
 }
 
+// ─── Email: welcome (to new user) ─────────────────────────────────────────────
+export async function emailWelcome(opts: {
+  email: string; name: string; role: 'traveler' | 'host' | 'admin';
+}) {
+  const resend = getResend()
+  if (!resend) return
+
+  const isHost = opts.role === 'host'
+  const html = baseHtml(`
+    <div class="card">
+      <div class="title">Bienvenido/a a RESER-VE 🎉</div>
+      <div class="sub">Hola ${opts.name}, tu cuenta ha sido creada. ${isHost ? 'Como posadero ya puedes publicar tu primera posada y comenzar a recibir viajeros.' : 'Ya puedes explorar las mejores posadas de Venezuela y hacer tu primera reserva.'}</div>
+      ${isHost
+        ? `<a href="https://reserve-ve.vercel.app/dashboard/posada/nueva" class="btn">Publicar mi posada →</a>`
+        : `<a href="https://reserve-ve.vercel.app/buscar" class="btn">Explorar posadas →</a>`
+      }
+      <div class="info-box" style="margin-top:1.25rem">¿Tienes alguna pregunta? Escríbenos a través del servicio al cliente en la plataforma o responde a este correo.</div>
+    </div>
+  `)
+
+  await resend.emails.send({
+    from: FROM,
+    to: opts.email,
+    subject: `Bienvenido/a a RESER-VE, ${opts.name}`,
+    html,
+  })
+}
+
+// ─── Email: new message notification ──────────────────────────────────────────
+export async function emailNewMessage(opts: {
+  recipientEmail: string; recipientName: string;
+  senderName: string; subject: string; body: string; conversationId: number;
+}) {
+  const resend = getResend()
+  if (!resend) return
+
+  const html = baseHtml(`
+    <div class="card">
+      <div class="title">Nuevo mensaje de ${opts.senderName}</div>
+      <div class="sub">Tienes un mensaje nuevo en la conversación: <strong>${opts.subject}</strong></div>
+      <div style="background:rgba(26,43,76,0.04);border-radius:12px;padding:1rem 1.2rem;margin:1rem 0;font-size:0.88rem;line-height:1.6;color:#1A2B4C;">${opts.body}</div>
+      <a href="https://reserve-ve.vercel.app/mensajes/${opts.conversationId}" class="btn">Responder →</a>
+    </div>
+  `)
+
+  await resend.emails.send({
+    from: FROM,
+    to: opts.recipientEmail,
+    subject: `Nuevo mensaje: ${opts.subject}`,
+    html,
+  })
+}
+
 // ─── Email: posada rejected (to host) ─────────────────────────────────────────
 export async function emailHostPosadaRejected(opts: {
   hostEmail: string; hostName: string; posadaNombre: string; notes: string;

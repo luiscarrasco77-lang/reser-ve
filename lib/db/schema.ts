@@ -76,7 +76,36 @@ export const reviews = pgTable('reviews', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
-// NextAuth tables (required by @auth/drizzle-adapter)
+// ─── Messaging ─────────────────────────────────────────────────────────────────
+
+export const conversationTypeEnum = pgEnum('conversation_type', ['booking', 'support'])
+
+export const conversations = pgTable('conversations', {
+  id: serial('id').primaryKey(),
+  type: conversationTypeEnum('type').notNull(),
+  // For booking conversations: the booking this thread is about
+  bookingId: integer('booking_id').references(() => bookings.id),
+  // Primary user (guest or traveler initiating support)
+  userId: integer('user_id').references(() => users.id).notNull(),
+  // Host side (null for support conversations with admin)
+  hostId: integer('host_id').references(() => users.id),
+  subject: text('subject').notNull(),
+  lastMessageAt: timestamp('last_message_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const messages = pgTable('messages', {
+  id: serial('id').primaryKey(),
+  conversationId: integer('conversation_id').references(() => conversations.id).notNull(),
+  senderId: integer('sender_id').references(() => users.id).notNull(),
+  senderName: text('sender_name').notNull(),
+  senderRole: text('sender_role').notNull().default('traveler'),
+  body: text('body').notNull(),
+  readAt: timestamp('read_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+// ─── NextAuth tables (required by @auth/drizzle-adapter) ───────────────────────
 export const accounts = pgTable('accounts', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').notNull().references(() => users.id),

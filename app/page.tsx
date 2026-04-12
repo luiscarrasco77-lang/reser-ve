@@ -1732,6 +1732,27 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* ── Floating customer service button ── */}
+      <a
+        href="/mensajes?type=support"
+        style={{
+          position: 'fixed', bottom: '1.75rem', right: '1.75rem', zIndex: 999,
+          display: 'flex', alignItems: 'center', gap: '0.55rem',
+          background: '#1A2B4C', color: 'white',
+          padding: '0.75rem 1.25rem 0.75rem 1rem',
+          borderRadius: 999, boxShadow: '0 8px 28px rgba(26,43,76,0.32)',
+          fontFamily: 'Inter,sans-serif', fontWeight: 700, fontSize: '0.86rem',
+          textDecoration: 'none', transition: 'all 0.2s',
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 36px rgba(26,43,76,0.42)' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 28px rgba(26,43,76,0.32)' }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        Servicio al cliente
+      </a>
     </>
   )
 }
