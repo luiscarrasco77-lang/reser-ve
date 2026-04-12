@@ -104,8 +104,9 @@ export default async function DashboardPage() {
         <a href="/" className="dash-nav-logo">RESER<span>-VE</span></a>
         <div className="dash-nav-links">
           <a href="/dashboard" className="dash-nav-link active">Dashboard</a>
+          <a href="/dashboard/posadas" className="dash-nav-link">Mis posadas</a>
           <a href="/dashboard/reservas" className="dash-nav-link">Reservas</a>
-          <a href="/dashboard/posada/nueva" className="dash-nav-link">Nueva posada</a>
+          <a href="/dashboard/posada/nueva" className="dash-nav-link">+ Nueva</a>
           <a href="/api/auth/signout" className="dash-nav-link">Cerrar sesión</a>
         </div>
       </nav>
@@ -134,6 +135,47 @@ export default async function DashboardPage() {
             <div className="stat-value cacao">${totalEarned.toLocaleString()}</div>
           </div>
         </div>
+
+        {/* Posadas status alerts */}
+        {hostPosadas.some(p => p.status === 'rejected' || p.status === 'pending_review') && (
+          <div style={{marginBottom:'1.5rem',display:'flex',flexDirection:'column',gap:'0.7rem'}}>
+            {hostPosadas.filter(p => p.status === 'rejected').map(p => (
+              <a key={p.id} href="/dashboard/posadas" style={{
+                display:'flex',alignItems:'center',gap:'0.8rem',
+                background:'rgba(239,68,68,0.06)',border:'1.5px solid rgba(239,68,68,0.2)',
+                borderRadius:14,padding:'0.9rem 1.2rem',textDecoration:'none',color:'var(--indigo)',transition:'background 0.15s',
+              }}>
+                <span style={{fontSize:'1.1rem'}}>✕</span>
+                <div>
+                  <div style={{fontWeight:700,fontSize:'0.88rem',color:'#ef4444'}}>
+                    Posada rechazada: {p.nombre}
+                  </div>
+                  <div style={{fontSize:'0.78rem',color:'var(--muted)',marginTop:2}}>
+                    {p.reviewNotes ? `Motivo: ${p.reviewNotes.slice(0, 80)}${p.reviewNotes.length > 80 ? '…' : ''}` : 'Ver detalles en Mis posadas'}
+                  </div>
+                </div>
+                <span style={{marginLeft:'auto',fontSize:'0.78rem',fontWeight:700,color:'#ef4444',whiteSpace:'nowrap'}}>Ver →</span>
+              </a>
+            ))}
+            {hostPosadas.filter(p => p.status === 'pending_review').map(p => (
+              <div key={p.id} style={{
+                display:'flex',alignItems:'center',gap:'0.8rem',
+                background:'rgba(245,158,11,0.06)',border:'1.5px solid rgba(245,158,11,0.2)',
+                borderRadius:14,padding:'0.9rem 1.2rem',
+              }}>
+                <span style={{fontSize:'1.1rem'}}>⏳</span>
+                <div>
+                  <div style={{fontWeight:700,fontSize:'0.88rem',color:'#92400e'}}>
+                    En revisión: {p.nombre}
+                  </div>
+                  <div style={{fontSize:'0.78rem',color:'var(--muted)',marginTop:2}}>
+                    El equipo RESER-VE está revisando tu posada (24–48h)
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="section-title">Reservas recientes</div>
         <div className="bookings-table">
