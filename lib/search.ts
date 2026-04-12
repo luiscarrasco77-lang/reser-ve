@@ -1,5 +1,6 @@
 import type { Posada } from './data'
 import { venezuelaLocations, type VELocation } from './locations-ve'
+import { filterPosadasByRegion } from './regions'
 
 // ─── Haversine distance (km) ────────────────────────────────────────────────
 export function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -100,11 +101,15 @@ export type SearchOptions = {
   overrideLat?: number
   overrideLng?: number
   overrideName?: string // display name for the resolved location
+  regionId?: string   // filter by region from /lib/regions
 }
 
 // ─── Main search function ────────────────────────────────────────────────────
 export function searchPosadas(posadas: Posada[], opts: SearchOptions): SearchResult[] {
   const { query = '', metodoPago = '', precioMax = 999, sort = 'rating' } = opts
+
+  // If a regionId is provided, pre-filter posadas to that region
+  const activePosadas = opts.regionId ? filterPosadasByRegion(posadas, opts.regionId) : posadas
 
   let results: SearchResult[]
 
@@ -115,13 +120,13 @@ export function searchPosadas(posadas: Posada[], opts: SearchOptions): SearchRes
 
   if (!query.trim()) {
     // No query — return everything
-    results = posadas.map(p => ({ posada: p, distanceKm: null, isProximity: false }))
+    results = activePosadas.map(p => ({ posada: p, distanceKm: null, isProximity: false }))
   } else if (locationMatch) {
     const { location } = locationMatch
     const EXACT_RADIUS_KM = 80   // within this → "exact" results
     const PROX_RADIUS_KM = 400   // within this → proximity results
 
-    const withDist = posadas.map(p => ({
+    const withDist = activePosadas.map(p => ({
       posada: p,
       distanceKm: haversineKm(location.lat, location.lng, p.lat, p.lng),
     }))
@@ -150,7 +155,7 @@ export function searchPosadas(posadas: Posada[], opts: SearchOptions): SearchRes
     // Query typed but not matched to any known location
     // Fall back to text search on nombre/destino/tipo/tags
     const q = normalizeStr(query)
-    results = posadas
+    results = activePosadas
       .filter(p => {
         const haystack = normalizeStr(
           [p.nombre, p.destino, p.tipo, ...p.tags, p.descripcion].join(' ')

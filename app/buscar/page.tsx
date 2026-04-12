@@ -7,6 +7,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { posadas, type Posada } from '@/lib/data'
 import { venezuelaLocations } from '@/lib/locations-ve'
 import { searchPosadas, resolveLocation, type SearchOptions } from '@/lib/search'
+import { regions, findRegionsByQuery, type Region } from '@/lib/regions'
 
 const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
@@ -380,9 +381,10 @@ function BuscarContent() {
   // UI state
   const [showDate,    setShowDate]    = useState(false)
   const [showPay,     setShowPay]     = useState(false)
-  const [suggestions, setSuggestions] = useState<Array<{label:string;sub:string;lat?:number;lng?:number;isStatic:boolean}>>([])
+  const [suggestions, setSuggestions] = useState<Array<{label:string;sub:string;lat?:number;lng?:number;isStatic:boolean;isRegion?:boolean;regionId?:string}>>([])
   const [showSug,     setShowSug]     = useState(false)
   const [sugLoading,  setSugLoading]  = useState(false)
+  const [regionId,    setRegionId]    = useState(searchParams.get('regionId') || '')
 
   const [hoveredSlug,    setHoveredSlug]    = useState<string|null>(null)
   const [selectedPosada, setSelectedPosada] = useState<Posada|null>(null)
@@ -426,7 +428,12 @@ function BuscarContent() {
       .slice(0,4)
       .map(l=>({ label:l.nombre, sub:l.region, lat:l.lat, lng:l.lng, isStatic:true }))
 
-    // 2) Nominatim via server-side proxy (no CORS / rate-limit issues)
+    // 2) Region matches
+    const regionMatches = findRegionsByQuery(q)
+      .slice(0, 3)
+      .map(r => ({ label: r.nombre, sub: r.sub, lat: r.lat, lng: r.lng, isStatic: true, isRegion: true, regionId: r.id }))
+
+    // 3) Nominatim via server-side proxy (no CORS / rate-limit issues)
     try {
       const res  = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`)
       const data: NominatimResult[] = await res.json()
@@ -442,9 +449,9 @@ function BuscarContent() {
         })
         .filter(n => !staticMatches.some(s => s.label.toLowerCase() === n.label.toLowerCase()))
 
-      setSuggestions([...staticMatches, ...nomMatches].slice(0, 8))
+      setSuggestions([...regionMatches, ...staticMatches, ...nomMatches].slice(0, 8))
     } catch {
-      setSuggestions(staticMatches)
+      setSuggestions([...regionMatches, ...staticMatches].slice(0, 8))
     }
     setSugLoading(false)
   }, [])
@@ -463,12 +470,22 @@ function BuscarContent() {
     } else {
       setOverrideLat(undefined); setOverrideLng(undefined); setOverrideName(undefined)
     }
+    setRegionId('')
     setShowSug(false)
   }
 
   function clearLocation() {
     setQuery(''); setOverrideLat(undefined); setOverrideLng(undefined); setOverrideName(undefined)
-    setSuggestions([])
+    setRegionId(''); setSuggestions([])
+  }
+
+  function selectRegion(r: Region) {
+    setQuery(r.nombre)
+    setOverrideLat(r.lat)
+    setOverrideLng(r.lng)
+    setOverrideName(r.nombre)
+    setRegionId(r.id)
+    setShowSug(false)
   }
 
   // Date label
@@ -491,8 +508,8 @@ function BuscarContent() {
   // Stable opts reference — only recalculate when search params actually change
   // This breaks the infinite re-render loop caused by searchPosadas returning a new array every render
   const searchResults = useMemo(
-    () => searchPosadas(posadas, { query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName }),
-    [query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName] // eslint-disable-line react-hooks/exhaustive-deps
+    () => searchPosadas(posadas, { query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName, regionId }),
+    [query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName, regionId] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   // searchKey changes only when the USER issues a new search (not on viewport pan)
@@ -545,7 +562,7 @@ function BuscarContent() {
         .sb-go:hover{background:var(--cacao-dark);}
         @media(max-width:680px){.sb-bar{flex-direction:column;border-radius:18px;}.sb-seg{border-right:none;border-bottom:1.5px solid var(--line);}.sb-seg:last-of-type{border-bottom:none;}.sb-go{margin:0.38rem;justify-content:center;}}
         /* Suggestion dropdown */
-        .sb-drop{position:absolute;top:calc(100% + 9px);left:0;background:white;border:1.5px solid var(--line);border-radius:16px;box-shadow:var(--shl);z-index:300;overflow:hidden;min-width:260px;max-height:340px;overflow-y:auto;}
+        .sb-drop{position:absolute;top:calc(100% + 9px);left:0;background:white;border:1.5px solid var(--line);border-radius:16px;box-shadow:var(--shl);z-index:300;overflow:hidden;min-width:260px;max-height:400px;overflow-y:auto;}
         /* Ensure dropdowns always clear the map below */
         .sb-bar{overflow:visible!important;}
         .sb-sug-row{display:flex;align-items:center;gap:0.65rem;padding:0.72rem 1rem;font-size:0.85rem;color:var(--indigo);cursor:pointer;transition:background 0.12s;}
@@ -556,6 +573,8 @@ function BuscarContent() {
         .sb-sug-sub{font-size:0.71rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
         .sb-sug-badge{font-size:0.6rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:999px;background:rgba(230,126,34,0.12);color:var(--cacao);flex-shrink:0;}
         .sb-sug-loading{padding:0.8rem 1rem;font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:0.5rem;}
+        .sb-sug-hdr{padding:0.62rem 1rem 0.3rem;font-size:0.68rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);}
+        .sb-sug-section-hdr{padding:0.55rem 1rem 0.2rem;font-size:0.65rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--line);margin-top:0.2rem;}
         /* Date picker panel */
         .sb-date-drop{position:absolute;top:calc(100% + 9px);left:50%;transform:translateX(-50%);background:white;border:1.5px solid var(--line);border-radius:20px;box-shadow:var(--shl);z-index:300;padding:1.05rem;min-width:min(640px,90vw);}
         @media(max-width:640px){.sb-date-drop{left:0;transform:none;min-width:calc(100vw - 2rem);}}
@@ -777,25 +796,75 @@ function BuscarContent() {
                 onFocus={()=>setShowSug(true)} autoComplete="off"/>
               {query && <button className="sb-clear" onClick={clearLocation} aria-label="Borrar">✕</button>}
             </div>
-            {showSug && (query.length>0) && (
+            {showSug && (
               <div className="sb-drop" ref={sugRef}>
-                {sugLoading && suggestions.length===0 && (
-                  <div className="sb-sug-loading">
-                    <span>⟳</span> Buscando en Venezuela…
-                  </div>
-                )}
-                {suggestions.map((s,i)=>(
-                  <div key={i} className="sb-sug-row" onMouseDown={()=>selectSuggestion(s)}>
-                    <span className="sb-sug-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="#7A8699"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></span>
-                    <div className="sb-sug-main">
-                      <div className="sb-sug-name">{s.label}</div>
-                      <div className="sb-sug-sub">{s.sub}</div>
+                {query === '' ? (
+                  /* Pre-state */
+                  <>
+                    <div className="sb-sug-hdr">Sugerencias de destinos</div>
+                    <div className="sb-sug-row" onMouseDown={()=>{clearLocation();setShowSug(false)}}>
+                      <span className="sb-sug-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+                      <div className="sb-sug-main">
+                        <div className="sb-sug-name">Buscar en toda Venezuela</div>
+                        <div className="sb-sug-sub">Ver todas las posadas disponibles</div>
+                      </div>
                     </div>
-                    {s.isStatic && <span className="sb-sug-badge">Popular</span>}
-                  </div>
-                ))}
-                {!sugLoading && suggestions.length===0 && query.length>1 && (
-                  <div className="sb-sug-loading">Sin resultados para "{query}"</div>
+                    <div className="sb-sug-section-hdr">Popular</div>
+                    {['Los Roques','Isla Margarita','Canaima','Mochima','Caracas','Choroní','Mérida'].map(name => {
+                      const loc = venezuelaLocations.find(l=>l.nombre===name)
+                      if (!loc) return null
+                      return (
+                        <div key={name} className="sb-sug-row" onMouseDown={()=>selectSuggestion({label:name,sub:loc.region,lat:loc.lat,lng:loc.lng})}>
+                          <span className="sb-sug-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="#7A8699"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></span>
+                          <div className="sb-sug-main">
+                            <div className="sb-sug-name">{name}</div>
+                            <div className="sb-sug-sub">{loc.region}</div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                    <div className="sb-sug-section-hdr">Regiones</div>
+                    {regions.map(r=>(
+                      <div key={r.id} className="sb-sug-row" onMouseDown={()=>selectRegion(r)}>
+                        <span className="sb-sug-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></span>
+                        <div className="sb-sug-main">
+                          <div className="sb-sug-name">{r.nombre}</div>
+                          <div className="sb-sug-sub">{r.sub}</div>
+                        </div>
+                        <span className="sb-sug-badge">Región</span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  /* Query typed */
+                  <>
+                    {sugLoading && suggestions.length===0 && (
+                      <div className="sb-sug-loading">
+                        <span>⟳</span> Buscando en Venezuela…
+                      </div>
+                    )}
+                    {suggestions.map((s,i)=>(
+                      <div key={i} className="sb-sug-row" onMouseDown={()=>s.isRegion&&s.regionId ? selectRegion({id:s.regionId,nombre:s.label,lat:s.lat!,lng:s.lng!,sub:s.sub,keywords:[]}) : selectSuggestion(s)}>
+                        <span className="sb-sug-icon">
+                          {s.isRegion
+                            ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7A8699" strokeWidth="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+                            : <svg width="14" height="14" viewBox="0 0 24 24" fill="#7A8699"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                          }
+                        </span>
+                        <div className="sb-sug-main">
+                          <div className="sb-sug-name">{s.label}</div>
+                          <div className="sb-sug-sub">{s.sub}</div>
+                        </div>
+                        {s.isRegion
+                          ? <span className="sb-sug-badge">Región</span>
+                          : s.isStatic && <span className="sb-sug-badge">Popular</span>
+                        }
+                      </div>
+                    ))}
+                    {!sugLoading && suggestions.length===0 && query.length>1 && (
+                      <div className="sb-sug-loading">Sin resultados para &quot;{query}&quot;</div>
+                    )}
+                  </>
                 )}
               </div>
             )}
