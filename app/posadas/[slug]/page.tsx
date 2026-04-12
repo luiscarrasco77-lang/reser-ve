@@ -1,23 +1,51 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import { getPosada } from '@/lib/data'
+import { type Posada } from '@/lib/data'
 
 export default function FichaPosada() {
   const rawParams = useParams<{ slug: string }>()
   const slug = rawParams?.slug ?? ''
-  const posada = getPosada(slug)
   const router = useRouter()
+
+  const [posada, setPosada] = useState<Posada | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
   const [imgActiva, setImgActiva] = useState(0)
   const [fechaEntrada, setFechaEntrada] = useState('')
   const [fechaSalida, setFechaSalida] = useState('')
   const [huespedes, setHuespedes] = useState(2)
 
+  useEffect(() => {
+    if (!slug) return
+    fetch(`/api/posadas/${slug}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data || data.error) { setNotFound(true); return }
+        // Map DB flat fields → Posada shape
+        setPosada({
+          ...data,
+          tags: data.tags ?? [],
+          servicios: data.servicios ?? [],
+          politicas: data.politicas ?? [],
+          imgs: data.imgs ?? [],
+          metodoPago: data.metodoPago ?? [],
+          host: { nombre: data.hostNombre ?? '', desde: data.hostDesde ?? '', idiomas: data.hostIdiomas ?? [] },
+          reseñas: [],
+        })
+      })
+      .finally(() => setLoading(false))
+  }, [slug])
+
   if (!rawParams) return null
 
-  if (!posada) {
+  if (loading) {
+    return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>Cargando…</div>
+  }
+
+  if (notFound || !posada) {
     return (
       <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C',gap:'1rem'}}>
         <p style={{fontSize:'1.2rem',fontWeight:700}}>Posada no encontrada</p>

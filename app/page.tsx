@@ -4,6 +4,8 @@ import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { venezuelaLocations } from '@/lib/locations-ve'
 import { normalizeStr } from '@/lib/search'
+import { regions, findRegionsByQuery, type Region } from '@/lib/regions'
+import NavUser from '@/components/NavUser'
 
 function useCounter(target: number, active: boolean, duration = 1800) {
   const [count, setCount] = useState(0)
@@ -27,14 +29,16 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false)
   const [activeTab, setActiveTab] = useState<'viajero' | 'posadero'>('viajero')
   const [destinoBusqueda, setDestinoBusqueda] = useState('')
+  const [mobOpen, setMobOpen] = useState(false)
   // Search bar state
-  type SbSug = { label: string; sub: string; lat?: number; lng?: number; isStatic: boolean }
+  type SbSug = { label: string; sub: string; lat?: number; lng?: number; isStatic: boolean; isRegion?: boolean; regionId?: string }
   const [sbSuggestions, setSbSuggestions] = useState<SbSug[]>([])
   const [sbShowSug, setSbShowSug] = useState(false)
   const [sbSugLoading, setSbSugLoading] = useState(false)
   const [sbOverrideLat, setSbOverrideLat] = useState<number | undefined>()
   const [sbOverrideLng, setSbOverrideLng] = useState<number | undefined>()
   const [sbOverrideName, setSbOverrideName] = useState<string | undefined>()
+  const [sbRegionId, setSbRegionId] = useState<string>('')
   const [sbCheckIn, setSbCheckIn] = useState<Date | null>(null)
   const [sbCheckOut, setSbCheckOut] = useState<Date | null>(null)
   const [sbFlexible, setSbFlexible] = useState(false)
@@ -153,6 +157,9 @@ export default function Home() {
       .filter(l => [l.nombre, ...l.aliases].some(a => a.toLowerCase().includes(ql)))
       .slice(0, 4)
       .map(l => ({ label: l.nombre, sub: l.region, lat: l.lat, lng: l.lng, isStatic: true }))
+    const regionMatches = findRegionsByQuery(q)
+      .slice(0, 3)
+      .map(r => ({ label: r.nombre, sub: r.sub, lat: r.lat, lng: r.lng, isStatic: true, isRegion: true, regionId: r.id }))
     try {
       const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`)
       const data = await res.json()
@@ -162,9 +169,9 @@ export default function Home() {
           .filter(Boolean).join(', ') || 'Venezuela'
         return { label: r.display_name.split(',')[0].trim(), sub, lat: parseFloat(r.lat), lng: parseFloat(r.lon), isStatic: false }
       }).filter((n: any) => !staticMatches.some(s => s.label.toLowerCase() === n.label.toLowerCase()))
-      setSbSuggestions([...staticMatches, ...nomMatches].slice(0, 8))
+      setSbSuggestions([...regionMatches, ...staticMatches, ...nomMatches].slice(0, 8))
     } catch {
-      setSbSuggestions(staticMatches)
+      setSbSuggestions([...regionMatches, ...staticMatches].slice(0, 8))
     }
     setSbSugLoading(false)
   }, [])
@@ -268,6 +275,7 @@ export default function Home() {
     if (sbOverrideLat !== undefined) params.set('overrideLat', String(sbOverrideLat))
     if (sbOverrideLng !== undefined) params.set('overrideLng', String(sbOverrideLng))
     if (sbOverrideName)              params.set('overrideName', sbOverrideName)
+    if (sbRegionId)                  params.set('regionId', sbRegionId)
     if (sbFlexible) {
       params.set('flexible', '1')
       if (sbFlexMonths.length > 0) params.set('flexMonths', sbFlexMonths.join(','))
@@ -279,6 +287,27 @@ export default function Home() {
     if (sbPago) params.set('pago', sbPago)
     router.push(`/buscar?${params.toString()}`)
   }
+
+  function selectVenezuela() {
+    setDestinoBusqueda('')
+    setSbOverrideLat(undefined)
+    setSbOverrideLng(undefined)
+    setSbOverrideName(undefined)
+    setSbRegionId('')
+    setSbShowSug(false)
+    router.push('/buscar')
+  }
+
+  function selectRegionSug(r: Region) {
+    setDestinoBusqueda(r.nombre)
+    setSbOverrideLat(r.lat)
+    setSbOverrideLng(r.lng)
+    setSbOverrideName(r.nombre)
+    setSbRegionId(r.id)
+    setSbShowSug(false)
+  }
+
+  const POPULAR_DEST = ['Los Roques', 'Isla Margarita', 'Canaima', 'Mochima', 'Caracas', 'Choroní', 'Mérida']
 
   const destinos: { name: string; slug: string | null; tag: string; count: string; img: string; wide?: boolean }[] = [
     { name: 'Los Roques', slug: 'los-roques', tag: 'Archipiélago', count: '12 posadas', img: '/images/Archipielago.webp' },
@@ -416,7 +445,18 @@ export default function Home() {
           animation:pulseShadow 3s ease-in-out infinite;
         }
         .nav-cta:hover { background:var(--cacao-dark); transform:translateY(-1px); animation:none; box-shadow:0 14px 35px rgba(230,126,34,0.38); }
-        @media(max-width:768px){.nav-links{display:none;} .nav{padding:1rem;} .nav.scrolled{padding:0.75rem 1rem;}}
+        .mob-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:0.3rem;color:inherit;}
+        .mob-menu-btn svg{display:block;}
+        .mob-drawer{position:fixed;inset:0;z-index:300;pointer-events:none;}
+        .mob-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.45);opacity:0;transition:opacity 0.25s;}
+        .mob-panel{position:absolute;top:0;right:0;bottom:0;width:min(300px,85vw);background:#FDFBF7;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.16,1,0.3,1);display:flex;flex-direction:column;padding:1.5rem;}
+        .mob-drawer.open{pointer-events:all;}
+        .mob-drawer.open .mob-overlay{opacity:1;}
+        .mob-drawer.open .mob-panel{transform:translateX(0);}
+        .mob-close{align-self:flex-end;background:none;border:none;cursor:pointer;padding:0.25rem;color:var(--indigo);margin-bottom:1.5rem;}
+        .mob-link{font-size:1rem;font-weight:600;color:var(--indigo);text-decoration:none;padding:0.85rem 0;border-bottom:1px solid rgba(26,43,76,0.07);display:block;}
+        .mob-link:last-of-type{border-bottom:none;}
+        @media(max-width:768px){.nav-links{display:none;} .nav{padding:1rem;} .nav.scrolled{padding:0.75rem 1rem;} .mob-menu-btn{display:block;}}
 
         /* ─── HERO ─── */
         .hero {
@@ -546,12 +586,23 @@ export default function Home() {
           position:absolute; top:calc(100% + 10px); left:0;
           background:white; border:1.5px solid rgba(26,43,76,0.09);
           border-radius:18px; box-shadow:0 16px 52px rgba(26,43,76,0.16);
-          z-index:600; overflow:visible;
+          z-index:600; overflow:hidden;
         }
-        .sb-suggest { min-width:240px; }
+        .sb-suggest { min-width:300px; max-height:380px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:rgba(26,43,76,0.15) transparent; }
         .sb-sug-item { display:flex; align-items:center; gap:0.7rem; padding:0.8rem 1rem; font-size:0.88rem; color:#1A2B4C; cursor:pointer; transition:background 0.14s; }
         .sb-sug-item:hover { background:rgba(26,43,76,0.04); }
         .sb-sug-reg { font-size:0.72rem; color:rgba(26,43,76,0.45); margin-left:auto; padding-left:0.4rem; white-space:nowrap; }
+        /* Pre-state suggestion headers */
+        .sb-sug-hdr { padding: 0.62rem 1rem 0.3rem; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+        .sb-sug-section-hdr { padding: 0.55rem 1rem 0.2rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); border-top: 1px solid var(--line); margin-top: 0.2rem; }
+        /* Suggestion row reuse */
+        .sb-sug-row-landing { display:flex; align-items:center; gap:0.7rem; padding:0.72rem 1rem; font-size:0.88rem; color:#1A2B4C; cursor:pointer; transition:background 0.14s; }
+        .sb-sug-row-landing:hover { background:rgba(26,43,76,0.04); }
+        .sb-sug-icon-sm { font-size:0.85rem; flex-shrink:0; color:rgba(26,43,76,0.45); display:flex; }
+        .sb-sug-main-col { flex:1; min-width:0; }
+        .sb-sug-name-txt { display:block; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sb-sug-sub-txt { display:block; font-size:0.71rem; color:rgba(26,43,76,0.45); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sb-sug-badge-region { font-size:0.6rem; font-weight:700; padding:0.12rem 0.38rem; border-radius:999px; background:rgba(230,126,34,0.1); color:#E67E22; flex-shrink:0; }
         /* Date panel */
         .sb-date-panel { padding:1.1rem; min-width:min(640px,92vw); left:50%; transform:translateX(-50%); }
         .sb-date-modes { display:flex; gap:0.4rem; background:rgba(26,43,76,0.05); border-radius:999px; padding:0.28rem; margin-bottom:1rem; }
@@ -681,7 +732,7 @@ export default function Home() {
         }
 
         /* ─── SECTIONS ─── */
-        .section { padding:7rem 1.5rem; max-width:1100px; margin:0 auto; }
+        .section { padding:3.5rem 1.5rem; max-width:1100px; margin:0 auto; }
         .section-label {
           display:inline-flex; align-items:center; gap:0.5rem;
           padding:0.44rem 0.85rem; border-radius:999px; font-size:0.74rem; font-weight:700;
@@ -832,7 +883,7 @@ export default function Home() {
         .dest-card:hover .dest-arrow { opacity:1; transform:translateX(0); }
 
         /* ─── TESTIMONIALS ─── */
-        .testimonials-section { background:var(--cream); padding:7rem 1.5rem; }
+        .testimonials-section { background:var(--cream); padding:4rem 1.5rem; }
         .testimonials-inner { max-width:1100px; margin:0 auto; }
         .testimonials-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; }
         @media(max-width:900px){ .testimonials-grid{grid-template-columns:1fr 1fr;} }
@@ -905,7 +956,7 @@ export default function Home() {
         /* ─── DARK CTA BAND ─── */
         .dark-cta {
           background:var(--indigo-deep);
-          padding:7rem 1.5rem;
+          padding:4.5rem 1.5rem;
           text-align:center;
           position:relative; overflow:hidden;
         }
@@ -979,9 +1030,9 @@ export default function Home() {
         .footer-bottom a:hover { color:rgba(255,255,255,0.8); }
 
         @media(max-width:768px){
-          .section{padding:5rem 1rem;}
+          .section{padding:3rem 1rem;}
           .posadero-section{padding:2rem;gap:2rem;}
-          .dark-cta{padding:5rem 1rem;}
+          .dark-cta{padding:3.5rem 1rem;}
           .footer{padding:4rem 1rem 2rem;}
         }
         @media(max-width:480px){
@@ -1015,11 +1066,35 @@ export default function Home() {
         </a>
         <div className="nav-links">
           <a href="/buscar" className="nav-link">Destinos</a>
-          <a href="/registro-posada" className="nav-link">Posaderos</a>
+          <a href="/posaderos" className="nav-link">Posaderos</a>
+          <a href="/vision" className="nav-link">Por qué posadas?</a>
           <a href="#como-funciona" className="nav-link">Cómo funciona</a>
-          <a href="/registro-posada" className="nav-cta">Registra tu posada</a>
+          <NavUser dark={scrollY < 60} />
         </div>
+        <button className="mob-menu-btn" onClick={() => setMobOpen(true)} aria-label="Menú">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={scrollY < 60 ? 'white' : '#1A2B4C'} strokeWidth="2.2" strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
       </nav>
+
+      {/* Mobile drawer */}
+      <div className={`mob-drawer${mobOpen ? ' open' : ''}`}>
+        <div className="mob-overlay" onClick={() => setMobOpen(false)} />
+        <div className="mob-panel">
+          <button className="mob-close" onClick={() => setMobOpen(false)} aria-label="Cerrar">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A2B4C" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <a href="/buscar" className="mob-link" onClick={() => setMobOpen(false)}>Destinos</a>
+          <a href="/posaderos" className="mob-link" onClick={() => setMobOpen(false)}>Posaderos</a>
+          <a href="/vision" className="mob-link" onClick={() => setMobOpen(false)}>Por qué posadas?</a>
+          <a href="#como-funciona" className="mob-link" onClick={() => setMobOpen(false)}>Cómo funciona</a>
+          <a href="/faq" className="mob-link" onClick={() => setMobOpen(false)}>Preguntas frecuentes</a>
+          <div style={{marginTop:'1.5rem'}}>
+            <NavUser dark={false} />
+          </div>
+        </div>
+      </div>
 
       {/* ── HERO ─────────────────────────────────────────── */}
       <section className="hero">
@@ -1038,8 +1113,8 @@ export default function Home() {
         <div className="hero-content">
           <div className="hero-panel">
             <div className={`hero-badges ${loaded ? 'anim-0' : ''}`}>
-              <span className="hero-badge">Boutique</span>
               <span className="hero-badge">Venezuela</span>
+              <span className="hero-badge">Autenticidad garantizada</span>
             </div>
             <h1 className={`hero-h1 ${loaded ? 'anim-1' : ''}`}>
               {loaded ? (
@@ -1096,38 +1171,96 @@ export default function Home() {
                 onFocus={() => setSbShowSug(true)}
                 autoComplete="off"
               />
-              {sbShowSug && (destinoBusqueda.length > 0) && (
+              {sbShowSug && (
                 <div className="sb-suggest" ref={sbSugRef}>
-                  {sbSugLoading && sbSuggestions.length === 0 && (
-                    <div className="sb-sug-item" style={{color:'rgba(26,43,76,0.45)',fontSize:'0.82rem'}}>
-                      Buscando en Venezuela…
-                    </div>
-                  )}
-                  {sbSuggestions.map((s, i) => (
-                    <div key={i} className="sb-sug-item"
-                      onMouseDown={() => {
-                        setDestinoBusqueda(s.label)
-                        setSbOverrideLat(s.lat); setSbOverrideLng(s.lng); setSbOverrideName(s.label)
-                        setSbShowSug(false)
-                      }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="rgba(26,43,76,0.45)" style={{flexShrink:0}}>
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                      </svg>
-                      <span style={{flex:1,minWidth:0}}>
-                        <span style={{display:'block',fontWeight:500}}>{s.label}</span>
-                        <span style={{fontSize:'0.71rem',color:'rgba(26,43,76,0.45)'}}>{s.sub}</span>
-                      </span>
-                      {s.isStatic && (
-                        <span style={{fontSize:'0.6rem',fontWeight:700,padding:'0.12rem 0.38rem',borderRadius:'999px',background:'rgba(230,126,34,0.1)',color:'#E67E22',flexShrink:0}}>
-                          Popular
+                  {destinoBusqueda === '' ? (
+                    /* Pre-state: show Venezuela + popular + regions */
+                    <>
+                      <div className="sb-sug-hdr">Sugerencias de destinos</div>
+                      <div className="sb-sug-row-landing" onMouseDown={() => { selectVenezuela() }}>
+                        <span className="sb-sug-icon-sm">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         </span>
+                        <div className="sb-sug-main-col">
+                          <span className="sb-sug-name-txt">Buscar en toda Venezuela</span>
+                          <span className="sb-sug-sub-txt">Ver todas las posadas disponibles</span>
+                        </div>
+                      </div>
+                      <div className="sb-sug-section-hdr">Popular</div>
+                      {POPULAR_DEST.map(name => {
+                        const loc = venezuelaLocations.find(l => l.nombre === name)
+                        if (!loc) return null
+                        return (
+                          <div key={name} className="sb-sug-row-landing" onMouseDown={() => {
+                            setDestinoBusqueda(name)
+                            setSbOverrideLat(loc.lat); setSbOverrideLng(loc.lng); setSbOverrideName(name)
+                            setSbRegionId(''); setSbShowSug(false)
+                          }}>
+                            <span className="sb-sug-icon-sm">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="rgba(26,43,76,0.45)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            </span>
+                            <div className="sb-sug-main-col">
+                              <span className="sb-sug-name-txt">{name}</span>
+                              <span className="sb-sug-sub-txt">{loc.region}</span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                      <div className="sb-sug-section-hdr">Regiones</div>
+                      {regions.map(r => (
+                        <div key={r.id} className="sb-sug-row-landing" onMouseDown={() => selectRegionSug(r)}>
+                          <span className="sb-sug-icon-sm">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+                          </span>
+                          <div className="sb-sug-main-col">
+                            <span className="sb-sug-name-txt">{r.nombre}</span>
+                            <span className="sb-sug-sub-txt">{r.sub}</span>
+                          </div>
+                          <span className="sb-sug-badge-region">Región</span>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    /* Query typed: show matches */
+                    <>
+                      {sbSugLoading && sbSuggestions.length === 0 && (
+                        <div className="sb-sug-item" style={{color:'rgba(26,43,76,0.45)',fontSize:'0.82rem'}}>
+                          Buscando en Venezuela…
+                        </div>
                       )}
-                    </div>
-                  ))}
-                  {!sbSugLoading && sbSuggestions.length === 0 && destinoBusqueda.length > 1 && (
-                    <div className="sb-sug-item" style={{color:'rgba(26,43,76,0.45)',fontSize:'0.82rem'}}>
-                      Sin resultados para &quot;{destinoBusqueda}&quot;
-                    </div>
+                      {sbSuggestions.map((s, i) => (
+                        <div key={i} className="sb-sug-item"
+                          onMouseDown={() => {
+                            if (s.isRegion && s.regionId) {
+                              selectRegionSug({ id: s.regionId, nombre: s.label, lat: s.lat!, lng: s.lng!, sub: s.sub, keywords: [] })
+                            } else {
+                              setDestinoBusqueda(s.label)
+                              setSbOverrideLat(s.lat); setSbOverrideLng(s.lng); setSbOverrideName(s.label)
+                              setSbRegionId(''); setSbShowSug(false)
+                            }
+                          }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="rgba(26,43,76,0.45)" style={{flexShrink:0}}>
+                            {s.isRegion
+                              ? <><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" fill="none" stroke="rgba(26,43,76,0.45)" strokeWidth="2"/><line x1="8" y1="2" x2="8" y2="18" stroke="rgba(26,43,76,0.45)" strokeWidth="2"/><line x1="16" y1="6" x2="16" y2="22" stroke="rgba(26,43,76,0.45)" strokeWidth="2"/></>
+                              : <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            }
+                          </svg>
+                          <span style={{flex:1,minWidth:0}}>
+                            <span style={{display:'block',fontWeight:500}}>{s.label}</span>
+                            <span style={{fontSize:'0.71rem',color:'rgba(26,43,76,0.45)'}}>{s.sub}</span>
+                          </span>
+                          {s.isRegion
+                            ? <span className="sb-sug-badge-region">Región</span>
+                            : s.isStatic && <span style={{fontSize:'0.6rem',fontWeight:700,padding:'0.12rem 0.38rem',borderRadius:'999px',background:'rgba(230,126,34,0.1)',color:'#E67E22',flexShrink:0}}>Popular</span>
+                          }
+                        </div>
+                      ))}
+                      {!sbSugLoading && sbSuggestions.length === 0 && destinoBusqueda.length > 1 && (
+                        <div className="sb-sug-item" style={{color:'rgba(26,43,76,0.45)',fontSize:'0.82rem'}}>
+                          Sin resultados para &quot;{destinoBusqueda}&quot;
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -1318,7 +1451,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="divider" style={{marginTop:'5rem'}} />
+      <div className="divider" style={{marginTop:'2.5rem'}} />
 
       {/* ── QUÉ ES UNA POSADA ────────────────────────────── */}
       <section className="section">
@@ -1330,7 +1463,7 @@ export default function Home() {
               loading="lazy"
             />
             <div className="split-photo-badge">
-              <div className="split-photo-badge-title">Posada La Brisa · Los Roques</div>
+              <div className="split-photo-badge-title">Waku Lodge · Canaima</div>
               <div className="split-photo-badge-sub">★ 4.9 · 48 reseñas · desde $120/noche</div>
             </div>
           </div>
@@ -1514,13 +1647,16 @@ export default function Home() {
                 'Fotografía profesional incluida en el paquete de digitalización',
                 'Perfil activo visible para viajeros locales, internacionales y la diáspora venezolana',
                 'Cobros flexibles vía Zelle, Pago Móvil, transferencia, Zinli o Binance',
-                'Respaldado por la comunidad Dos Locos de Viaje',
               ].map((f,i) => (
                 <div className="feature-item" key={i}>
                   <div className="feature-dot" />
                   <div className="feature-text">{f}</div>
                 </div>
               ))}
+              <div className="feature-item">
+                <div className="feature-dot" />
+                <div className="feature-text">Respaldado por la comunidad <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>dos locos de viaje</a></div>
+              </div>
             </div>
           </div>
           <div className="posadero-right reveal-right">
@@ -1576,25 +1712,47 @@ export default function Home() {
             <a href="/registro-posada">Registra tu posada</a>
             <a href="#como-funciona">Cómo funciona</a>
             <a href="#">Paquete digitalización</a>
-            <a href="#">Preguntas frecuentes</a>
+            <a href="/faq">Preguntas frecuentes</a>
           </div>
           <div className="footer-col">
             <h4>Contacto</h4>
             <a href="#">hola@reser-ve.com</a>
             <a href="#">WhatsApp</a>
             <a href="#">Instagram</a>
-            <a href="#">Dos Locos de Viaje</a>
+            <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer">Dos Locos de Viaje</a>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 RESER-VE · Impulsado por Dos Locos de Viaje</p>
+          <p>© 2026 RESER-VE · Impulsado por <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>dos locos de viaje</a></p>
           <div style={{display:'flex',gap:'1.5rem'}}>
             <a href="#">Términos</a>
             <a href="#">Privacidad</a>
+            <a href="/vision">Por qué posadas?</a>
             <a href="#">Sobre nosotros</a>
           </div>
         </div>
       </footer>
+
+      {/* ── Floating customer service button ── */}
+      <a
+        href="/mensajes?type=support"
+        style={{
+          position: 'fixed', bottom: '1.75rem', right: '1.75rem', zIndex: 999,
+          display: 'flex', alignItems: 'center', gap: '0.55rem',
+          background: '#1A2B4C', color: 'white',
+          padding: '0.75rem 1.25rem 0.75rem 1rem',
+          borderRadius: 999, boxShadow: '0 8px 28px rgba(26,43,76,0.32)',
+          fontFamily: 'Inter,sans-serif', fontWeight: 700, fontSize: '0.86rem',
+          textDecoration: 'none', transition: 'all 0.2s',
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 36px rgba(26,43,76,0.42)' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 28px rgba(26,43,76,0.32)' }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        Servicio al cliente
+      </a>
     </>
   )
 }
