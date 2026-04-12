@@ -14,6 +14,7 @@ export default function FichaPosada() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [imgActiva, setImgActiva] = useState(0)
+  const [lightbox, setLightbox] = useState<number | null>(null)
   const [fechaEntrada, setFechaEntrada] = useState('')
   const [fechaSalida, setFechaSalida] = useState('')
   const [huespedes, setHuespedes] = useState(2)
@@ -38,6 +39,18 @@ export default function FichaPosada() {
       })
       .finally(() => setLoading(false))
   }, [slug])
+
+  useEffect(() => {
+    if (lightbox === null) return
+    function onKey(e: KeyboardEvent) {
+      if (!posada) return
+      if (e.key === 'Escape') setLightbox(null)
+      if (e.key === 'ArrowRight') setLightbox(i => i !== null ? (i + 1) % posada!.imgs.length : null)
+      if (e.key === 'ArrowLeft') setLightbox(i => i !== null ? (i - 1 + posada!.imgs.length) % posada!.imgs.length : null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [lightbox, posada])
 
   if (!rawParams) return null
 
@@ -109,6 +122,18 @@ export default function FichaPosada() {
           .gallery-thumbs{gap:0.35rem;}
           .gallery-thumb{height:100px;}
         }
+
+        /* LIGHTBOX */
+        .lb-overlay{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.94);display:flex;align-items:center;justify-content:center;animation:lb-in 0.18s ease;}
+        @keyframes lb-in{from{opacity:0}to{opacity:1}}
+        .lb-img{max-width:90vw;max-height:88vh;object-fit:contain;border-radius:8px;box-shadow:0 30px 80px rgba(0,0,0,0.6);}
+        .lb-close{position:fixed;top:1.25rem;right:1.5rem;background:rgba(255,255,255,0.12);border:none;color:white;width:40px;height:40px;border-radius:50%;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;z-index:1000;}
+        .lb-close:hover{background:rgba(255,255,255,0.25);}
+        .lb-arrow{position:fixed;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);border:none;color:white;width:48px;height:48px;border-radius:50%;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;z-index:1000;}
+        .lb-arrow:hover{background:rgba(255,255,255,0.25);}
+        .lb-arrow.prev{left:1.5rem;}
+        .lb-arrow.next{right:1.5rem;}
+        .lb-counter{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.55);font-size:0.82rem;font-weight:600;z-index:1000;}
 
         .layout{display:grid;grid-template-columns:1fr 340px;gap:3rem;align-items:start;}
         @media(max-width:900px){.layout{grid-template-columns:1fr;}}
@@ -194,7 +219,7 @@ export default function FichaPosada() {
 
         {/* GALLERY: full-width featured + 3 thumbs row */}
         <div className="gallery">
-          <div className="gallery-main" onClick={() => setImgActiva(0)}>
+          <div className="gallery-main" onClick={() => setLightbox(imgActiva)} style={{cursor:'zoom-in'}}>
             <img src={posada.imgs[imgActiva]} alt={posada.nombre} />
           </div>
           <div className="gallery-thumbs">
@@ -202,13 +227,35 @@ export default function FichaPosada() {
               <div
                 key={i}
                 className={`gallery-thumb ${imgActiva === i ? 'active' : ''}`}
-                onClick={() => setImgActiva(i)}
+                onClick={() => { setImgActiva(i); setLightbox(i) }}
               >
                 <img src={img} alt={`${posada.nombre} ${i + 1}`} />
               </div>
             ))}
           </div>
         </div>
+
+        {/* LIGHTBOX */}
+        {lightbox !== null && (
+          <div className="lb-overlay" onClick={() => setLightbox(null)}>
+            <button className="lb-close" onClick={e => { e.stopPropagation(); setLightbox(null) }}>✕</button>
+            {posada.imgs.length > 1 && (
+              <>
+                <button className="lb-arrow prev" onClick={e => { e.stopPropagation(); setLightbox(i => i !== null ? (i - 1 + posada!.imgs.length) % posada!.imgs.length : 0) }}>‹</button>
+                <button className="lb-arrow next" onClick={e => { e.stopPropagation(); setLightbox(i => i !== null ? (i + 1) % posada!.imgs.length : 0) }}>›</button>
+              </>
+            )}
+            <img
+              className="lb-img"
+              src={posada.imgs[lightbox]}
+              alt={`${posada.nombre} ${lightbox + 1}`}
+              onClick={e => e.stopPropagation()}
+            />
+            {posada.imgs.length > 1 && (
+              <div className="lb-counter">{lightbox + 1} / {posada.imgs.length}</div>
+            )}
+          </div>
+        )}
 
         <div className="layout">
           <div>
