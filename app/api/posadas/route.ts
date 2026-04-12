@@ -23,10 +23,34 @@ export async function GET(req: NextRequest) {
   }
 
   const db = getDb()
-  const results = await db.select().from(posadas).where(eq(posadas.status, 'active'))
+  const rows = await db.select().from(posadas).where(eq(posadas.status, 'active'))
+
+  // Map DB rows to Posada shape expected by the UI (nested host, reseñas=[])
+  const mapped = rows.map(p => ({
+    slug: p.slug,
+    nombre: p.nombre,
+    destino: p.destino,
+    destinoSlug: p.destinoSlug,
+    tipo: p.tipo,
+    precio: p.precio,
+    habitaciones: p.habitaciones,
+    capacidad: p.capacidad,
+    rating: p.rating ?? 5,
+    reviews: p.reviews ?? 0,
+    descripcion: p.descripcion,
+    tags: p.tags as string[] ?? [],
+    servicios: p.servicios as string[] ?? [],
+    politicas: p.politicas as string[] ?? [],
+    imgs: p.imgs as string[] ?? [],
+    lat: p.lat,
+    lng: p.lng,
+    metodoPago: p.metodoPago as string[] ?? [],
+    host: { nombre: p.hostNombre ?? '', desde: p.hostDesde ?? '', idiomas: p.hostIdiomas as string[] ?? [] },
+    reseñas: [],
+  }))
 
   // Filter in JS (flexible, good enough for current scale)
-  return NextResponse.json(results.filter(p => {
+  return NextResponse.json(mapped.filter(p => {
     if (p.precio > precioMax) return false
     if (destino && !normalizeStr(p.destino).includes(normalizeStr(destino)) && !normalizeStr(p.destinoSlug).includes(normalizeStr(destino))) return false
     if (metodoPago && !p.metodoPago.some((m: string) => normalizeStr(m).includes(normalizeStr(metodoPago)))) return false

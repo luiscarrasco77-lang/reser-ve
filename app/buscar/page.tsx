@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense, useCallback, useMemo } from 'rea
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { posadas, type Posada } from '@/lib/data'
+import { type Posada } from '@/lib/data'
 import { venezuelaLocations } from '@/lib/locations-ve'
 import { searchPosadas, resolveLocation, type SearchOptions } from '@/lib/search'
 import { regions, findRegionsByQuery, type Region } from '@/lib/regions'
@@ -392,6 +392,14 @@ function BuscarContent() {
   const [mobileTab,      setMobileTab]      = useState<'lista'|'mapa'>('lista')
   // Slugs currently visible in the map viewport (for Airbnb-style pan behaviour)
   const [viewportSlugs,  setViewportSlugs]  = useState<string[]|null>(null)
+  const [allPosadas,     setAllPosadas]     = useState<Posada[]>([])
+
+  // Fetch posadas from API on mount
+  useEffect(() => {
+    fetch('/api/posadas').then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setAllPosadas(data)
+    }).catch(() => {})
+  }, [])
 
   const inputRef  = useRef<HTMLInputElement>(null)
   const dateRef   = useRef<HTMLDivElement>(null)
@@ -509,8 +517,8 @@ function BuscarContent() {
   // Stable opts reference — only recalculate when search params actually change
   // This breaks the infinite re-render loop caused by searchPosadas returning a new array every render
   const searchResults = useMemo(
-    () => searchPosadas(posadas, { query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName, regionId }),
-    [query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName, regionId] // eslint-disable-line react-hooks/exhaustive-deps
+    () => searchPosadas(allPosadas, { query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName, regionId }),
+    [allPosadas, query, metodoPago, precioMax, sort, overrideLat, overrideLng, overrideName, regionId] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   // searchKey changes only when the USER issues a new search (not on viewport pan)
@@ -520,13 +528,13 @@ function BuscarContent() {
   const results = useMemo(() => {
     if (!viewportSlugs || viewportSlugs.length === 0) return searchResults
     const inSearch = new Set(searchResults.map(r => r.posada.slug))
-    const extra = posadas
+    const extra = allPosadas
       .filter(p => viewportSlugs.includes(p.slug) && !inSearch.has(p.slug))
       .filter(p => p.precio <= precioMax)
       .filter(p => !metodoPago || p.metodoPago.some(m => m.toLowerCase().includes(metodoPago.toLowerCase())))
       .map(p => ({ posada: p, distanceKm: null as number | null, isProximity: true }))
     return [...searchResults, ...extra]
-  }, [searchResults, viewportSlugs, precioMax, metodoPago]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchResults, viewportSlugs, allPosadas, precioMax, metodoPago]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isProximity = results.some(r=>r.isProximity)
   const resolvedLoc = overrideName || (query ? resolveLocation(query)?.location.nombre : undefined)
@@ -1016,13 +1024,13 @@ function BuscarContent() {
           <div className="map-inner">
             <MapView
               results={searchResults}
-              allPosadas={posadas}
+              allPosadas={allPosadas}
               searchKey={searchKey}
               mobileVisible={mobileTab === 'mapa'}
               hoveredSlug={hoveredSlug}
               onHover={setHoveredSlug}
               onSelect={slug=>{
-                const p=posadas.find(x=>x.slug===slug)
+                const p=allPosadas.find(x=>x.slug===slug)
                 if (p) setSelectedPosada(p)
               }}
               onViewportChange={slugs => setViewportSlugs(slugs)}
