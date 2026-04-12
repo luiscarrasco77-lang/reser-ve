@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/neon-http'
 import { neon } from '@neondatabase/serverless'
 import * as schema from '../lib/db/schema'
 import { posadas as posadasData } from '../lib/data'
-import 'dotenv/config'
+// env loaded externally via dotenv-cli
 
 const sql = neon(process.env.DATABASE_URL!)
 const db = drizzle(sql, { schema })
