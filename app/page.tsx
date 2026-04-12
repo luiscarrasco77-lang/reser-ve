@@ -1055,6 +1055,7 @@ export default function Home() {
         <div className="nav-links">
           <a href="/buscar" className="nav-link">Destinos</a>
           <a href="/posaderos" className="nav-link">Posaderos</a>
+          <a href="/vision" className="nav-link">Por qué posadas?</a>
           <a href="#como-funciona" className="nav-link">Cómo funciona</a>
           <NavUser dark={scrollY < 60} />
         </div>

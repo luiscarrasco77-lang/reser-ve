@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     ...body,
     slug,
     hostId: parseInt((session.user as any).id),
-    status: 'draft',
+    status: 'pending_review',
   }).returning()
 
   return NextResponse.json(created, { status: 201 })

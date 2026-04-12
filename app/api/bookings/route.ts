@@ -41,13 +41,26 @@ export async function POST(req: NextRequest) {
 
   const { posadaId, checkIn, checkOut, nights, totalPrice, paymentMethod, guestCount, notes } = await req.json()
 
+  // Generate human-readable booking code: RV-2026-XXXX
+  const year = new Date().getFullYear()
+  const rand = Math.floor(1000 + Math.random() * 9000)
+  const bookingCode = `RV-${year}-${rand}`
+
   const db = getDb()
+
+  // Verify posada is active
+  const [posada] = await db.select({ id: posadas.id, nombre: posadas.nombre, status: posadas.status })
+    .from(posadas).where(eq(posadas.id, posadaId))
+  if (!posada || posada.status !== 'active') {
+    return NextResponse.json({ error: 'Posada no disponible' }, { status: 400 })
+  }
+
   const [booking] = await db.insert(bookings).values({
-    posadaId, checkIn, checkOut, nights, totalPrice,
+    bookingCode, posadaId, checkIn, checkOut, nights, totalPrice,
     paymentMethod, guestCount: guestCount || 1, notes,
     guestId: parseInt((session.user as any).id),
     status: 'pending',
   }).returning()
 
-  return NextResponse.json(booking, { status: 201 })
+  return NextResponse.json({ ...booking, posadaNombre: posada.nombre }, { status: 201 })
 }

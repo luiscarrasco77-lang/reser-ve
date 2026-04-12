@@ -1,7 +1,7 @@
 import { pgTable, text, integer, real, boolean, timestamp, serial, json, pgEnum } from 'drizzle-orm/pg-core'
 
 export const userRoleEnum = pgEnum('user_role', ['traveler', 'host', 'admin'])
-export const posadaStatusEnum = pgEnum('posada_status', ['draft', 'active', 'suspended'])
+export const posadaStatusEnum = pgEnum('posada_status', ['draft', 'pending_review', 'active', 'suspended', 'rejected'])
 export const bookingStatusEnum = pgEnum('booking_status', ['pending', 'confirmed', 'cancelled', 'completed'])
 
 export const users = pgTable('users', {
@@ -37,7 +37,8 @@ export const posadas = pgTable('posadas', {
   lat: real('lat').notNull(),
   lng: real('lng').notNull(),
   metodoPago: json('metodo_pago').$type<string[]>().notNull().default([]),
-  status: posadaStatusEnum('status').notNull().default('active'),
+  status: posadaStatusEnum('status').notNull().default('draft'),
+  reviewNotes: text('review_notes'),
   hostNombre: text('host_nombre'),
   hostDesde: text('host_desde'),
   hostIdiomas: json('host_idiomas').$type<string[]>().notNull().default([]),
@@ -47,6 +48,7 @@ export const posadas = pgTable('posadas', {
 
 export const bookings = pgTable('bookings', {
   id: serial('id').primaryKey(),
+  bookingCode: text('booking_code').notNull().unique(),
   posadaId: integer('posada_id').references(() => posadas.id).notNull(),
   guestId: integer('guest_id').references(() => users.id).notNull(),
   checkIn: text('check_in').notNull(),   // ISO date string YYYY-MM-DD
