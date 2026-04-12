@@ -17,15 +17,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: '/login',
   },
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      authorization: {
-        params: {
-          prompt: 'select_account',
-        },
-      },
-    }),
+    // Google OAuth disabled for now — will re-enable later
+    // Google({
+    //   clientId: process.env.GOOGLE_CLIENT_ID,
+    //   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    //   authorization: {
+    //     params: {
+    //       prompt: 'select_account',
+    //     },
+    //   },
+    // }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
