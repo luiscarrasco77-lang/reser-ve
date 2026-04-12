@@ -8,6 +8,7 @@ import { posadas, type Posada } from '@/lib/data'
 import { venezuelaLocations } from '@/lib/locations-ve'
 import { searchPosadas, resolveLocation, type SearchOptions } from '@/lib/search'
 import { regions, findRegionsByQuery, type Region } from '@/lib/regions'
+import NavUser from '@/components/NavUser'
 
 const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
@@ -780,7 +781,7 @@ function BuscarContent() {
           <Link href="/#destinos" className="nav-link">Destinos</Link>
           <Link href="/posaderos" className="nav-link">Posaderos</Link>
           <Link href="/#como-funciona" className="nav-link">Cómo funciona</Link>
-          <Link href="/registro-posada" className="nav-cta">Registra tu posada</Link>
+          <NavUser />
         </div>
       </nav>
 

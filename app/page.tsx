@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { venezuelaLocations } from '@/lib/locations-ve'
 import { normalizeStr } from '@/lib/search'
 import { regions, findRegionsByQuery, type Region } from '@/lib/regions'
+import NavUser from '@/components/NavUser'
 
 function useCounter(target: number, active: boolean, duration = 1800) {
   const [count, setCount] = useState(0)
@@ -1055,7 +1056,7 @@ export default function Home() {
           <a href="/buscar" className="nav-link">Destinos</a>
           <a href="/posaderos" className="nav-link">Posaderos</a>
           <a href="#como-funciona" className="nav-link">Cómo funciona</a>
-          <a href="/registro-posada" className="nav-cta">Registra tu posada</a>
+          <NavUser dark={scrollY < 60} />
         </div>
       </nav>
 
