@@ -41,11 +41,21 @@ export async function GET() {
     : []
   const posadaMap = Object.fromEntries(posadaInfo.map(p => [p.id, p]))
 
+  // Enrich with guest name + email (for host view)
+  const guestIds = [...new Set(rows.map(b => b.guestId))]
+  const guestInfo = guestIds.length > 0
+    ? await db.select({ id: users.id, name: users.name, email: users.email })
+        .from(users).where(inArray(users.id, guestIds))
+    : []
+  const guestMap = Object.fromEntries(guestInfo.map(u => [u.id, u]))
+
   const enriched = rows.map(b => ({
     ...b,
     posadaNombre: posadaMap[b.posadaId]?.nombre ?? `Posada #${b.posadaId}`,
     posadaSlug: posadaMap[b.posadaId]?.slug ?? '',
     posadaImg: ((posadaMap[b.posadaId]?.imgs ?? []) as string[])[0] ?? '',
+    guestName: guestMap[b.guestId]?.name ?? `Huésped #${b.guestId}`,
+    guestEmail: guestMap[b.guestId]?.email ?? '',
   }))
 
   return NextResponse.json(enriched)
