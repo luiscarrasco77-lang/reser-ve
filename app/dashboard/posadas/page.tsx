@@ -117,7 +117,13 @@ export default async function MisPosadasPage() {
                         </a>
                       )}
                       {(p.status === 'rejected' || p.status === 'draft') && (
-                        <ResubmitButton slug={p.slug} status={p.status} />
+                        <>
+                          <a href={`/dashboard/posada/${p.slug}/editar`} className="btn btn-primary">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            Editar
+                          </a>
+                          <ResubmitButton slug={p.slug} status={p.status} />
+                        </>
                       )}
                     </div>
                   </div>
@@ -131,7 +137,7 @@ export default async function MisPosadasPage() {
                       {p.reviewNotes ?? 'No se especificó un motivo. Contacta al equipo para más detalles.'}
                     </div>
                     <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginTop: '0.65rem' }}>
-                      Corrige los puntos indicados y haz click en <strong>"Reenviar a revisión"</strong> para que el equipo revise nuevamente.
+                      Haz click en <strong>"Editar"</strong> para corregir los puntos indicados y enviarla a revisión nuevamente.
                     </div>
                   </div>
                 )}

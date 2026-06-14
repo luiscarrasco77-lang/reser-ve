@@ -229,6 +229,9 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
                 {n.badge ? <span className="sb-badge-count">{n.badge}</span> : null}
               </div>
             ))}
+            <Link href="/mensajes" className="sb-item" style={{display:'block',marginTop:'0.25rem'}}>
+              Mensajes
+            </Link>
           </nav>
           <div className="sb-footer">
             <a href="/docs/Manual-RESER-VE.pdf" target="_blank" rel="noopener noreferrer">📘 Manual de la plataforma (PDF)</a>
