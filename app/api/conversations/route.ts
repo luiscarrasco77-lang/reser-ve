@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db'
 import { conversations, messages, users, bookings, posadas } from '@/lib/db/schema'
 import { auth } from '@/auth'
 import { eq, or, desc } from 'drizzle-orm'
+import { generateVeraReply } from '@/lib/vera'
 
 export async function GET() {
   const session = await auth()
@@ -101,6 +102,11 @@ export async function POST(req: NextRequest) {
     senderRole: userRole,
     body,
   })
+
+  // En tickets de soporte, Vera (IA) responde de inmediato al primer mensaje.
+  if (type === 'support') {
+    await generateVeraReply(conv.id)
+  }
 
   return NextResponse.json(conv, { status: 201 })
 }

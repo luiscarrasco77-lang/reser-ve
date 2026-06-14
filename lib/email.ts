@@ -246,6 +246,46 @@ export async function emailWelcome(opts: {
   })
 }
 
+// ─── Email: nueva solicitud de registro de posada (al equipo) ─────────────────
+export async function emailPosadaLead(opts: {
+  nombrePosada: string; destino: string; tipo: string; descripcion: string;
+  habitaciones: string; capacidad: string; precio: string; servicios: string[];
+  nombrePosadero: string; emailPosadero: string; telefono?: string; whatsapp?: string;
+  metodoCobro: string[];
+}) {
+  const resend = getResend()
+  if (!resend) return
+
+  const to = process.env.TEAM_EMAIL || 'hola@reser-ve.com'
+  const html = baseHtml(`
+    <div class="card">
+      <div class="title">Nueva solicitud de posada</div>
+      <div class="sub">Un posadero quiere unirse a RESER-VE. Contáctalo para verificar y activar el perfil.</div>
+      <div class="row"><span>Posada</span><strong>${opts.nombrePosada}</strong></div>
+      <div class="row"><span>Destino</span><strong>${opts.destino}</strong></div>
+      <div class="row"><span>Tipo</span><strong>${opts.tipo}</strong></div>
+      <div class="row"><span>Habitaciones</span><strong>${opts.habitaciones} · ${opts.capacidad} personas</strong></div>
+      <div class="row"><span>Precio base</span><strong>$${opts.precio} USD/noche</strong></div>
+      <div class="row"><span>Servicios</span><strong>${opts.servicios.join(', ') || '—'}</strong></div>
+      <div class="divider"/>
+      <div class="row"><span>Posadero/a</span><strong>${opts.nombrePosadero}</strong></div>
+      <div class="row"><span>Email</span><strong>${opts.emailPosadero}</strong></div>
+      <div class="row"><span>Teléfono</span><strong>${opts.telefono || '—'}</strong></div>
+      <div class="row"><span>WhatsApp</span><strong>${opts.whatsapp || '—'}</strong></div>
+      <div class="row"><span>Métodos de cobro</span><strong>${opts.metodoCobro.join(', ') || '—'}</strong></div>
+      <div class="info-box" style="margin-top:1rem"><strong>Descripción:</strong><br/>${opts.descripcion}</div>
+    </div>
+  `)
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    replyTo: opts.emailPosadero,
+    subject: `Nueva posada: ${opts.nombrePosada} (${opts.destino})`,
+    html,
+  })
+}
+
 // ─── Email: new message notification ──────────────────────────────────────────
 export async function emailNewMessage(opts: {
   recipientEmail: string; recipientName: string;

@@ -12,6 +12,16 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   const db = getDb()
   const [booking] = await db.select().from(bookings).where(eq(bookings.id, parseInt(id)))
   if (!booking) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  // Only the guest, the posada's host, or an admin may view a booking.
+  const userId = parseInt((session.user as any).id)
+  const role = (session.user as any).role
+  if (role !== 'admin' && booking.guestId !== userId) {
+    const [posada] = await db.select({ hostId: posadas.hostId }).from(posadas).where(eq(posadas.id, booking.posadaId))
+    if (!posada || posada.hostId !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+  }
   return NextResponse.json(booking)
 }
 

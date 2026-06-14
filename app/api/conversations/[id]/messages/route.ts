@@ -4,6 +4,7 @@ import { conversations, messages, users } from '@/lib/db/schema'
 import { auth } from '@/auth'
 import { eq } from 'drizzle-orm'
 import { emailNewMessage } from '@/lib/email'
+import { generateVeraReply } from '@/lib/vera'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -38,6 +39,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   // Update lastMessageAt on conversation
   await db.update(conversations).set({ lastMessageAt: new Date() }).where(eq(conversations.id, conv.id))
+
+  // En tickets de soporte, Vera (IA) intenta responder al usuario.
+  // No actúa si un admin humano ya tomó el caso (lógica en generateVeraReply).
+  if (conv.type === 'support' && role !== 'admin') {
+    await generateVeraReply(conv.id)
+  }
 
   // Notify the other participant (fire-and-forget)
   const recipientId = conv.userId === userId ? conv.hostId : conv.userId

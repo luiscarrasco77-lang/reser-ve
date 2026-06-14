@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>RESER-VE · Manual de la plataforma</title>
+<style>
+  :root{
+    --indigo:#1A2B4C; --cacao:#E67E22; --cacao-dark:#C96510;
+    --sand:#FDFBF7; --muted:#5d6b80; --line:rgba(26,43,76,0.12);
+  }
+  *{box-sizing:border-box;}
+  @page{ size:A4; margin:18mm 16mm; }
+  html,body{margin:0;padding:0;}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;color:var(--indigo);line-height:1.6;font-size:11pt;background:#fff;}
+  h1,h2,h3{font-family:Georgia,'Times New Roman',serif;color:var(--indigo);line-height:1.2;}
+  h2{font-size:18pt;margin:0 0 .2rem;border-bottom:2px solid var(--cacao);padding-bottom:.35rem;}
+  h3{font-size:13pt;margin:1.1rem 0 .3rem;color:var(--cacao-dark);}
+  p{margin:.45rem 0;}
+  a{color:var(--cacao-dark);text-decoration:none;}
+  code{background:rgba(26,43,76,.06);border:1px solid var(--line);border-radius:5px;padding:.08rem .35rem;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:9.5pt;color:var(--cacao-dark);}
+  pre{background:#1A2B4C;color:#f4f0e8;border-radius:10px;padding:.9rem 1.1rem;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:9pt;line-height:1.5;overflow:hidden;white-space:pre-wrap;}
+  ul,ol{margin:.4rem 0 .6rem;padding-left:1.3rem;}
+  li{margin:.22rem 0;}
+  .section{page-break-before:always;padding-top:.3rem;}
+  .lead{color:var(--muted);font-size:11pt;}
+  .tag{display:inline-block;font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:.18rem .55rem;border-radius:999px;}
+  .tag-viajero{background:rgba(26,43,76,.1);color:var(--indigo);}
+  .tag-host{background:rgba(230,126,34,.14);color:var(--cacao-dark);}
+  .tag-admin{background:rgba(220,38,38,.1);color:#c0322a;}
+  .box{background:var(--sand);border:1px solid var(--line);border-left:4px solid var(--cacao);border-radius:0 10px 10px 0;padding:.8rem 1.1rem;margin:.8rem 0;}
+  .box-warn{border-left-color:#dc2626;background:rgba(220,38,38,.04);}
+  .box-ok{border-left-color:#10b981;background:rgba(16,185,129,.05);}
+  table{width:100%;border-collapse:collapse;margin:.7rem 0;font-size:10pt;}
+  th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{background:rgba(26,43,76,.05);font-weight:700;font-size:9pt;text-transform:uppercase;letter-spacing:.04em;}
+  .muted{color:var(--muted);}
+  .step{display:flex;gap:.7rem;margin:.5rem 0;}
+  .step-n{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--cacao);color:#fff;font-weight:700;font-size:10pt;display:flex;align-items:center;justify-content:center;}
+  /* Cover */
+  .cover{height:247mm;display:flex;flex-direction:column;justify-content:center;page-break-after:always;}
+  .cover .logo{font-size:42pt;font-weight:800;letter-spacing:-.04em;font-family:'Helvetica Neue',Arial,sans-serif;}
+  .cover .logo span{color:var(--cacao);}
+  .cover .sub{font-size:16pt;color:var(--muted);margin-top:.6rem;}
+  .cover .meta{margin-top:2rem;font-size:10pt;color:var(--muted);}
+  .pill{display:inline-block;background:var(--cacao);color:#fff;font-size:9pt;font-weight:700;padding:.3rem .8rem;border-radius:999px;letter-spacing:.05em;}
+  .toc li{margin:.3rem 0;}
+</style>
+</head>
+<body>
+
+<!-- ───────── COVER ───────── -->
+<div class="cover">
+  <div class="pill">MANUAL DE LA PLATAFORMA</div>
+  <div class="logo" style="margin-top:1.2rem;">RESER<span>-VE</span></div>
+  <div class="sub">Posadas auténticas de Venezuela<br/>Guía de uso y administración</div>
+  <div class="meta">
+    Documento operativo · Viajeros · Posaderos · Administradores<br/>
+    Versión 1.0 — MVP listo para lanzamiento
+  </div>
+</div>
+
+<!-- ───────── TOC ───────── -->
+<div>
+  <h2>Contenido</h2>
+  <ol class="toc">
+    <li><b>Qué es RESER-VE</b> — visión y modelo</li>
+    <li><b>Roles y accesos</b> — viajero, posadero, administrador</li>
+    <li><b>Guía del viajero</b> — buscar, reservar, pagar, mensajes</li>
+    <li><b>Guía del posadero</b> — registrar, publicar, gestionar reservas</li>
+    <li><b>Guía del administrador</b> — revisar posadas, reservas, usuarios, soporte</li>
+    <li><b>Atención al cliente con IA (Vera)</b> — cómo funciona y el escalado</li>
+    <li><b>Puesta en marcha técnica</b> — base de datos, variables de entorno, despliegue</li>
+    <li><b>Credenciales de demostración y checklist de lanzamiento</b></li>
+  </ol>
+  <div class="box">
+    <b>Cómo leer este manual.</b> Cada sección está marcada con el rol al que aplica:
+    <span class="tag tag-viajero">Viajero</span>
+    <span class="tag tag-host">Posadero</span>
+    <span class="tag tag-admin">Admin</span>.
+    Las rutas de la app aparecen como <code>/ruta</code> y los comandos en bloques oscuros.
+  </div>
+</div>
+
+<!-- ───────── 1 ───────── -->
+<div class="section">
+  <h2>1 · Qué es RESER-VE</h2>
+  <p class="lead">RESER-VE es un <b>marketplace de posadas auténticas de Venezuela</b>. Conecta viajeros con anfitriones locales (posaderos) en los destinos más bellos del país: Los Roques, Mérida, Mochima, Morrocoy, Canaima, la Gran Sabana, Isla Margarita y Coro.</p>
+  <p>No somos un hotel ni un intermediario frío: destacamos la hospitalidad local. El viajero descubre, reserva y coordina el pago directamente con el posadero; RESER-VE aporta la vitrina, la confianza y una comisión de servicio del <b>10%</b> incluida en el total mostrado.</p>
+  <h3>El modelo en una frase</h3>
+  <p>El viajero <b>solicita</b> una reserva → el posadero <b>confirma</b> en 24h → el viajero <b>paga</b> con el método acordado (Zelle, Pago Móvil, transferencia, efectivo) → disfruta su estancia. Sin cobros automáticos.</p>
+  <h3>Pilares de la plataforma</h3>
+  <ul>
+    <li><b>Búsqueda inteligente</b> por destino, fechas, precio y método de pago, con mapa interactivo.</li>
+    <li><b>Reservas gestionadas</b> con estados claros (pendiente, confirmada, cancelada, completada).</li>
+    <li><b>Mensajería</b> entre viajero, posadero y equipo RESER-VE.</li>
+    <li><b>Panel de administración</b> para curar la oferta y operar la plataforma.</li>
+    <li><b>Asistente de IA "Vera"</b> que responde dudas y escala a un agente humano cuando hace falta.</li>
+  </ul>
+</div>
+
+<!-- ───────── 2 ───────── -->
+<div class="section">
+  <h2>2 · Roles y accesos</h2>
+  <table>
+    <tr><th>Rol</th><th>Qué puede hacer</th><th>Dónde trabaja</th></tr>
+    <tr>
+      <td><span class="tag tag-viajero">Viajero</span></td>
+      <td>Buscar posadas, reservar, pagar, mensajear con posaderos y soporte, ver sus reservas.</td>
+      <td><code>/buscar</code>, <code>/mis-reservas</code>, <code>/mensajes</code></td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-host">Posadero</span></td>
+      <td>Publicar y editar posadas, aceptar/rechazar reservas, responder mensajes, ver ingresos.</td>
+      <td><code>/dashboard</code> y subsecciones</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-admin">Admin</span></td>
+      <td>Revisar y aprobar posadas, gestionar todas las reservas y usuarios, atender tickets de soporte, ver métricas.</td>
+      <td><code>/admin</code></td>
+    </tr>
+  </table>
+  <div class="box">
+    <b>Cómo se asigna el rol.</b> Al registrarse en <code>/register</code> el usuario elige <i>Viajero</i> o <i>Posadero</i>. El rol <b>Admin nunca se autoasigna</b>: se otorga desde el servidor (ver sección 7). Esto es una protección de seguridad deliberada.
+  </div>
+</div>
+
+<!-- ───────── 3 ───────── -->
+<div class="section">
+  <h2>3 · Guía del viajero <span class="tag tag-viajero">Viajero</span></h2>
+  <h3>3.1 Buscar una posada</h3>
+  <div class="step"><div class="step-n">1</div><div>Desde la página de inicio o <code>/buscar</code>, escribe un destino o usa el mapa. Filtra por fechas, precio máximo y método de pago.</div></div>
+  <div class="step"><div class="step-n">2</div><div>Explora los resultados en lista o en el mapa interactivo. Cada tarjeta muestra precio por noche, calificación y servicios.</div></div>
+  <div class="step"><div class="step-n">3</div><div>Abre una posada para ver galería de fotos, descripción, servicios, políticas, anfitrión y reseñas.</div></div>
+  <h3>3.2 Reservar</h3>
+  <div class="step"><div class="step-n">1</div><div>En la ficha de la posada elige <b>llegada</b>, <b>salida</b> y número de <b>huéspedes</b>. Verás el desglose: noches × precio + comisión 10%.</div></div>
+  <div class="step"><div class="step-n">2</div><div>Pulsa <b>Reservar</b>. Si no tienes cuenta, crea una gratis (correo y contraseña). Volverás automáticamente al flujo de reserva.</div></div>
+  <div class="step"><div class="step-n">3</div><div>Elige tu <b>método de pago preferido</b>, agrega notas opcionales y confirma la solicitud.</div></div>
+  <div class="step"><div class="step-n">4</div><div>Recibirás un <b>código de reserva</b> (ej. <code>RV-2026-1001</code>) y un correo de confirmación. El estado inicial es <b>pendiente</b>.</div></div>
+  <div class="box box-ok"><b>Importante:</b> reservar no genera ningún cobro. El pago se coordina <b>solo cuando el posadero confirma</b>, con las instrucciones que llegan por correo y aparecen en <code>/mis-reservas</code>.</div>
+  <h3>3.3 Pagar y dar seguimiento</h3>
+  <p>Cuando el posadero confirma, recibes las <b>instrucciones de pago</b> según el método (Zelle, Pago Móvil, transferencia…). Sigue el estado de todas tus reservas en <code>/mis-reservas</code> y conversa con el posadero en <code>/mensajes</code>.</p>
+  <h3>3.4 Cancelar</h3>
+  <p>Una reserva <b>pendiente</b> se puede cancelar desde <code>/mis-reservas</code>. Las políticas de cancelación de cada posada aparecen en su ficha (lo común: gratis 48–72h antes).</p>
+</div>
+
+<!-- ───────── 4 ───────── -->
+<div class="section">
+  <h2>4 · Guía del posadero <span class="tag tag-host">Posadero</span></h2>
+  <h3>4.1 Unirse a RESER-VE</h3>
+  <p>Hay dos caminos:</p>
+  <ul>
+    <li><b>Solicitud guiada</b> en <code>/registro-posada</code>: un asistente de 4 pasos recoge los datos de tu posada y los envía al equipo, que te contacta para verificar y ayudarte a publicar.</li>
+    <li><b>Cuenta directa</b>: regístrate como <i>Posadero</i> en <code>/register</code> y publica tú mismo desde el dashboard.</li>
+  </ul>
+  <h3>4.2 Publicar una posada</h3>
+  <div class="step"><div class="step-n">1</div><div>Entra a <code>/dashboard/posada/nueva</code>.</div></div>
+  <div class="step"><div class="step-n">2</div><div>Completa nombre, destino, tipo, descripción, precio, habitaciones, capacidad, servicios, métodos de pago, <b>fotos</b> (se suben a almacenamiento seguro) y ubicación en el mapa.</div></div>
+  <div class="step"><div class="step-n">3</div><div>Al guardar, la posada queda <b>en revisión</b>. El equipo RESER-VE la aprueba antes de que sea visible al público.</div></div>
+  <div class="box"><b>Estados de una posada:</b> <code>borrador</code> → <code>en revisión</code> → <code>activa</code> (visible) · o <code>rechazada</code> (con notas para corregir y reenviar) · o <code>suspendida</code>.</div>
+  <h3>4.3 Gestionar reservas</h3>
+  <p>En <code>/dashboard/reservas</code> ves todas las solicitudes. Para cada reserva <b>pendiente</b> puedes <b>confirmar</b> o <b>rechazar</b> (con una nota), y agregar notas al huésped. Al confirmar, el viajero recibe automáticamente las instrucciones de pago por correo.</p>
+  <h3>4.4 Panel y mensajes</h3>
+  <p><code>/dashboard</code> resume tus reservas, ingresos y alertas (posadas en revisión o rechazadas). Responde a los viajeros en <code>/mensajes</code>.</p>
+</div>
+
+<!-- ───────── 5 ───────── -->
+<div class="section">
+  <h2>5 · Guía del administrador <span class="tag tag-admin">Admin</span></h2>
+  <p class="lead">El panel <code>/admin</code> es el centro de operaciones de RESER-VE. Solo accesible para usuarios con rol admin.</p>
+  <h3>5.1 Vista general (Overview)</h3>
+  <p>Métricas clave: usuarios, posadas, reservas, posadas pendientes de revisión, reservas pendientes e ingresos totales. Una alerta destaca si hay posadas esperando aprobación.</p>
+  <h3>5.2 Revisar y aprobar posadas <span class="muted">(lo más importante del día a día)</span></h3>
+  <div class="step"><div class="step-n">1</div><div>Abre la pestaña <b>Revisión</b>. Verás cada posada pendiente con todos sus datos y fotos.</div></div>
+  <div class="step"><div class="step-n">2</div><div><b>Aprobar</b> → la posada pasa a <code>activa</code> y se publica; el posadero recibe un correo.</div></div>
+  <div class="step"><div class="step-n">3</div><div><b>Rechazar</b> → escribe una nota clara con lo que debe corregir. El posadero la recibe y puede reenviar.</div></div>
+  <div class="box box-warn"><b>Criterio de curación.</b> Aprueba solo posadas con fotos de calidad, descripción honesta, precio coherente y ubicación correcta. La curación es lo que hace que RESER-VE se sienta premium.</div>
+  <h3>5.3 Gestionar posadas, reservas y usuarios</h3>
+  <ul>
+    <li><b>Posadas:</b> busca y filtra por estado; suspende o reactiva listados.</li>
+    <li><b>Reservas:</b> busca por código, huésped o posada; supervisa estados.</li>
+    <li><b>Usuarios:</b> busca, filtra por rol y cambia el rol de un usuario (p. ej. promover a posadero).</li>
+  </ul>
+  <h3>5.4 Atención al cliente y tickets</h3>
+  <p>Los tickets de soporte llegan a <code>/mensajes</code> (los admins ven <b>todas</b> las conversaciones). Muchos los abre el asistente de IA automáticamente cuando un usuario necesita ayuda humana (ver sección 6). Responde desde el mismo hilo; el usuario lo ve en su bandeja.</p>
+</div>
+
+<!-- ───────── 6 ───────── -->
+<div class="section">
+  <h2>6 · Atención al cliente con IA — "Vera"</h2>
+  <p class="lead">Vera es la asistente virtual de RESER-VE. Aparece como un botón flotante 🌴 en todas las páginas y responde al instante.</p>
+  <h3>6.1 Qué resuelve sola</h3>
+  <p>Vera conoce el funcionamiento de la plataforma (cómo reservar, métodos de pago, cancelaciones, cómo publicar una posada, destinos disponibles) y responde estas preguntas básicas de inmediato, en español, las 24 horas.</p>
+  <h3>6.2 Cuándo escala a un humano</h3>
+  <p>Cuando el usuario lo pide, tiene un problema concreto con un pago o reserva, una queja, o algo que Vera no puede resolver, ella usa la herramienta <b>"escalar a agente"</b>:</p>
+  <ul>
+    <li>Si el usuario <b>ha iniciado sesión</b>: Vera abre automáticamente un <b>ticket de soporte</b> que aparece en <code>/mensajes</code> para el equipo admin. El usuario sigue la conversación desde su bandeja.</li>
+    <li>Si <b>no ha iniciado sesión</b>: Vera lo invita a entrar para abrir el ticket, o a escribir a <code>hola@reser-ve.com</code>.</li>
+  </ul>
+  <div class="box box-ok"><b>Para el admin:</b> revisa <code>/mensajes</code> periódicamente. Los tickets abiertos por Vera traen el contexto ya resumido ("[Ticket abierto vía asistente IA]"), así respondes más rápido.</div>
+  <h3>6.3 Límites y buenas prácticas</h3>
+  <ul>
+    <li>Vera <b>no</b> inventa precios ni disponibilidad de fechas; ante la duda, escala.</li>
+    <li>Nunca pide datos sensibles de pago (números de tarjeta completos, claves).</li>
+    <li>El conocimiento de Vera vive en <code>lib/support-kb.ts</code>: edítalo cuando cambien políticas, métodos de pago o destinos.</li>
+  </ul>
+</div>
+
+<!-- ───────── 7 ───────── -->
+<div class="section">
+  <h2>7 · Puesta en marcha técnica</h2>
+  <p class="lead">RESER-VE está construido con Next.js 16 (App Router), React 19, NextAuth, Drizzle ORM sobre Postgres (Neon), Vercel Blob para imágenes, Resend para correos y Vercel AI Gateway + Claude para el asistente.</p>
+
+  <h3>7.1 Variables de entorno</h3>
+  <table>
+    <tr><th>Variable</th><th>Para qué</th><th>Obligatoria</th></tr>
+    <tr><td><code>DATABASE_URL</code></td><td>Conexión a Postgres (Neon)</td><td>Sí (reservas reales)</td></tr>
+    <tr><td><code>AUTH_SECRET</code></td><td>Firma de sesiones NextAuth</td><td>Sí</td></tr>
+    <tr><td><code>AI_GATEWAY_API_KEY</code></td><td>Asistente IA (en Vercel se usa OIDC automático)</td><td>Sí para la IA</td></tr>
+    <tr><td><code>BLOB_READ_WRITE_TOKEN</code></td><td>Subida de fotos de posadas</td><td>Sí para fotos</td></tr>
+    <tr><td><code>RESEND_API_KEY</code></td><td>Envío de correos</td><td>Opcional</td></tr>
+    <tr><td><code>TEAM_EMAIL</code></td><td>Destino de solicitudes de posada</td><td>Opcional</td></tr>
+  </table>
+  <div class="box"><b>Sin <code>DATABASE_URL</code></b> la web sigue navegable: usa datos curados de ejemplo (fallback). Las <b>reservas reales requieren base de datos.</b></div>
+
+  <h3>7.2 Crear la base de datos (Neon en Vercel)</h3>
+  <div class="step"><div class="step-n">1</div><div>En el proyecto de Vercel: <b>Storage → Create Database → Neon (Postgres)</b>. Vercel inyecta <code>DATABASE_URL</code> automáticamente.</div></div>
+  <div class="step"><div class="step-n">2</div><div>Trae las variables a tu máquina y crea las tablas:</div></div>
+  <pre>vercel env pull .env.local
+npm run db:push      # crea el esquema en la base de datos
+npm run db:seed      # carga posadas, usuarios y datos demo</pre>
+  <div class="step"><div class="step-n">3</div><div>Conecta también <b>Blob</b> (Storage → Blob) para las fotos y añade una <b>AI Gateway key</b> (panel de Vercel → AI Gateway) para el asistente.</div></div>
+
+  <h3>7.3 Promover un administrador</h3>
+  <p>El primer admin se crea por línea de comandos (por seguridad no se puede autoasignar):</p>
+  <pre>npx tsx scripts/make-admin.ts tu-correo@ejemplo.com</pre>
+  <p>Después, ese admin puede cambiar roles de otros usuarios desde <code>/admin</code>.</p>
+
+  <h3>7.4 Desplegar</h3>
+  <pre>npm run build     # verifica que todo compila
+vercel --prod     # despliega a producción</pre>
+</div>
+
+<!-- ───────── 8 ───────── -->
+<div class="section">
+  <h2>8 · Credenciales demo y checklist de lanzamiento</h2>
+  <h3>8.1 Cuentas de demostración (tras correr el seed)</h3>
+  <table>
+    <tr><th>Rol</th><th>Correo</th><th>Contraseña</th></tr>
+    <tr><td>Admin</td><td><code>admin@reserve.ve</code></td><td><code>reserve2026</code></td></tr>
+    <tr><td>Viajero</td><td><code>viajero@reserve.demo</code></td><td><code>reserve2026</code></td></tr>
+    <tr><td>Posadero</td><td><code>maria.gonzalez@reserve.demo</code></td><td><code>reserve2026</code></td></tr>
+  </table>
+  <div class="box box-warn"><b>Antes de un lanzamiento real:</b> cambia estas contraseñas demo, define tus propios términos y condiciones, y sustituye las posadas de ejemplo por posadas reales <b>con consentimiento de cada posadero</b>.</div>
+
+  <h3>8.2 Checklist de lanzamiento</h3>
+  <ul>
+    <li>☐ Base de datos Neon conectada y <code>db:push</code> + <code>db:seed</code> ejecutados.</li>
+    <li>☐ <code>AUTH_SECRET</code>, <code>AI_GATEWAY_API_KEY</code>, <code>BLOB_READ_WRITE_TOKEN</code> y <code>RESEND_API_KEY</code> configurados en Vercel.</li>
+    <li>☐ Primer administrador creado con <code>make-admin</code>.</li>
+    <li>☐ Posadas reales cargadas y aprobadas; contraseñas demo cambiadas.</li>
+    <li>☐ Dominio propio conectado en Vercel y correos verificados en Resend.</li>
+    <li>☐ Prueba de extremo a extremo: reservar → confirmar → pagar → mensajear.</li>
+  </ul>
+
+  <div class="box box-ok" style="margin-top:1.5rem;">
+    <b>RESER-VE</b> — La plataforma de posadas auténticas de Venezuela.<br/>
+    <span class="muted">Manual operativo v1.0 · Para soporte interno escribe a hola@reser-ve.com</span>
+  </div>
+</div>
+
+</body>
+</html>

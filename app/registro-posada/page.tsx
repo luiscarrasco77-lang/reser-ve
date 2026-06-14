@@ -38,11 +38,41 @@ export default function RegistroPosada() {
   const [whatsapp, setWhatsapp] = useState('')
   const [metodoCobro, setMetodoCobro] = useState<string[]>([])
 
+  const [enviando, setEnviando] = useState(false)
+  const [errorEnvio, setErrorEnvio] = useState('')
+
   const toggleServicio = (s: string) =>
     setServicios(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
 
   const toggleMetodo = (m: string) =>
     setMetodoCobro(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
+
+  const enviarSolicitud = async () => {
+    setEnviando(true)
+    setErrorEnvio('')
+    try {
+      const res = await fetch('/api/posada-leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombrePosada, destino, tipo, descripcion,
+          habitaciones, capacidad, precio, servicios,
+          nombrePosadero, emailPosadero, telefono: telefonoPosadero, whatsapp,
+          metodoCobro,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setErrorEnvio(data.error || 'No pudimos enviar tu solicitud. Intenta de nuevo.')
+        return
+      }
+      setPaso('listo')
+    } catch {
+      setErrorEnvio('Error de red. Revisa tu conexión e intenta de nuevo.')
+    } finally {
+      setEnviando(false)
+    }
+  }
 
   const progreso = paso === 'listo' ? 100 : ((paso as number) - 1) * 33.3
 
@@ -410,8 +440,13 @@ export default function RegistroPosada() {
               <p>Nuestro equipo revisará tu solicitud en <strong>48–72 horas</strong>. Te contactaremos por email y WhatsApp para coordinar la sesión fotográfica y la activación de tu perfil.</p>
             </div>
 
-            <button className="btn-primary" onClick={() => setPaso('listo')}>
-              Enviar solicitud de registro
+            {errorEnvio && (
+              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '0.75rem 1rem', fontSize: '0.84rem', color: '#dc2626', marginBottom: '1rem' }}>
+                {errorEnvio}
+              </div>
+            )}
+            <button className="btn-primary" disabled={enviando} onClick={enviarSolicitud}>
+              {enviando ? 'Enviando…' : 'Enviar solicitud de registro'}
             </button>
             <button className="btn-back" onClick={() => setPaso(3)}>← Editar información</button>
           </div>

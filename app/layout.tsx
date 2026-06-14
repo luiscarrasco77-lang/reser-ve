@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
+import SupportChat from "@/components/SupportChat";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,11 +40,14 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-          <SessionProviderWrapper>{children}</SessionProviderWrapper>
+          <SessionProviderWrapper>
+            {children}
+            <SupportChat />
+          </SessionProviderWrapper>
         </body>
     </html>
   );

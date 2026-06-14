@@ -1,15 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
-import { posadas } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { posadas, reviews } from '@/lib/db/schema'
+import { eq, and, desc } from 'drizzle-orm'
 import { auth } from '@/auth'
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
+
+  // Fallback to curated data when there is no database connected.
+  if (!process.env.DATABASE_URL) {
+    const { getPosada, posadas: posadasData } = await import('@/lib/data')
+    const p = getPosada(slug)
+    if (!p) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json({
+      ...p,
+      id: posadasData.findIndex(x => x.slug === slug) + 1,
+      hostNombre: p.host.nombre, hostDesde: p.host.desde, hostIdiomas: p.host.idiomas,
+      status: 'active',
+    })
+  }
+
   const db = getDb()
   const [posada] = await db.select().from(posadas).where(eq(posadas.slug, slug))
   if (!posada) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(posada)
+
+  // Public can only see active posadas. The owner and admins can preview any status.
+  if (posada.status !== 'active') {
+    const session = await auth()
+    const userId = session?.user ? parseInt((session.user as any).id) : null
+    const role = session?.user ? (session.user as any).role : null
+    if (posada.hostId !== userId && role !== 'admin') {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+  }
+
+  // Include published reviews so the detail page can render them.
+  const rows = await db.select().from(reviews).where(eq(reviews.posadaId, posada.id)).orderBy(desc(reviews.createdAt))
+  const reseñas = rows.map(r => ({ autor: r.authorName, pais: r.authorCountry ?? '', rating: r.rating, texto: r.texto }))
+
+  return NextResponse.json({ ...posada, reseñas })
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {

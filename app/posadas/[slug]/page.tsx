@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { type Posada } from '@/lib/data'
+import NavUser from '@/components/NavUser'
 
 export default function FichaPosada() {
   const rawParams = useParams<{ slug: string }>()
@@ -32,8 +33,8 @@ export default function FichaPosada() {
           politicas: data.politicas ?? [],
           imgs: data.imgs ?? [],
           metodoPago: data.metodoPago ?? [],
-          host: { nombre: data.hostNombre ?? '', desde: data.hostDesde ?? '', idiomas: data.hostIdiomas ?? [] },
-          reseñas: [],
+          host: { nombre: data.hostNombre ?? data.host?.nombre ?? '', desde: data.hostDesde ?? data.host?.desde ?? '', idiomas: data.hostIdiomas ?? data.host?.idiomas ?? [] },
+          reseñas: data.reseñas ?? [],
         })
       })
       .finally(() => setLoading(false))
@@ -183,7 +184,10 @@ export default function FichaPosada() {
       <div className="grain" />
       <nav className="nav">
         <Link href="/" className="logo">RESER<span>-VE</span></Link>
-        <Link href="/buscar" className="nav-back">← Volver a búsqueda</Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+          <Link href="/buscar" className="nav-back">← Volver a búsqueda</Link>
+          <NavUser />
+        </div>
       </nav>
       <div className="page">
         <div className="breadcrumb">
@@ -326,10 +330,9 @@ export default function FichaPosada() {
               )}
               <p className="booking-nota">Sin cargos hasta confirmar. El posadero acepta en 24h.</p>
               <div className="booking-badges">
-                <span className="booking-badge">Zelle</span>
-                <span className="booking-badge">Zinli</span>
-                <span className="booking-badge">Pago Móvil</span>
-                <span className="booking-badge">Tarjeta</span>
+                {(posada.metodoPago.length ? posada.metodoPago : ['Zelle', 'Pago Móvil', 'Transferencia']).map(m => (
+                  <span className="booking-badge" key={m}>{m}</span>
+                ))}
               </div>
             </div>
           </div>

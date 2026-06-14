@@ -65,11 +65,22 @@ export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Inicia sesión para reservar' }, { status: 401 })
 
-  const { posadaId, checkIn, checkOut, nights, totalPrice, paymentMethod, guestCount, notes } = await req.json()
+  const { posadaId, checkIn, checkOut, paymentMethod, guestCount, notes } = await req.json()
 
-  const year = new Date().getFullYear()
-  const rand = Math.floor(1000 + Math.random() * 9000)
-  const bookingCode = `RV-${year}-${rand}`
+  // ── Validate dates server-side (never trust the client) ──
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+  if (!posadaId || !DATE_RE.test(checkIn ?? '') || !DATE_RE.test(checkOut ?? '')) {
+    return NextResponse.json({ error: 'Fechas inválidas' }, { status: 400 })
+  }
+  const inD = new Date(checkIn + 'T00:00:00')
+  const outD = new Date(checkOut + 'T00:00:00')
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  if (isNaN(inD.getTime()) || isNaN(outD.getTime())) {
+    return NextResponse.json({ error: 'Fechas inválidas' }, { status: 400 })
+  }
+  if (inD < today) return NextResponse.json({ error: 'La llegada no puede ser en el pasado' }, { status: 400 })
+  const nights = Math.round((outD.getTime() - inD.getTime()) / 86_400_000)
+  if (nights < 1) return NextResponse.json({ error: 'La salida debe ser posterior a la llegada' }, { status: 400 })
 
   const db = getDb()
 
@@ -79,9 +90,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Posada no disponible' }, { status: 400 })
   }
 
+  // Capacity check
+  const guests = Math.max(1, parseInt(guestCount) || 1)
+  if (guests > posada.capacidad) {
+    return NextResponse.json({ error: `Esta posada admite hasta ${posada.capacidad} huéspedes` }, { status: 400 })
+  }
+
+  // No overlapping confirmed/pending bookings for the same dates
+  const existing = await db.select().from(bookings).where(eq(bookings.posadaId, posadaId))
+  const clash = existing.some(b =>
+    (b.status === 'pending' || b.status === 'confirmed') &&
+    checkIn < b.checkOut && checkOut > b.checkIn
+  )
+  if (clash) {
+    return NextResponse.json({ error: 'Esas fechas ya no están disponibles' }, { status: 409 })
+  }
+
+  // Recompute price on the server (10% service fee) — never trust the client total
+  const subtotal = nights * posada.precio
+  const totalPrice = Math.round(subtotal * 1.10)
+
+  const year = new Date().getFullYear()
+  const rand = Math.floor(1000 + Math.random() * 9000)
+  const bookingCode = `RV-${year}-${rand}`
+
   const [booking] = await db.insert(bookings).values({
     bookingCode, posadaId, checkIn, checkOut, nights, totalPrice,
-    paymentMethod, guestCount: guestCount || 1, notes,
+    paymentMethod, guestCount: guests, notes,
     guestId: parseInt((session.user as any).id),
     status: 'pending',
   }).returning()

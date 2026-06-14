@@ -231,6 +231,7 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
             ))}
           </nav>
           <div className="sb-footer">
+            <a href="/docs/Manual-RESER-VE.pdf" target="_blank" rel="noopener noreferrer">📘 Manual de la plataforma (PDF)</a>
             <Link href="/">← Volver al sitio</Link>
             <Link href="/api/auth/signout">Cerrar sesión</Link>
           </div>
