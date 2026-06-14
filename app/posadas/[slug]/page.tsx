@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { type Posada } from '@/lib/data'
 import NavUser from '@/components/NavUser'
+import FavoriteButton from '@/components/FavoriteButton'
+import { SUPPORT_WHATSAPP, SITE_URL } from '@/lib/constants'
 
 export default function FichaPosada() {
   const rawParams = useParams<{ slug: string }>()
@@ -90,6 +92,20 @@ export default function FichaPosada() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'LodgingBusiness',
+          name: posada.nombre,
+          description: posada.descripcion,
+          image: posada.imgs?.map(i => i.startsWith('http') ? i : `${SITE_URL}${i}`),
+          address: { '@type': 'PostalAddress', addressLocality: posada.destino, addressCountry: 'VE' },
+          geo: { '@type': 'GeoCoordinates', latitude: posada.lat, longitude: posada.lng },
+          priceRange: `$${posada.precio} USD`,
+          ...(posada.reviews > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: posada.rating, reviewCount: posada.reviews } } : {}),
+        }) }}
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Inter:wght@300;400;500;600;700;800&display=swap');
         :root{--indigo:#1A2B4C;--cacao:#E67E22;--cacao-dark:#C96510;--sand:#FDFBF7;--cream:#F5EFE0;--text:#1A2B4C;--muted:#7A8699;--line:rgba(26,43,76,0.08);}
@@ -358,7 +374,20 @@ export default function FichaPosada() {
                 </svg>
                 Reserva protegida · Sin cobro automático
               </div>
-              <button className="btn-whatsapp">Consultar por WhatsApp</button>
+              <a
+                className="btn-whatsapp"
+                href={`https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(`Hola RESER-VE, quiero información sobre la posada "${posada.nombre}" (${posada.destino}).`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}
+              >
+                Consultar por WhatsApp
+              </a>
+              {(posada as any).id && (
+                <div style={{ marginTop: '0.6rem', display: 'flex', justifyContent: 'center' }}>
+                  <FavoriteButton posadaId={(posada as any).id} variant="full" />
+                </div>
+              )}
               {noches > 0 && (
                 <div className="booking-desglose">
                   <div className="booking-linea">

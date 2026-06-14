@@ -72,9 +72,22 @@ export default function Home() {
     '/images/Guacamaya.webp',
   ]
 
-  const c1 = useCounter(49, statsVisible)
-  const c2 = useCounter(44, statsVisible)
-  const c3 = useCounter(6, statsVisible)
+  const [stats, setStats] = useState<{ posadas: number; destinos: number; reviews: number; ratingPromedio: number } | null>(null)
+  const [destCounts, setDestCounts] = useState<Record<string, number>>({})
+  useEffect(() => {
+    fetch('/api/stats').then(r => r.ok ? r.json() : null).then(d => { if (d) setStats(d) }).catch(() => {})
+    fetch('/api/posadas').then(r => r.ok ? r.json() : []).then((list: { destinoSlug: string }[]) => {
+      if (!Array.isArray(list)) return
+      const counts: Record<string, number> = {}
+      for (const p of list) counts[p.destinoSlug] = (counts[p.destinoSlug] ?? 0) + 1
+      setDestCounts(counts)
+    }).catch(() => {})
+  }, [])
+  const destCount = (slug: string | null) => slug && destCounts[slug] ? `${destCounts[slug]} posada${destCounts[slug] > 1 ? 's' : ''}` : null
+
+  const c1 = useCounter(stats?.posadas ?? 11, statsVisible)
+  const c2 = useCounter(stats?.reviews ?? 44, statsVisible)
+  const c3 = useCounter(stats?.destinos ?? 8, statsVisible)
 
   const handleCardTilt = useCallback((e: React.MouseEvent<HTMLElement>) => {
     const el = e.currentTarget
@@ -310,13 +323,13 @@ export default function Home() {
   const POPULAR_DEST = ['Los Roques', 'Isla Margarita', 'Canaima', 'Mochima', 'Caracas', 'Choroní', 'Mérida']
 
   const destinos: { name: string; slug: string | null; tag: string; count: string; img: string; wide?: boolean }[] = [
-    { name: 'Los Roques', slug: 'los-roques', tag: 'Archipiélago', count: '12 posadas', img: '/images/Archipielago.webp' },
-    { name: 'Mérida', slug: 'merida', tag: 'Los Andes', count: '9 posadas', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&q=90' },
-    { name: 'Mochima', slug: 'mochima', tag: 'Costa Oriental', count: '7 posadas', img: '/images/Mochima.webp' },
-    { name: 'Morrocoy', slug: 'morrocoy', tag: 'Costa Occidental', count: '6 posadas', img: '/images/CayoSombero.webp' },
-    { name: 'Canaima', slug: 'canaima', tag: 'Gran Sabana', count: '4 posadas', img: '/images/KerepaKupaiWena.webp' },
-    { name: 'Isla Margarita', slug: 'isla-margarita', tag: 'Caribe', count: '11 posadas', img: '/images/PlayaElAgua.webp' },
-    { name: 'Otros destinos', slug: null, tag: 'Descúbrelos', count: 'Vargas, Miranda y más', img: '/images/PlayaElIndio.webp', wide: true },
+    { name: 'Los Roques', slug: 'los-roques', tag: 'Archipiélago', count: destCount('los-roques') ?? 'Archipiélago', img: '/images/Archipielago.webp' },
+    { name: 'Mérida', slug: 'merida', tag: 'Los Andes', count: destCount('merida') ?? 'Los Andes', img: '/images/Guacamaya.webp' },
+    { name: 'Mochima', slug: 'mochima', tag: 'Costa Oriental', count: destCount('mochima') ?? 'Costa Oriental', img: '/images/Mochima.webp' },
+    { name: 'Morrocoy', slug: 'morrocoy', tag: 'Costa Occidental', count: destCount('morrocoy') ?? 'Costa Occidental', img: '/images/CayoSombero.webp' },
+    { name: 'Canaima', slug: 'canaima', tag: 'Gran Sabana', count: destCount('canaima') ?? 'Salto Ángel', img: '/images/KerepaKupaiWena.webp' },
+    { name: 'Isla Margarita', slug: 'isla-margarita', tag: 'Caribe', count: destCount('isla-margarita') ?? 'Caribe', img: '/images/PlayaElAgua.webp' },
+    { name: 'Otros destinos', slug: null, tag: 'Descúbrelos', count: 'Gran Sabana, Coro y más', img: '/images/PlayaElIndio.webp', wide: true },
   ]
 
   return (
@@ -1437,8 +1450,8 @@ export default function Home() {
             <div className="stat-l">posadas registradas</div>
           </div>
           <div className="stat-item reveal d2">
-            <div className="stat-n"><span className="accent">+{c2}%</span></div>
-            <div className="stat-l">crecimiento turístico</div>
+            <div className="stat-n"><span className="accent">+{c2}</span></div>
+            <div className="stat-l">reseñas de viajeros</div>
           </div>
           <div className="stat-item reveal d3">
             <div className="stat-n">{c3}</div>
@@ -1683,7 +1696,7 @@ export default function Home() {
         <div className="dark-cta-inner">
           <div className="reveal">
             <h2>Venezuela te está <em>esperando.</em></h2>
-            <p>Más de 49 posadas auténticas en los destinos más increíbles. Tu próxima aventura empieza con un solo clic.</p>
+            <p>{stats ? `${stats.posadas} posadas` : 'Decenas de posadas'} auténticas en {stats ? stats.destinos : 'los'} destinos increíbles. Tu próxima aventura empieza con un solo clic.</p>
           </div>
           <div className="dark-cta-btns reveal d2">
             <a href="/buscar" className="btn-light">Explorar posadas →</a>
@@ -1710,25 +1723,25 @@ export default function Home() {
           <div className="footer-col">
             <h4>Posaderos</h4>
             <a href="/registro-posada">Registra tu posada</a>
-            <a href="#como-funciona">Cómo funciona</a>
-            <a href="#">Paquete digitalización</a>
+            <a href="/posaderos">Cómo funciona</a>
+            <a href="/posaderos">Paquete digitalización</a>
             <a href="/faq">Preguntas frecuentes</a>
           </div>
           <div className="footer-col">
             <h4>Contacto</h4>
-            <a href="#">hola@reser-ve.com</a>
-            <a href="#">WhatsApp</a>
-            <a href="#">Instagram</a>
-            <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer">Dos Locos de Viaje</a>
+            <a href="mailto:hola@reser-ve.com">hola@reser-ve.com</a>
+            <a href="https://wa.me/584125550000" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+            <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="/faq">Centro de ayuda</a>
           </div>
         </div>
         <div className="footer-bottom">
           <p>© 2026 RESER-VE · Impulsado por <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>dos locos de viaje</a></p>
           <div style={{display:'flex',gap:'1.5rem'}}>
-            <a href="#">Términos</a>
-            <a href="#">Privacidad</a>
+            <a href="/faq">Términos</a>
+            <a href="/faq">Privacidad</a>
             <a href="/vision">Por qué posadas?</a>
-            <a href="#">Sobre nosotros</a>
+            <a href="/vision">Sobre nosotros</a>
           </div>
         </div>
       </footer>

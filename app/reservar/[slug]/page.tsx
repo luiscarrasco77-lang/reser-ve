@@ -31,6 +31,18 @@ function ReservarContent() {
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [bookedRanges, setBookedRanges] = useState<{ checkIn: string; checkOut: string }[]>([])
+
+  // Cargar fechas ocupadas para avisar de solapamientos antes de enviar.
+  useEffect(() => {
+    if (!slug) return
+    fetch(`/api/posadas/${slug}/availability`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (Array.isArray(d?.ranges)) setBookedRanges(d.ranges) })
+      .catch(() => {})
+  }, [slug])
+
+  const fechasOcupadas = llegada && salida && bookedRanges.some(r => llegada < r.checkOut && salida > r.checkIn)
 
   // Fetch posada from API
   useEffect(() => {
@@ -282,7 +294,12 @@ function ReservarContent() {
                     </button>
                   ))}
                 </div>
-                <button type="submit" className="btn-confirmar" disabled={!llegada || !salida || noches < 1 || submitting}>
+                {fechasOcupadas && (
+                  <div className="error-banner" style={{ marginBottom: '1rem' }}>
+                    Esas fechas no están disponibles para esta posada. Por favor elige otras.
+                  </div>
+                )}
+                <button type="submit" className="btn-confirmar" disabled={!llegada || !salida || noches < 1 || submitting || !!fechasOcupadas}>
                   {submitting ? 'Enviando solicitud…' : 'Confirmar reserva'}
                 </button>
                 <p className="nota">

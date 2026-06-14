@@ -151,6 +151,60 @@ export default function MisReservasPage() {
   )
 }
 
+function ReviewForm({ posadaId }: { posadaId: number }) {
+  const [open, setOpen] = useState(false)
+  const [rating, setRating] = useState(5)
+  const [hover, setHover] = useState(0)
+  const [texto, setTexto] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit() {
+    if (!texto.trim()) return
+    setBusy(true); setError('')
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ posadaId, rating, texto }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) { setError(data.error || 'No se pudo enviar la reseña'); return }
+      setDone(true)
+    } catch { setError('Error de red. Intenta de nuevo.') }
+    finally { setBusy(false) }
+  }
+
+  if (done) return <div className="host-note" style={{ marginTop: '0.6rem' }}>¡Gracias por tu reseña! ⭐</div>
+  if (!open) {
+    return (
+      <button className="btn-cancel" style={{ color: 'var(--cacao)', background: 'rgba(230,126,34,0.08)', borderColor: 'rgba(230,126,34,0.25)' }} onClick={() => setOpen(true)}>
+        ⭐ Dejar una reseña
+      </button>
+    )
+  }
+  return (
+    <div style={{ marginTop: '0.6rem', background: 'rgba(26,43,76,0.03)', border: '1px solid var(--line)', borderRadius: 12, padding: '0.85rem 1rem' }}>
+      <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '0.5rem' }}>
+        {[1, 2, 3, 4, 5].map(n => (
+          <button key={n} onClick={() => setRating(n)} onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}
+            aria-label={`${n} estrellas`}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.3rem', padding: 0, color: (hover || rating) >= n ? '#E67E22' : 'rgba(26,43,76,0.2)' }}>★</button>
+        ))}
+      </div>
+      <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder="¿Cómo fue tu experiencia?"
+        style={{ width: '100%', minHeight: 70, border: '1.5px solid var(--line)', borderRadius: 10, padding: '0.6rem 0.8rem', fontFamily: 'inherit', fontSize: '0.85rem', resize: 'vertical', outline: 'none' }} />
+      {error && <div style={{ color: '#dc2626', fontSize: '0.78rem', marginTop: '0.4rem' }}>{error}</div>}
+      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem' }}>
+        <button className="btn-explore" style={{ padding: '0.5rem 1.1rem', fontSize: '0.82rem' }} disabled={busy || !texto.trim()} onClick={submit}>
+          {busy ? 'Enviando…' : 'Publicar reseña'}
+        </button>
+        <button className="btn-cancel" onClick={() => setOpen(false)}>Cancelar</button>
+      </div>
+    </div>
+  )
+}
+
 function BookingCard({ b, onCancel, cancelling }: { b: Booking; onCancel: (id: number) => void; cancelling: boolean }) {
   const s = STATUS[b.status] ?? STATUS.pending
   const canCancel = b.status === 'pending'
@@ -201,6 +255,7 @@ function BookingCard({ b, onCancel, cancelling }: { b: Booking; onCancel: (id: n
               {cancelling ? 'Cancelando…' : 'Cancelar solicitud'}
             </button>
           )}
+          {(b.status === 'completed' || b.status === 'confirmed') && <ReviewForm posadaId={b.posadaId} />}
         </div>
       </div>
     </div>

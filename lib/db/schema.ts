@@ -105,6 +105,14 @@ export const messages = pgTable('messages', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
+// ─── Favoritos (wishlist) ──────────────────────────────────────────────────────
+export const favorites = pgTable('favorites', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  posadaId: integer('posada_id').references(() => posadas.id).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
 // ─── NextAuth tables (required by @auth/drizzle-adapter) ───────────────────────
 export const accounts = pgTable('accounts', {
   id: serial('id').primaryKey(),

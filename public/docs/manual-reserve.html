@@ -55,7 +55,7 @@
   <div class="sub">Posadas auténticas de Venezuela<br/>Guía de uso y administración</div>
   <div class="meta">
     Documento operativo · Viajeros · Posaderos · Administradores<br/>
-    Versión 1.0 — MVP listo para lanzamiento
+    Versión 2.0 — Plataforma de reservas profesional
   </div>
 </div>
 
@@ -70,6 +70,7 @@
     <li><b>Guía del administrador</b> — revisar posadas, reservas, usuarios, soporte</li>
     <li><b>Atención al cliente con IA (Vera)</b> — cómo funciona y el escalado</li>
     <li><b>Puesta en marcha técnica</b> — base de datos, variables de entorno, despliegue</li>
+    <li><b>Funciones avanzadas</b> — favoritos, reseñas, disponibilidad, automatización, SEO</li>
     <li><b>Credenciales de demostración y checklist de lanzamiento</b></li>
   </ol>
   <div class="box">
@@ -219,6 +220,8 @@
     <tr><td><code>BLOB_READ_WRITE_TOKEN</code></td><td>Subida de fotos de posadas</td><td>Sí para fotos</td></tr>
     <tr><td><code>RESEND_API_KEY</code></td><td>Envío de correos</td><td>Opcional</td></tr>
     <tr><td><code>TEAM_EMAIL</code></td><td>Destino de solicitudes de posada</td><td>Opcional</td></tr>
+    <tr><td><code>CRON_SECRET</code></td><td>Protege el cron de ciclo de vida de reservas</td><td>Recomendada</td></tr>
+    <tr><td><code>NEXT_PUBLIC_SITE_URL</code></td><td>URL pública (SEO/sitemap)</td><td>Opcional</td></tr>
   </table>
   <div class="box"><b>Sin <code>DATABASE_URL</code></b> la web sigue navegable: usa datos curados de ejemplo (fallback). Las <b>reservas reales requieren base de datos.</b></div>
 
@@ -226,8 +229,9 @@
   <div class="step"><div class="step-n">1</div><div>En el proyecto de Vercel: <b>Storage → Create Database → Neon (Postgres)</b>. Vercel inyecta <code>DATABASE_URL</code> automáticamente.</div></div>
   <div class="step"><div class="step-n">2</div><div>Trae las variables a tu máquina y crea las tablas:</div></div>
   <pre>vercel env pull .env.local
-npm run db:push      # crea el esquema en la base de datos
+npm run db:push      # crea/actualiza el esquema (incluye favoritos y reseñas)
 npm run db:seed      # carga posadas, usuarios y datos demo</pre>
+  <div class="box"><b>Tras añadir funciones</b> (como favoritos), vuelve a correr <code>npm run db:push</code> para crear las tablas nuevas. Es seguro: no borra datos existentes.</div>
   <div class="step"><div class="step-n">3</div><div>Conecta también <b>Blob</b> (Storage → Blob) para las fotos y añade una <b>AI Gateway key</b> (panel de Vercel → AI Gateway) para el asistente.</div></div>
 
   <h3>7.3 Promover un administrador</h3>
@@ -240,9 +244,38 @@ npm run db:seed      # carga posadas, usuarios y datos demo</pre>
 vercel --prod     # despliega a producción</pre>
 </div>
 
-<!-- ───────── 8 ───────── -->
+<!-- ───────── 8 · FUNCIONES AVANZADAS ───────── -->
 <div class="section">
-  <h2>8 · Credenciales demo y checklist de lanzamiento</h2>
+  <h2>8 · Funciones avanzadas y automatización</h2>
+  <p class="lead">Estas capacidades hacen que RESER-VE opere como una plataforma de reservas profesional, con menos trabajo manual.</p>
+
+  <h3>8.1 Favoritos (wishlist) <span class="tag tag-viajero">Viajero</span></h3>
+  <p>Cada posada tiene un botón de corazón. Los viajeros guardan posadas y las revisan luego en <code>/favoritos</code> (también en el menú de usuario). Requiere haber iniciado sesión.</p>
+
+  <h3>8.2 Reseñas verificadas <span class="tag tag-viajero">Viajero</span></h3>
+  <p>Solo quien tuvo una reserva (confirmada o completada) puede dejar una reseña, y solo una vez por posada. Se hace desde <code>/mis-reservas</code> en la tarjeta de la estadía. La calificación de la posada se recalcula automáticamente con cada reseña nueva.</p>
+
+  <h3>8.3 Disponibilidad y anti-doble-reserva</h3>
+  <p>El sistema conoce las fechas ya ocupadas (reservas pendientes o confirmadas). Si un viajero elige fechas que se solapan, la plataforma lo avisa y bloquea la solicitud — tanto en el navegador como en el servidor. Imposible reservar dos veces las mismas noches.</p>
+
+  <h3>8.4 Ciclo de vida automático de reservas</h3>
+  <p>Un proceso programado (cron diario en Vercel) mantiene las reservas al día sin intervención:</p>
+  <ul>
+    <li>Cancela automáticamente las solicitudes <b>pendientes</b> que el posadero no respondió en <b>24 horas</b>.</li>
+    <li>Marca como <b>completadas</b> las reservas confirmadas cuyo check-out ya pasó (habilitando la reseña del viajero).</li>
+  </ul>
+  <p>Se configura en <code>vercel.json</code> y se protege con la variable <code>CRON_SECRET</code>.</p>
+
+  <h3>8.5 Estadísticas reales y SEO</h3>
+  <p>La página de inicio muestra números reales (posadas activas, destinos, reseñas) desde <code>/api/stats</code>, no datos fijos. La plataforma incluye <code>sitemap.xml</code>, <code>robots.txt</code>, metadatos Open Graph y datos estructurados (schema.org) en cada posada para mejor posicionamiento en Google y mejor vista al compartir en redes.</p>
+
+  <h3>8.6 Precio seguro en el servidor</h3>
+  <p>El total de cada reserva (noches × precio + 10% de servicio) se recalcula en el servidor; el cliente no puede manipularlo. La comisión vive en una sola constante (<code>SERVICE_FEE_RATE</code>) para cambiarla en un solo lugar.</p>
+</div>
+
+<!-- ───────── 9 ───────── -->
+<div class="section">
+  <h2>9 · Credenciales demo y checklist de lanzamiento</h2>
   <h3>8.1 Cuentas de demostración (tras correr el seed)</h3>
   <table>
     <tr><th>Rol</th><th>Correo</th><th>Contraseña</th></tr>

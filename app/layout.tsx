@@ -29,8 +29,28 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "RESER-VE | Posadas auténticas de Venezuela",
-  description: "Descubre y reserva las mejores posadas de Venezuela. Los Roques, Mérida, Mochima, Canaima y más.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://reser-ve.com"),
+  title: {
+    default: "RESER-VE | Posadas auténticas de Venezuela",
+    template: "%s | RESER-VE",
+  },
+  description: "Descubre y reserva las mejores posadas de Venezuela. Los Roques, Mérida, Mochima, Canaima, Gran Sabana y más.",
+  keywords: ["posadas Venezuela", "Los Roques", "Canaima", "Mérida", "Mochima", "Morrocoy", "reservar posada", "turismo Venezuela"],
+  openGraph: {
+    title: "RESER-VE | Posadas auténticas de Venezuela",
+    description: "Descubre y reserva las mejores posadas de Venezuela, con pago en Zelle, Pago Móvil o transferencia.",
+    url: "/",
+    siteName: "RESER-VE",
+    locale: "es_VE",
+    type: "website",
+    images: [{ url: "/images/los-roques-hero.webp", width: 1200, height: 630, alt: "Posadas de Venezuela" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RESER-VE | Posadas auténticas de Venezuela",
+    description: "Descubre y reserva las mejores posadas de Venezuela.",
+    images: ["/images/los-roques-hero.webp"],
+  },
 };
 
 export default function RootLayout({

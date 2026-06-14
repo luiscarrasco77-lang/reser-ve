@@ -91,7 +91,8 @@ export default function MapView({
         { subdomains: 'abcd', maxZoom: 20 }
       ).addTo(map)
 
-      L.control.zoom({ position: 'bottomright' }).addTo(map)
+      // 'topright' evita que el control de zoom choque con el botón flotante del asistente (abajo-derecha)
+      L.control.zoom({ position: 'topright' }).addTo(map)
       L.control.attribution({
         position: 'bottomleft',
         prefix: '<a href="https://www.openstreetmap.org/copyright" target="_blank">OSM</a> · <a href="https://carto.com" target="_blank">CARTO</a>',

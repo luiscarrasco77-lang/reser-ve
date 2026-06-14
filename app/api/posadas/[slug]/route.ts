@@ -41,13 +41,23 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
   return NextResponse.json({ ...posada, reseñas })
 }
 
+const EDITABLE_FIELDS = ['nombre', 'descripcion', 'precio', 'habitaciones', 'capacidad',
+  'tags', 'servicios', 'metodoPago', 'imgs', 'politicas', 'tipo', 'destino', 'destinoSlug', 'lat', 'lng']
+
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { slug } = await params
   const body = await req.json()
   const db = getDb()
-  const [updated] = await db.update(posadas).set({ ...body, updatedAt: new Date() })
+
+  // Whitelist: nunca dejar que el host cambie status, hostId, rating, etc.
+  const updates: Record<string, any> = { updatedAt: new Date() }
+  for (const key of EDITABLE_FIELDS) {
+    if (body[key] !== undefined) updates[key] = body[key]
+  }
+
+  const [updated] = await db.update(posadas).set(updates)
     .where(and(eq(posadas.slug, slug), eq(posadas.hostId, parseInt((session.user as any).id))))
     .returning()
   if (!updated) return NextResponse.json({ error: 'Not found or forbidden' }, { status: 404 })
