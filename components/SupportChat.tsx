@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { WELCOME_MESSAGE, SUGGESTED_QUESTIONS } from '@/lib/support-kb'
+import RichText from '@/components/RichText'
 
 export default function SupportChat() {
   const [open, setOpen] = useState(false)
@@ -111,7 +112,7 @@ export default function SupportChat() {
               return (
                 <div key={m.id} className={`sc-row ${m.role === 'user' ? 'me' : 'ai'}`}>
                   {m.role !== 'user' && <div className="sc-mini-ava">🌴</div>}
-                  <div className="sc-bub">{text}</div>
+                  <div className="sc-bub"><RichText text={text} /></div>
                 </div>
               )
             })}

@@ -197,9 +197,16 @@ export default function MapView({
       bubblingMouseEvents: false,
     }).addTo(map)
 
+    // Tooltip con el nombre de la posada — para saber qué es cada marcador.
+    const safeName = posada.nombre.replace(/</g, '&lt;')
+    marker.bindTooltip(
+      `<div class="mkr-tip-name">${safeName}</div><div class="mkr-tip-meta">${posada.destino} · $${posada.precio}/noche</div>`,
+      { direction: 'top', offset: [0, -12], opacity: 1, className: 'mkr-tip' },
+    )
+
     marker.on('mouseover', () => onHover(posada.slug))
     marker.on('mouseout',  () => onHover(null))
-    marker.on('click',     () => onSelect(posada.slug))
+    marker.on('click',     () => { onSelect(posada.slug); marker.closeTooltip() })
 
     return marker
   }
@@ -242,6 +249,18 @@ export default function MapView({
           transform: translate(-50%, -50%) scale(1.2) !important;
           box-shadow: 0 5px 18px rgba(230,126,34,0.50) !important;
         }
+        .mkr-tip {
+          background: #1A2B4C !important;
+          color: white !important;
+          border: none !important;
+          border-radius: 10px !important;
+          box-shadow: 0 6px 20px rgba(26,43,76,0.35) !important;
+          padding: 7px 11px !important;
+          font-family: 'Inter', system-ui, sans-serif !important;
+        }
+        .mkr-tip::before { border-top-color: #1A2B4C !important; }
+        .mkr-tip-name { font-size: 12.5px; font-weight: 800; letter-spacing: -0.01em; }
+        .mkr-tip-meta { font-size: 11px; opacity: 0.8; margin-top: 1px; }
         .leaflet-control-zoom a {
           border-radius: 8px !important;
           color: #1A2B4C !important;

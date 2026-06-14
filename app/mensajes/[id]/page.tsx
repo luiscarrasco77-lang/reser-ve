@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import NavUser from '@/components/NavUser'
+import RichText from '@/components/RichText'
 
 type Message = {
   id: number
@@ -176,7 +177,7 @@ export default function ConversationPage() {
                     )}
                   </div>
                 )}
-                <div className="msg-bubble">{msg.body}</div>
+                <div className="msg-bubble"><RichText text={msg.body} /></div>
                 <div className="msg-time">
                   {new Date(msg.createdAt).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })},&nbsp;
                   {new Date(msg.createdAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })}
