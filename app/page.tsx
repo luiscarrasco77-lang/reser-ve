@@ -1078,9 +1078,9 @@ export default function Home() {
           />
         </a>
         <div className="nav-links">
+          <a href="/aurora" className="nav-link" style={{fontWeight:700}}>✨ Aurora</a>
           <a href="/buscar" className="nav-link">Destinos</a>
           <a href="/posaderos" className="nav-link">Posaderos</a>
-          <a href="/vision" className="nav-link">Por qué posadas?</a>
           <a href="#como-funciona" className="nav-link">Cómo funciona</a>
           <NavUser dark={scrollY < 60} />
         </div>
@@ -1098,6 +1098,7 @@ export default function Home() {
           <button className="mob-close" onClick={() => setMobOpen(false)} aria-label="Cerrar">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A2B4C" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
+          <a href="/aurora" className="mob-link" onClick={() => setMobOpen(false)}>✨ Aurora · Concierge IA</a>
           <a href="/buscar" className="mob-link" onClick={() => setMobOpen(false)}>Destinos</a>
           <a href="/posaderos" className="mob-link" onClick={() => setMobOpen(false)}>Posaderos</a>
           <a href="/vision" className="mob-link" onClick={() => setMobOpen(false)}>Por qué posadas?</a>
