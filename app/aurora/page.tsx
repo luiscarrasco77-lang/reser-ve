@@ -186,7 +186,7 @@ export default function AuroraPage() {
 
         {error && (
           <div className="msg"><div className="ai-row"><div className="ai-ava">🌅</div>
-            <div className="ai-body"><div className="ai-text">Tuve un problema para responder. Intenta de nuevo en un momento. 🙏</div></div>
+            <div className="ai-body"><div className="ai-text">{error.message && error.message !== 'An error occurred.' ? error.message : 'Tuve un problema para responder. Intenta de nuevo en un momento. 🙏'}</div></div>
           </div></div>
         )}
       </div>

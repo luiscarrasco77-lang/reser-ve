@@ -22,7 +22,20 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
 
   const db = getDb()
   const [posada] = await db.select().from(posadas).where(eq(posadas.slug, slug))
-  if (!posada) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  if (!posada) {
+    // Posada curada que aún no está sembrada en la DB: servir desde lib/data.
+    const { getPosada, posadas: posadasData } = await import('@/lib/data')
+    const p = getPosada(slug)
+    if (p) {
+      return NextResponse.json({
+        ...p,
+        id: 100000 + posadasData.findIndex(x => x.slug === slug),
+        hostNombre: p.host.nombre, hostDesde: p.host.desde, hostIdiomas: p.host.idiomas,
+        status: 'active',
+      })
+    }
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
 
   // Public can only see active posadas. The owner and admins can preview any status.
   if (posada.status !== 'active') {

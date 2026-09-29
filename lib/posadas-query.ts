@@ -20,20 +20,28 @@ function toLite(p: any): PosadaLite {
   }
 }
 
-// Devuelve posadas activas que cumplen los filtros. Usa DB o datos curados (fallback).
+// Devuelve posadas activas que cumplen los filtros.
+// Siempre incluye el catálogo curado (lib/data) para garantizar variedad, y
+// además las posadas reales de la base de datos si está disponible. Nunca lanza.
 export async function queryPosadas(opts: {
   destino?: string; precioMax?: number; huespedes?: number; texto?: string
 } = {}): Promise<PosadaLite[]> {
-  let base: PosadaLite[]
+  const { posadas } = await import('./data')
+  const bySlug = new Map<string, PosadaLite>()
+  for (const p of posadas) bySlug.set(p.slug, toLite(p))
 
-  if (!process.env.DATABASE_URL) {
-    const { posadas } = await import('./data')
-    base = posadas.map(toLite)
-  } else {
-    const db = getDb()
-    const rows = await db.select().from(posadasTable).where(eq(posadasTable.status, 'active'))
-    base = rows.map(toLite)
+  // Añade/actualiza con posadas reales activas de la DB (sin romper si falla).
+  if (process.env.DATABASE_URL) {
+    try {
+      const db = getDb()
+      const rows = await db.select().from(posadasTable).where(eq(posadasTable.status, 'active'))
+      for (const r of rows) bySlug.set(r.slug, toLite(r))
+    } catch {
+      // DB no disponible o esquema desactualizado: seguimos con el catálogo curado.
+    }
   }
+
+  const base = [...bySlug.values()]
 
   const destN = opts.destino ? normalizeStr(opts.destino) : ''
   const txtN = opts.texto ? normalizeStr(opts.texto) : ''
@@ -51,13 +59,18 @@ export async function queryPosadas(opts: {
 }
 
 // ¿Está la posada libre en ese rango? (sin reservas pendientes/confirmadas que se solapen)
+// Ante cualquier error o sin DB, asume disponible para no bloquear al concierge.
 export async function isAvailable(slug: string, checkIn: string, checkOut: string): Promise<boolean> {
   if (!process.env.DATABASE_URL) return true
-  const db = getDb()
-  const [posada] = await db.select({ id: posadasTable.id }).from(posadasTable).where(eq(posadasTable.slug, slug))
-  if (!posada) return false
-  const rows = await db.select({ checkIn: bookings.checkIn, checkOut: bookings.checkOut })
-    .from(bookings)
-    .where(and(eq(bookings.posadaId, posada.id), inArray(bookings.status, ['pending', 'confirmed'])))
-  return !rows.some(r => checkIn < r.checkOut && checkOut > r.checkIn)
+  try {
+    const db = getDb()
+    const [posada] = await db.select({ id: posadasTable.id }).from(posadasTable).where(eq(posadasTable.slug, slug))
+    if (!posada) return true // posada curada que no está en la DB: se considera disponible
+    const rows = await db.select({ checkIn: bookings.checkIn, checkOut: bookings.checkOut })
+      .from(bookings)
+      .where(and(eq(bookings.posadaId, posada.id), inArray(bookings.status, ['pending', 'confirmed'])))
+    return !rows.some(r => checkIn < r.checkOut && checkOut > r.checkIn)
+  } catch {
+    return true
+  }
 }

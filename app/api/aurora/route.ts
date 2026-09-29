@@ -43,13 +43,17 @@ export async function POST(req: Request) {
             texto: z.string().optional().describe('Palabras clave de la vibra: playa, aventura, snorkel, montaña, romántico, familiar…'),
           }),
           execute: async (args) => {
-            const results = await queryPosadas(args)
-            return results.slice(0, 6).map(p => ({
-              slug: p.slug, nombre: p.nombre, destino: p.destino, tipo: p.tipo,
-              precio: p.precio, rating: p.rating, reviews: p.reviews, capacidad: p.capacidad,
-              tags: p.tags, img: p.img,
-              resumen: p.descripcion.slice(0, 160),
-            }))
+            try {
+              const results = await queryPosadas(args)
+              return results.slice(0, 6).map(p => ({
+                slug: p.slug, nombre: p.nombre, destino: p.destino, tipo: p.tipo,
+                precio: p.precio, rating: p.rating, reviews: p.reviews, capacidad: p.capacidad,
+                tags: p.tags, img: p.img,
+                resumen: p.descripcion.slice(0, 160),
+              }))
+            } catch {
+              return []
+            }
           },
         }),
         verDisponibilidad: tool({
@@ -67,8 +71,19 @@ export async function POST(req: Request) {
       },
     })
 
-    return result.toUIMessageStreamResponse()
-  } catch {
+    return result.toUIMessageStreamResponse({
+      onError: (error) => {
+        const msg = error instanceof Error ? error.message : String(error)
+        console.error('[aurora] stream error:', msg)
+        if (/gateway|unauthenticat|api[\s_-]?key|credit|quota|balance|402|401|billing/i.test(msg)) {
+          return 'La IA no está configurada en el servidor (falta o venció la AI_GATEWAY_API_KEY, o no hay créditos). Revísala en Vercel → AI Gateway.'
+        }
+        return 'Aurora tuvo un problema al responder. Intenta de nuevo en un momento.'
+      },
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[aurora] fatal:', msg)
     return new Response(
       JSON.stringify({ error: 'Aurora no está disponible ahora mismo. Intenta de nuevo en un momento.' }),
       { status: 503, headers: { 'Content-Type': 'application/json' } },
