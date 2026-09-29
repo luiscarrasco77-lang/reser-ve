@@ -107,8 +107,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Recompute price on the server (10% service fee) — never trust the client total
-  const subtotal = nights * posada.precio
-  const totalPrice = Math.round(subtotal * 1.10)
+  // El viajero paga solo noches × precio. La comisión la asume la posada (no se cobra al cliente).
+  const totalPrice = nights * posada.precio
 
   const year = new Date().getFullYear()
   const rand = Math.floor(1000 + Math.random() * 9000)

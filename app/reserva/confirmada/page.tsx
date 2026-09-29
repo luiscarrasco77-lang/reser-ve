@@ -33,7 +33,6 @@ function ConfirmadaContent() {
   const huespedes = Number(sp.get('huespedes') ?? 1)
   const precio   = Number(sp.get('precio') ?? 0)
   const subtotal = Number(sp.get('subtotal') ?? 0)
-  const comision = Number(sp.get('comision') ?? 0)
   const total    = Number(sp.get('total') ?? 0)
   const metodo   = sp.get('metodo') ?? ''
   const metodoLabel = sp.get('metodoLabel') ?? ''
@@ -162,7 +161,6 @@ function ConfirmadaContent() {
             </div>
             <div className="card-body">
               <div className="linea"><span>${precio} × {noches} noche{noches>1?'s':''}</span><span>${subtotal}</span></div>
-              <div className="linea"><span>Comisión RESER-VE (10%)</span><span>${comision}</span></div>
               <div className="linea-total"><span>Total</span><span>${total} USD</span></div>
               <div className="instrucciones-box">
                 <div className="instrucciones-label">Instrucciones · {metodoLabel}</div>

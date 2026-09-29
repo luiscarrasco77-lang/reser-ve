@@ -85,17 +85,17 @@ export default function MapView({
       })
       mapRef.current = map
 
-      // CartoDB Positron — minimal, matches brand palette
+      // OpenStreetMap standard tiles — sin API key (CartoDB ahora exige key)
       L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-        { subdomains: 'abcd', maxZoom: 20 }
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        { subdomains: 'abc', maxZoom: 19 }
       ).addTo(map)
 
       // 'topright' evita que el control de zoom choque con el botón flotante del asistente (abajo-derecha)
       L.control.zoom({ position: 'topright' }).addTo(map)
       L.control.attribution({
         position: 'bottomleft',
-        prefix: '<a href="https://www.openstreetmap.org/copyright" target="_blank">OSM</a> · <a href="https://carto.com" target="_blank">CARTO</a>',
+        prefix: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
       }).addTo(map)
 
       map.on('dragstart', () => {

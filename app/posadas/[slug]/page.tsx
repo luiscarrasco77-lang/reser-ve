@@ -394,13 +394,9 @@ export default function FichaPosada() {
                     <span>${posada.precio} × {noches} noche{noches > 1 ? 's' : ''}</span>
                     <span>${posada.precio * noches}</span>
                   </div>
-                  <div className="booking-linea">
-                    <span>Comisión RESER-VE (10%)</span>
-                    <span>${Math.round(posada.precio * noches * 0.1)}</span>
-                  </div>
                   <div className="booking-total">
                     <span>Total</span>
-                    <span>${Math.round(posada.precio * noches * 1.1)} USD</span>
+                    <span>${posada.precio * noches} USD</span>
                   </div>
                 </div>
               )}

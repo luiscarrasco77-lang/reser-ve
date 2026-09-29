@@ -31,7 +31,7 @@ ${destinosResumen}
 No se cobra nada automáticamente al reservar: el pago se coordina directo con el posadero una vez confirmada la reserva.
 
 # Métodos de pago
-Zelle, Pago Móvil, transferencia bancaria, efectivo en USD o Bs, y tarjeta en algunas posadas. Cada posada indica los que acepta. RESER-VE cobra una comisión de servicio del 10% incluida en el total mostrado.
+Zelle, Pago Móvil, transferencia bancaria, efectivo en USD o Bs, y tarjeta en algunas posadas. Cada posada indica los que acepta. El viajero NO paga comisión: el precio que ve es el precio final que paga directamente al posadero, sin cargos ocultos.
 
 # Cancelaciones
 Cada posada define su política (aparece en la página de la posada, sección "Políticas"). Lo común es cancelación gratuita 48–72h antes. Una reserva "pendiente" se puede cancelar desde /mis-reservas.

@@ -76,8 +76,7 @@ function ReservarContent() {
     ? Math.max(0, Math.round((new Date(salida).getTime() - new Date(llegada).getTime()) / 86400000))
     : 0
   const subtotal = noches * (posada?.precio ?? 0)
-  const comision = Math.round(subtotal * 0.1)
-  const total = subtotal + comision
+  const total = subtotal // el viajero paga solo noches × precio; la comisión la asume la posada
 
   const metodos: Record<typeof metodoPago, { label: string; desc: string; icon: string }> = {
     zelle:     { label: 'Zelle',      desc: 'USD desde EE.UU. o internacionalmente', icon: '$' },
@@ -118,7 +117,6 @@ function ReservarContent() {
         huespedes: String(huespedes),
         precio: String(posada.precio),
         subtotal: String(subtotal),
-        comision: String(comision),
         total: String(total),
         metodo: metodoPago,
         metodoLabel: metodos[metodoPago].label,
@@ -327,7 +325,6 @@ function ReservarContent() {
                       <div className="resumen-hr" />
                       <div className="resumen-linea"><span>{fmt(llegada)} → {fmt(salida)}</span><span>{noches} noche{noches>1?'s':''}</span></div>
                       <div className="resumen-linea"><span>${posada.precio} × {noches} noche{noches>1?'s':''}</span><span>${subtotal}</span></div>
-                      <div className="resumen-linea"><span>Comisión RESER-VE (10%)</span><span>${comision}</span></div>
                       <div className="resumen-total"><span>Total</span><span>${total} USD</span></div>
                     </>
                   ) : (
