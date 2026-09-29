@@ -3,8 +3,9 @@ import { eq, asc } from 'drizzle-orm'
 import { getDb } from './db'
 import { conversations, messages, users } from './db/schema'
 import { SUPPORT_SYSTEM_PROMPT } from './support-kb'
+import { AI_MODEL } from './constants'
 
-const MODEL = 'anthropic/claude-haiku-4.5'
+const MODEL = AI_MODEL
 const VERA_EMAIL = 'vera@reser-ve.app'
 const VERA_NAME = 'Vera · Asistente RESER-VE'
 

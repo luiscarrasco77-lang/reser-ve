@@ -1,10 +1,11 @@
 import { convertToModelMessages, streamText, stepCountIs, tool, type UIMessage } from 'ai'
 import { z } from 'zod'
 import { queryPosadas, isAvailable } from '@/lib/posadas-query'
+import { AI_MODEL } from '@/lib/constants'
 
 export const maxDuration = 30
 
-const MODEL = 'anthropic/claude-haiku-4.5'
+const MODEL = AI_MODEL
 
 const SYSTEM = `Eres **Aurora**, la concierge de viajes IA de RESER-VE, la plataforma de posadas auténticas de Venezuela. Tu misión: convertir el sueño de viaje de una persona en un itinerario concreto y reservable, usando posadas reales de la plataforma.
 

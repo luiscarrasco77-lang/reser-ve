@@ -1,5 +1,10 @@
 // Constantes compartidas de la plataforma.
 
+// Modelo de IA vía Vercel AI Gateway. Gemini 2.5 Flash está disponible en el
+// free tier del Gateway (los modelos Claude requieren créditos de pago).
+export const AI_MODEL = 'google/gemini-2.5-flash'
+
+
 // Comisión de servicio que paga el viajero (incluida en el total mostrado).
 export const SERVICE_FEE_RATE = 0.10
 

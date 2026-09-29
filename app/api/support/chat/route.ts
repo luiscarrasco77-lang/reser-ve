@@ -5,12 +5,13 @@ import { getDb } from '@/lib/db'
 import { conversations, messages as messagesTable, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { SUPPORT_SYSTEM_PROMPT } from '@/lib/support-kb'
+import { AI_MODEL } from '@/lib/constants'
 
 // El asistente puede dar varios pasos (responder + usar herramienta)
 export const maxDuration = 30
 
 // Modelo vía Vercel AI Gateway. Autentica con OIDC en Vercel o AI_GATEWAY_API_KEY en local.
-const MODEL = 'anthropic/claude-haiku-4.5'
+const MODEL = AI_MODEL
 
 export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json()
