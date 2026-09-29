@@ -22,32 +22,51 @@ export async function GET(req: NextRequest) {
     }))
   }
 
-  const db = getDb()
-  const rows = await db.select().from(posadas).where(eq(posadas.status, 'active'))
+  let rows: any[] = []
+  try {
+    const db = getDb()
+    rows = await db.select().from(posadas).where(eq(posadas.status, 'active'))
+  } catch {
+    rows = []
+  }
 
   // Map DB rows to Posada shape expected by the UI (nested host, reseñas=[])
-  const mapped = rows.map(p => ({
-    slug: p.slug,
-    nombre: p.nombre,
-    destino: p.destino,
-    destinoSlug: p.destinoSlug,
-    tipo: p.tipo,
-    precio: p.precio,
-    habitaciones: p.habitaciones,
-    capacidad: p.capacidad,
-    rating: p.rating ?? 5,
-    reviews: p.reviews ?? 0,
-    descripcion: p.descripcion,
-    tags: p.tags as string[] ?? [],
-    servicios: p.servicios as string[] ?? [],
-    politicas: p.politicas as string[] ?? [],
-    imgs: p.imgs as string[] ?? [],
-    lat: p.lat,
-    lng: p.lng,
-    metodoPago: p.metodoPago as string[] ?? [],
-    host: { nombre: p.hostNombre ?? '', desde: p.hostDesde ?? '', idiomas: p.hostIdiomas as string[] ?? [] },
-    reseñas: [],
-  }))
+  const bySlug = new Map<string, any>()
+  for (const p of rows) {
+    bySlug.set(p.slug, {
+      slug: p.slug,
+      nombre: p.nombre,
+      destino: p.destino,
+      destinoSlug: p.destinoSlug,
+      tipo: p.tipo,
+      precio: p.precio,
+      habitaciones: p.habitaciones,
+      capacidad: p.capacidad,
+      rating: p.rating ?? 5,
+      reviews: p.reviews ?? 0,
+      descripcion: p.descripcion,
+      tags: p.tags as string[] ?? [],
+      servicios: p.servicios as string[] ?? [],
+      politicas: p.politicas as string[] ?? [],
+      imgs: p.imgs as string[] ?? [],
+      lat: p.lat,
+      lng: p.lng,
+      metodoPago: p.metodoPago as string[] ?? [],
+      host: { nombre: p.hostNombre ?? '', desde: p.hostDesde ?? '', idiomas: p.hostIdiomas as string[] ?? [] },
+      reseñas: [],
+    })
+  }
+
+  // Include curated catalog (lib/data) for any slug not already in the DB, so the
+  // full set shows in search without needing a re-seed.
+  const { posadas: curated } = await import('@/lib/data')
+  for (const p of curated) {
+    if (!bySlug.has(p.slug)) {
+      bySlug.set(p.slug, { ...p, reseñas: [] })
+    }
+  }
+
+  const mapped = [...bySlug.values()]
 
   // Filter in JS (flexible, good enough for current scale)
   return NextResponse.json(mapped.filter(p => {
