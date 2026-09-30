@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<title>RESER-VE · Guía para posaderos, viajeros y admins</title>
+<title>RESER-VE · Guía para posaderos</title>
 <style>
   :root{ --indigo:#1A2B4C; --cacao:#E67E22; --cacao-dark:#C96510; --sand:#FDFBF7; --muted:#5d6b80; --line:rgba(26,43,76,0.12); }
   *{box-sizing:border-box;}
@@ -13,15 +13,10 @@
   h2{font-size:19pt;margin:0 0 .2rem;border-bottom:2px solid var(--cacao);padding-bottom:.35rem;}
   h3{font-size:13pt;margin:1.1rem 0 .3rem;color:var(--cacao-dark);}
   p{margin:.45rem 0;} ul,ol{margin:.4rem 0 .7rem;padding-left:1.25rem;} li{margin:.25rem 0;}
-  a{color:var(--cacao-dark);text-decoration:none;}
   code{background:rgba(26,43,76,.06);border:1px solid var(--line);border-radius:5px;padding:.06rem .35rem;font-family:Menlo,Consolas,monospace;font-size:9.5pt;color:var(--cacao-dark);}
   .section{page-break-before:always;padding-top:.3rem;}
   .lead{color:var(--muted);font-size:11.5pt;}
   .pill{display:inline-block;background:var(--cacao);color:#fff;font-size:9pt;font-weight:700;padding:.3rem .8rem;border-radius:999px;letter-spacing:.05em;}
-  .tag{display:inline-block;font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:.16rem .5rem;border-radius:999px;}
-  .tag-host{background:rgba(230,126,34,.14);color:var(--cacao-dark);}
-  .tag-viajero{background:rgba(26,43,76,.1);color:var(--indigo);}
-  .tag-admin{background:rgba(220,38,38,.1);color:#c0322a;}
   .box{background:var(--sand);border:1px solid var(--line);border-left:4px solid var(--cacao);border-radius:0 10px 10px 0;padding:.8rem 1.1rem;margin:.8rem 0;}
   .box-ok{border-left-color:#10b981;background:rgba(16,185,129,.05);}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:.8rem 0;}
@@ -31,7 +26,7 @@
   .step-n{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--cacao);color:#fff;font-weight:700;font-size:11pt;display:flex;align-items:center;justify-content:center;}
   .price-box{background:linear-gradient(135deg,rgba(230,126,34,.1),rgba(230,126,34,.03));border:2px dashed rgba(230,126,34,.35);border-radius:16px;padding:1.2rem 1.4rem;margin:1rem 0;}
   .price-big{font-size:2.2rem;font-weight:800;color:var(--cacao);font-family:'Helvetica Neue',Arial,sans-serif;letter-spacing:-.02em;}
-  .muted{color:var(--muted);} .center{text-align:center;}
+  .muted{color:var(--muted);}
   .cover{height:250mm;display:flex;flex-direction:column;justify-content:center;page-break-after:always;}
   .cover .logo{font-size:44pt;font-weight:800;letter-spacing:-.04em;font-family:'Helvetica Neue',Arial,sans-serif;}
   .cover .logo span{color:var(--cacao);}
@@ -40,33 +35,26 @@
 </head>
 <body>
 
-<!-- COVER -->
 <div class="cover">
-  <div class="pill">GUÍA DE BIENVENIDA</div>
+  <div class="pill">GUÍA PARA POSADEROS</div>
   <div class="logo" style="margin-top:1.2rem;">RESER<span>-VE</span></div>
-  <div class="sub">Posadas auténticas de Venezuela<br/>Guía para posaderos, viajeros y administradores</div>
-  <div style="margin-top:2rem;font-size:10pt;color:var(--muted)">
-    <span class="tag tag-host">Posaderos</span> &nbsp;
-    <span class="tag tag-viajero">Viajeros</span> &nbsp;
-    <span class="tag tag-admin">Admins</span><br/><br/>
-    reser-ve.com · hola@reser-ve.com
-  </div>
+  <div class="sub">Únete y recibe más viajeros<br/>en tu posada</div>
+  <div class="muted" style="margin-top:2rem;font-size:10pt">reser-ve.com · hola@reser-ve.com</div>
 </div>
 
-<!-- PARTE A: POSADEROS -->
 <div>
-  <h2>Para posaderos <span class="tag tag-host">Anfitriones</span></h2>
-  <p class="lead">Convierte tu posada en un negocio con más reservas. RESER-VE te da visibilidad nacional e internacional, herramientas para gestionar tus reservas y viajeros listos para hospedarse — sin complicaciones técnicas.</p>
+  <h2>Únete a RESER-VE</h2>
+  <p class="lead">Convierte tu posada en un negocio con más reservas. Te damos visibilidad nacional e internacional, herramientas para gestionar tus reservas y viajeros listos para hospedarse — sin complicaciones técnicas.</p>
 
   <h3>¿Qué es RESER-VE?</h3>
   <p>Somos la primera plataforma dedicada a las <b>posadas auténticas de Venezuela</b>. Conectamos viajeros de todo el mundo con anfitriones locales como tú. No somos una agencia: tú mantienes el control de tu posada, tus precios y tu relación con el huésped.</p>
 
   <h3>Ventajas de unirte</h3>
   <div class="grid2">
-    <div class="cardv"><b>Más viajeros</b><br/>Tu posada visible para viajeros dentro y fuera del país, con buscador y mapa.</div>
-    <div class="cardv"><b>Sin costo para empezar</b><br/>Publicar tu posada es gratis. No hay mensualidad ni cuota de inscripción.</div>
+    <div class="cardv"><b>Más viajeros</b><br/>Tu posada visible dentro y fuera del país, con buscador y mapa.</div>
+    <div class="cardv"><b>Sin costo para empezar</b><br/>Publicar es gratis. Sin mensualidad ni cuota de inscripción.</div>
     <div class="cardv"><b>Tú cobras directo</b><br/>Recibes el pago del viajero por tu método preferido (Zelle, Pago Móvil, transferencia, efectivo).</div>
-    <div class="cardv"><b>Concierge con IA</b><br/>Nuestra asistente "Aurora" recomienda tu posada a viajeros según lo que buscan.</div>
+    <div class="cardv"><b>Concierge con IA</b><br/>"Aurora" recomienda tu posada a viajeros según lo que buscan.</div>
     <div class="cardv"><b>Todo en la app</b><br/>Chateas con el viajero dentro de RESER-VE — comunicación segura y ordenada.</div>
     <div class="cardv"><b>Marketplace curado</b><br/>Revisamos cada posada para mantener calidad y confianza; eso atrae mejores huéspedes.</div>
   </div>
@@ -77,23 +65,22 @@
     <div class="muted" style="margin-top:.3rem">solo por <b>reserva confirmada</b>. Sin costo de publicación · Sin mensualidad · Sin permanencia.</div>
   </div>
   <ul>
-    <li><b>El viajero paga el precio final</b> que tú publicas — sin recargos para él.</li>
+    <li><b>El viajero paga el precio final</b> que publicas — sin recargos para él.</li>
     <li>La comisión del 10% <b>la asume la posada</b> sobre las reservas confirmadas. Si no tienes reservas, no pagas nada.</li>
     <li>Tú defines tus precios, políticas y métodos de pago.</li>
   </ul>
-  <div class="box">💡 Ejemplo: publicas tu habitación a <b>$50/noche</b>. Un viajero reserva 3 noches ($150) y te paga directo. La comisión RESER-VE es $15 (10%). Tu ingreso neto: $135.</div>
+  <div class="box">💡 Ejemplo: publicas a <b>$50/noche</b>. Un viajero reserva 3 noches ($150) y te paga directo. Comisión RESER-VE: $15 (10%). Tu ingreso neto: $135.</div>
 
   <h3>Paridad de precios (importante)</h3>
-  <div class="box"><b>El precio que publiques en RESER-VE debe ser el mismo que ofreces en tus otros canales</b> (WhatsApp, Instagram, otras plataformas). No publiques aquí un precio más alto para "cubrir" la comisión: eso rompe la confianza del viajero y la equidad de la plataforma. La comisión la asume la posada sobre ese precio publicado.</div>
+  <div class="box"><b>El precio que publiques en RESER-VE debe ser el mismo que ofreces en tus otros canales</b> (WhatsApp, Instagram, otras plataformas). No publiques aquí un precio más alto para "cubrir" la comisión: rompe la confianza del viajero y la equidad de la plataforma.</div>
 
   <h3>Estamos en fase MVP (beta)</h3>
-  <div class="box box-ok">RESER-VE está en su primera versión. Ya puedes publicar tu posada y recibir reservas reales, pero seguimos <b>perfeccionando los métodos de pago y el cobro de la comisión</b>. Por ahora coordinas el pago directamente con el viajero; muy pronto integraremos pagos y liquidación de comisión automatizados. Tu opinión en esta etapa vale oro. 🙌</div>
+  <div class="box box-ok">RESER-VE está en su primera versión. Ya puedes publicar y recibir reservas reales, pero seguimos <b>perfeccionando los métodos de pago y el cobro de la comisión</b>. Por ahora coordinas el pago directo con el viajero; muy pronto integraremos pagos y liquidación automatizados. Tu opinión en esta etapa vale oro. 🙌</div>
 </div>
 
-<!-- PASO A PASO POSADERO -->
 <div class="section">
-  <h2>Cómo unirte y publicar tu posada <span class="tag tag-host">Anfitriones</span></h2>
-  <div class="step"><div class="step-n">1</div><div><b>Crea tu cuenta</b> en <code>reser-ve.com/register</code> y elige la opción <b>"Posadero"</b>. (O completa el formulario guiado en <code>reser-ve.com/registro-posada</code> y te contactamos.)</div></div>
+  <h2>Cómo unirte y publicar tu posada</h2>
+  <div class="step"><div class="step-n">1</div><div><b>Crea tu cuenta</b> en <code>reser-ve.com/register</code> y elige <b>"Posadero"</b>. (O usa el formulario guiado en <code>reser-ve.com/registro-posada</code> y te contactamos.)</div></div>
   <div class="step"><div class="step-n">2</div><div><b>Entra a tu panel</b> en <code>reser-ve.com/dashboard</code>.</div></div>
   <div class="step"><div class="step-n">3</div><div>Pulsa <b>"Publicar posada"</b> y completa: nombre, destino, tipo, descripción, precio por noche, habitaciones, capacidad, servicios y métodos de pago que aceptas.</div></div>
   <div class="step"><div class="step-n">4</div><div><b>Sube fotos</b> de calidad (JPG/PNG/WebP, hasta 10 MB c/u) y marca la ubicación en el mapa.</div></div>
@@ -103,49 +90,18 @@
   <ul>
     <li>Cuando alguien reserva, recibes la solicitud en <code>/dashboard/reservas</code> y por correo.</li>
     <li><b>Tienes 24h</b> para <b>confirmar o rechazar</b>. Al confirmar, el viajero recibe automáticamente tus instrucciones de pago.</li>
-    <li>Coordinas el pago y la llegada con el viajero por el <b>chat interno</b> (<code>/mensajes</code>).</li>
+    <li>Coordinas pago y llegada por el <b>chat interno</b> (<code>/mensajes</code>).</li>
     <li>Tras la estancia, el viajero puede dejarte una <b>reseña</b> ⭐ que mejora tu reputación.</li>
   </ul>
 
   <h3>Consejos para recibir más reservas</h3>
   <ul>
-    <li>📸 Fotos luminosas y reales de las habitaciones, áreas comunes y vistas.</li>
+    <li>📸 Fotos luminosas y reales de habitaciones, áreas comunes y vistas.</li>
     <li>✍️ Descripción honesta y cálida: qué hace especial tu posada y su entorno.</li>
     <li>💲 Precio competitivo para tu zona y temporada.</li>
     <li>⚡ Responde rápido: los viajeros reservan con quien contesta primero.</li>
   </ul>
-  <div class="box box-ok"><b>Importante — por tu seguridad y la del viajero:</b> mantén toda la comunicación y la coordinación dentro de RESER-VE. Evita salir a canales privados: así hay respaldo de cada reserva y protección para ambos.</div>
-</div>
-
-<!-- PARTE B: VIAJEROS -->
-<div class="section">
-  <h2>Para viajeros <span class="tag tag-viajero">Clientes</span></h2>
-  <p class="lead">Reservar una posada auténtica en Venezuela es fácil y sin cargos ocultos: el precio que ves es el que pagas.</p>
-  <div class="step"><div class="step-n">1</div><div><b>Explora</b> en <code>reser-ve.com/buscar</code> por destino, fechas y método de pago — o pídele un plan a <b>Aurora</b>, el concierge IA, en <code>/aurora</code>.</div></div>
-  <div class="step"><div class="step-n">2</div><div><b>Elige tu posada</b>, revisa fotos, servicios, políticas y reseñas.</div></div>
-  <div class="step"><div class="step-n">3</div><div><b>Reserva</b>: elige fechas y huéspedes, crea tu cuenta gratis y envía la solicitud. No se cobra nada aún.</div></div>
-  <div class="step"><div class="step-n">4</div><div>El posadero <b>confirma</b> y recibes las <b>instrucciones de pago</b>. Coordinas el pago directo con él.</div></div>
-  <div class="step"><div class="step-n">5</div><div>Sigue todo en <code>/mis-reservas</code>, chatea con el posadero en <code>/mensajes</code> y deja tu reseña al volver.</div></div>
-  <div class="box">🌴 ¿Dudas? La asistente <b>Vera</b> (botón flotante) responde al instante y te conecta con una persona si hace falta. También puedes guardar posadas en <b>Favoritos</b> ❤️.</div>
-</div>
-
-<!-- PARTE C: ADMINS -->
-<div class="section">
-  <h2>Para administradores <span class="tag tag-admin">Equipo RESER-VE</span></h2>
-  <p class="lead">El panel <code>/admin</code> es el centro de operaciones. Solo accesible con rol admin.</p>
-  <h3>Tareas diarias</h3>
-  <ul>
-    <li><b>Revisión de posadas</b> (lo más importante): en la pestaña "Revisión", aprueba o rechaza cada posada nueva. Aprueba solo las que tengan buenas fotos, descripción honesta y precio coherente.</li>
-    <li><b>Reservas</b>: supervisa todas por código, huésped o posada.</li>
-    <li><b>Usuarios</b>: busca y cambia roles (promover a posadero o admin).</li>
-    <li><b>Soporte</b>: en <code>/mensajes</code> ves todos los tickets; muchos los abre la IA (Vera) con el contexto ya resumido.</li>
-  </ul>
-  <h3>Puesta en marcha (técnico)</h3>
-  <ul>
-    <li>Crear el primer admin: <code>npx tsx scripts/make-admin.ts tu@correo.com</code>.</li>
-    <li>Datos y variables de entorno: ver el <b>Manual de la plataforma</b> (PDF completo en <code>/docs/Manual-RESER-VE.pdf</code>).</li>
-  </ul>
-  <div class="box box-ok" style="margin-top:1.5rem"><b>RESER-VE</b> — La plataforma de posadas auténticas de Venezuela.<br/><span class="muted">¿Preguntas? hola@reser-ve.com</span></div>
+  <div class="box box-ok"><b>Por tu seguridad y la del viajero:</b> mantén toda la comunicación y coordinación dentro de RESER-VE. Así hay respaldo de cada reserva y protección para ambos.</div>
 </div>
 
 </body>
