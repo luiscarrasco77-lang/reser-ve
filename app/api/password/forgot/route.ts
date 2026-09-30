@@ -6,29 +6,27 @@ import { randomBytes } from 'crypto'
 import { emailPasswordReset } from '@/lib/email'
 import { SITE_URL } from '@/lib/constants'
 
-// Solicita un enlace de restablecimiento de contraseña.
-// Siempre responde OK (no revela si el email existe).
+// Solicita un enlace para restablecer la contraseña.
 export async function POST(req: NextRequest) {
   const { email } = await req.json()
   const clean = String(email ?? '').trim().toLowerCase()
-  const ok = NextResponse.json({ ok: true })
-  if (!clean) return ok
+  if (!clean) return NextResponse.json({ error: 'Escribe tu correo' }, { status: 400 })
 
-  try {
-    const db = getDb()
-    const [user] = await db.select().from(users).where(eq(users.email, clean))
-    if (user) {
-      const token = randomBytes(32).toString('hex')
-      const expires = new Date(Date.now() + 60 * 60 * 1000) // 1 hora
-      // Limpia tokens previos de ese email y crea uno nuevo.
-      await db.delete(passwordResets).where(eq(passwordResets.email, clean))
-      await db.insert(passwordResets).values({ email: clean, token, expires })
-      const resetUrl = `${SITE_URL}/restablecer?token=${token}`
-      // Fire-and-forget: no bloquea la respuesta.
-      emailPasswordReset({ email: clean, name: user.name, resetUrl }).catch(() => {})
-    }
-  } catch {
-    // No revelamos errores internos al cliente.
+  const db = getDb()
+  const [user] = await db.select().from(users).where(eq(users.email, clean))
+  if (!user) {
+    return NextResponse.json({ error: 'No hay ninguna cuenta registrada con ese correo.' }, { status: 404 })
   }
-  return ok
+
+  const token = randomBytes(32).toString('hex')
+  const expires = new Date(Date.now() + 60 * 60 * 1000) // 1 hora
+  await db.delete(passwordResets).where(eq(passwordResets.email, clean))
+  await db.insert(passwordResets).values({ email: clean, token, expires })
+
+  // Se espera el envío: así el correo sale al instante y sabemos si falló.
+  const sent = await emailPasswordReset({ email: clean, name: user.name, resetUrl: `${SITE_URL}/restablecer?token=${token}` })
+  if (!sent) {
+    return NextResponse.json({ error: 'No pudimos enviar el correo. Intenta de nuevo en unos minutos.' }, { status: 502 })
+  }
+  return NextResponse.json({ ok: true })
 }

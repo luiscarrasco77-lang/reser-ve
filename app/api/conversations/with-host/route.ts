@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { getDb } from '@/lib/db'
 import { conversations, messages, posadas } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
@@ -55,11 +55,13 @@ export async function POST(req: NextRequest) {
     })
     await db.update(conversations).set({ lastMessageAt: new Date() }).where(eq(conversations.id, conv.id))
 
-    // Notifica al posadero (fire-and-forget).
-    db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, posada.hostId))
-      .then(([host]) => {
-        if (host) emailNewMessage({ recipientEmail: host.email, recipientName: host.name, senderName: userName, subject, body: message.trim(), conversationId: conv.id })
-      }).catch(() => {})
+    // Notifica al posadero tras responder.
+    const hostId = posada.hostId
+    const convId = conv.id
+    after(async () => {
+      const [host] = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, hostId))
+      if (host) await emailNewMessage({ recipientEmail: host.email, recipientName: host.name, senderName: userName, subject, body: message.trim(), conversationId: convId })
+    })
   }
 
   return NextResponse.json({ id: conv.id }, { status: 201 })

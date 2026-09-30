@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { getDb } from '@/lib/db'
 import { bookings, posadas, users } from '@/lib/db/schema'
 import { eq, inArray } from 'drizzle-orm'
@@ -125,17 +125,16 @@ export async function POST(req: NextRequest) {
   const guestName = session.user.name ?? 'Viajero'
   const guestEmail = session.user.email!
 
-  // Get host user for email
-  Promise.all([
-    posada.hostId
-      ? db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, posada.hostId)).then(r => r[0])
-      : Promise.resolve(null),
-    emailGuestBookingReceived({ guestEmail, guestName, posadaNombre: posada.nombre, bookingCode, checkIn, checkOut, nights, totalPrice, paymentMethod }),
-  ]).then(([host]) => {
-    if (host) {
-      emailHostNewBooking({ hostEmail: host.email, hostName: host.name, guestName, guestEmail, posadaNombre: posada.nombre, bookingCode, checkIn, checkOut, nights, totalPrice, paymentMethod, guestCount: guestCount || 1, notes })
-    }
-  }).catch(() => {}) // Email errors never break the booking
+  // Correos tras responder: after() mantiene viva la función hasta que salen.
+  after(async () => {
+    const host = posada.hostId
+      ? (await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, posada.hostId)))[0]
+      : null
+    await Promise.all([
+      emailGuestBookingReceived({ guestEmail, guestName, posadaNombre: posada.nombre, bookingCode, checkIn, checkOut, nights, totalPrice, paymentMethod }),
+      host ? emailHostNewBooking({ hostEmail: host.email, hostName: host.name, guestName, guestEmail, posadaNombre: posada.nombre, bookingCode, checkIn, checkOut, nights, totalPrice, paymentMethod, guestCount: guests, notes }) : null,
+    ])
+  })
 
   return NextResponse.json({ ...booking, posadaNombre: posada.nombre }, { status: 201 })
 }

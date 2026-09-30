@@ -4,6 +4,10 @@ import { useEffect, useRef } from 'react'
 import type { Posada } from '@/lib/data'
 import type { SearchResult } from '@/lib/search'
 
+// Mapa vectorial con MapLibre GL + OpenFreeMap (estilo "Liberty"): nítido, colorido,
+// rápido y sin API key. Misma interfaz que el mapa anterior.
+const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty'
+
 type Props = {
   results: SearchResult[]
   allPosadas: Posada[]
@@ -16,289 +20,199 @@ type Props = {
   onUserPan?: () => void
 }
 
+type MarkerEntry = { marker: any; pill: HTMLDivElement; posada: Posada }
+
 export default function MapView({
   results, allPosadas, searchKey, mobileVisible,
   hoveredSlug, onHover, onSelect,
   onViewportChange, onUserPan,
 }: Props) {
-  const containerRef        = useRef<HTMLDivElement>(null)
-  const mapRef              = useRef<any>(null)
-  const markersRef          = useRef<Map<string, any>>(new Map())
-  const LRef                = useRef<any>(null)
-  const userHasPannedRef    = useRef(false)
-  const programmaticRef     = useRef(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const mapRef       = useRef<any>(null)
+  const libRef       = useRef<any>(null)
+  const markersRef   = useRef<Map<string, MarkerEntry>>(new Map())
+  const popupRef     = useRef<any>(null)
+  const userHasPannedRef = useRef(false)
 
-  // Always-fresh refs — avoids stale closure in async Leaflet init
+  // Refs siempre frescas (el init es asíncrono)
   const resultsRef          = useRef(results)
   const allPosadasRef       = useRef(allPosadas)
   const onViewportChangeRef = useRef(onViewportChange)
   const onUserPanRef        = useRef(onUserPan)
-
-  useEffect(() => { resultsRef.current    = results },          [results])
-  useEffect(() => { allPosadasRef.current = allPosadas },       [allPosadas])
+  const onHoverRef          = useRef(onHover)
+  const onSelectRef         = useRef(onSelect)
+  useEffect(() => { resultsRef.current = results }, [results])
+  useEffect(() => { allPosadasRef.current = allPosadas }, [allPosadas])
   useEffect(() => { onViewportChangeRef.current = onViewportChange }, [onViewportChange])
-  useEffect(() => { onUserPanRef.current  = onUserPan },        [onUserPan])
+  useEffect(() => { onUserPanRef.current = onUserPan }, [onUserPan])
+  useEffect(() => { onHoverRef.current = onHover }, [onHover])
+  useEffect(() => { onSelectRef.current = onSelect }, [onSelect])
 
-  // Reset pan-lock whenever a brand-new search fires
+  // Nueva búsqueda → vuelve a encuadrar
   useEffect(() => { userHasPannedRef.current = false }, [searchKey])
 
-  // When the mobile Mapa tab becomes visible, Leaflet's container was hidden
-  // (display:none → fixed). Force a size recalculation and re-fit.
+  // Pestaña "Mapa" en móvil: el contenedor estaba oculto → recalcular tamaño
   useEffect(() => {
-    if (!mobileVisible) return
-    const map = mapRef.current
-    if (!map) return
-    // rAF ensures the CSS transition has committed before measuring
+    if (!mobileVisible || !mapRef.current) return
     requestAnimationFrame(() => {
-      map.invalidateSize({ animate: false })
-      // Re-fit so tiles cover the new full-screen size
-      const L = LRef.current
-      if (!L) return
-      const targets = resultsRef.current.length > 0
-        ? resultsRef.current.map(r => r.posada)
-        : allPosadasRef.current
-      if (targets.length > 0 && !userHasPannedRef.current) {
-        fitBounds(L, map, targets)
-      }
+      mapRef.current?.resize()
+      if (!userHasPannedRef.current) fitTo(currentTargets())
     })
   }, [mobileVisible]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Init map once ─────────────────────────────────────────────────────────
+  // ── Init (una vez) ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
+    let cancelled = false
 
-    import('leaflet').then(L => {
-      if (!containerRef.current) return  // unmounted while loading
-      LRef.current = L
-      delete (L.Icon.Default.prototype as any)._getIconUrl
-
-      const map = L.map(containerRef.current, {
-        center: [8.0, -66.5],
-        zoom: 6,
-        maxZoom: 16,
-        zoomControl: false,
-        attributionControl: false,
-        scrollWheelZoom: true,
-        doubleClickZoom: true,
-        dragging: true,
-        touchZoom: true,
-        bounceAtZoomLimits: false,
+    import('maplibre-gl').then(lib => {
+      if (cancelled || !containerRef.current) return
+      // Worker servido desde /public (copiado en postinstall) — ver scripts/copy-maplibre-worker.mjs
+      lib.setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')
+      libRef.current = lib
+      const map = new lib.Map({
+        container: containerRef.current,
+        style: STYLE_URL,
+        center: [-66.5, 8.0],
+        zoom: 5,
+        maxZoom: 17,
+        attributionControl: { compact: true },
+        cooperativeGestures: false,
       })
       mapRef.current = map
+      // Zoom arriba-derecha: no choca con el botón del asistente (abajo-derecha)
+      map.addControl(new lib.NavigationControl({ showCompass: false }), 'top-right')
+      map.dragRotate.disable()
+      map.touchZoomRotate.disableRotation()
 
-      // Esri "Light Gray Canvas" — basemap minimalista y claro, sin API key,
-      // liviano y rápido (mejor que el satélite, que era pesado). Orden {z}/{y}/{x}.
-      L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-        { maxZoom: 16 }
-      ).addTo(map)
-      // Etiquetas de lugares encima del canvas gris.
-      L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-        { maxZoom: 16 }
-      ).addTo(map)
-
-      // 'topright' evita que el control de zoom choque con el botón flotante del asistente (abajo-derecha)
-      L.control.zoom({ position: 'topright' }).addTo(map)
-      L.control.attribution({
-        position: 'bottomleft',
-        prefix: '© <a href="https://www.esri.com" target="_blank">Esri</a>',
-      }).addTo(map)
-
-      map.on('dragstart', () => {
-        if (!programmaticRef.current) {
-          userHasPannedRef.current = true
-          onUserPanRef.current?.()
-        }
+      map.on('dragstart', (e: any) => {
+        if (e.originalEvent) { userHasPannedRef.current = true; onUserPanRef.current?.() }
       })
-
-      map.on('moveend zoomend', () => {
-        if (!onViewportChangeRef.current) return
-        const bounds = map.getBounds()
+      map.on('moveend', () => {
+        const cb = onViewportChangeRef.current
+        if (!cb) return
+        const b = map.getBounds()
         const visible: string[] = []
-        markersRef.current.forEach((marker, slug) => {
-          if (bounds.contains(marker.getLatLng())) visible.push(slug)
-        })
-        onViewportChangeRef.current(visible)
+        markersRef.current.forEach((m, slug) => { if (b.contains([m.posada.lng, m.posada.lat])) visible.push(slug) })
+        cb(visible)
       })
 
-      // ── CRITICAL: build markers immediately after Leaflet is ready ──────
-      // The [results, allPosadas] effect fires before Leaflet loads (async),
-      // finds LRef=null and exits. Build here with the current values from refs.
-      rebuildMarkers(L, map, resultsRef.current, allPosadasRef.current)
+      rebuildMarkers()
     })
 
     return () => {
-      if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; markersRef.current.clear() }
+      cancelled = true
+      popupRef.current?.remove()
+      markersRef.current.forEach(m => m.marker.remove())
+      markersRef.current.clear()
+      mapRef.current?.remove()
+      mapRef.current = null
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Re-build markers when results change (Leaflet already ready) ─────────
-  useEffect(() => {
-    const L   = LRef.current
-    const map = mapRef.current
-    if (!L || !map) return  // Not ready yet — handled in init callback above
-    rebuildMarkers(L, map, results, allPosadas)
-  }, [results, allPosadas]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Resultados cambian → reconstruir marcadores
+  useEffect(() => { if (mapRef.current) rebuildMarkers() }, [results, allPosadas]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Hover highlight ───────────────────────────────────────────────────────
+  // Resaltado al pasar el cursor por una tarjeta de la lista
   useEffect(() => {
-    markersRef.current.forEach((marker, slug) => {
-      const el    = marker.getElement()
-      const inner = el?.querySelector('.mkr') as HTMLElement | null
-      if (!inner) return
-      if (slug === hoveredSlug) {
-        inner.classList.add('mkr-hov'); marker.setZIndexOffset(1000)
-      } else {
-        inner.classList.remove('mkr-hov'); marker.setZIndexOffset(0)
-      }
+    markersRef.current.forEach((m, slug) => {
+      const on = slug === hoveredSlug
+      m.pill.classList.toggle('mkr-hov', on)
+      const el = m.marker.getElement() as HTMLElement
+      el.style.zIndex = on ? '1000' : (m.pill.classList.contains('ghost') ? '1' : '5')
     })
   }, [hoveredSlug])
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  function rebuildMarkers(L: any, map: any, res: SearchResult[], all: Posada[]) {
-    markersRef.current.forEach(m => m.remove())
-    markersRef.current.clear()
-
-    const resultSlugs = new Set(res.map(r => r.posada.slug))
-
-    // Ghost markers for posadas not in current results
-    all.forEach(posada => {
-      if (resultSlugs.has(posada.slug)) return
-      const m = addMarker(L, map, posada, 'ghost')
-      markersRef.current.set(posada.slug, m)
-    })
-
-    // Active markers on top
-    res.forEach(({ posada, isProximity }) => {
-      const m = addMarker(L, map, posada, isProximity ? 'proximity' : 'active')
-      markersRef.current.set(posada.slug, m)
-    })
-
-    // Fit bounds — only if user hasn't manually panned
-    if (!userHasPannedRef.current) {
-      const targets = res.length > 0 ? res.map(r => r.posada) : all
-      if (targets.length > 0) {
-        programmaticRef.current = true
-        fitBounds(L, map, targets)
-        setTimeout(() => { programmaticRef.current = false }, 1000)
-      }
-    }
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function currentTargets(): Posada[] {
+    return resultsRef.current.length > 0 ? resultsRef.current.map(r => r.posada) : allPosadasRef.current
   }
 
-  function addMarker(L: any, map: any, posada: Posada, variant: 'active' | 'proximity' | 'ghost') {
-    const cls = variant === 'ghost' ? 'mkr ghost'
-              : variant === 'proximity' ? 'mkr proximity'
-              : 'mkr'
+  function fitTo(posadas: Posada[]) {
+    const map = mapRef.current, lib = libRef.current
+    if (!map || !lib || posadas.length === 0) return
+    if (posadas.length === 1) {
+      map.flyTo({ center: [posadas[0].lng, posadas[0].lat], zoom: 11, duration: 700 })
+      return
+    }
+    const bounds = new lib.LngLatBounds()
+    posadas.forEach(p => bounds.extend([p.lng, p.lat]))
+    map.fitBounds(bounds, { padding: 60, maxZoom: 12, duration: 700 })
+  }
 
-    const icon = L.divIcon({
-      className: '',
-      html: `<div class="${cls}">$${posada.precio}</div>`,
-      iconSize:   [1, 1],
-      iconAnchor: [0, 0],
-    })
+  function showPopup(p: Posada) {
+    const map = mapRef.current, lib = libRef.current
+    if (!map || !lib) return
+    popupRef.current?.remove()
+    const safe = (s: string) => s.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]!))
+    popupRef.current = new lib.Popup({ closeButton: false, closeOnClick: false, offset: 18, className: 'mkr-tip' })
+      .setLngLat([p.lng, p.lat])
+      .setHTML(`<div class="mkr-tip-name">${safe(p.nombre)}</div><div class="mkr-tip-meta">${safe(p.destino)} · $${p.precio}/noche</div>`)
+      .addTo(map)
+  }
 
-    const marker = L.marker([posada.lat, posada.lng], {
-      icon,
-      zIndexOffset: variant === 'ghost' ? 0 : 500,
-      interactive: true,
-      bubblingMouseEvents: false,
-    }).addTo(map)
+  function rebuildMarkers() {
+    const map = mapRef.current, lib = libRef.current
+    if (!map || !lib) return
+    markersRef.current.forEach(m => m.marker.remove())
+    markersRef.current.clear()
 
-    // Tooltip con el nombre de la posada — para saber qué es cada marcador.
-    const safeName = posada.nombre.replace(/</g, '&lt;')
-    marker.bindTooltip(
-      `<div class="mkr-tip-name">${safeName}</div><div class="mkr-tip-meta">${posada.destino} · $${posada.precio}/noche</div>`,
-      { direction: 'top', offset: [0, -12], opacity: 1, className: 'mkr-tip' },
-    )
+    const res = resultsRef.current
+    const resultSlugs = new Set(res.map(r => r.posada.slug))
+    const add = (posada: Posada, variant: 'active' | 'proximity' | 'ghost') => {
+      // El elemento raíz lo posiciona MapLibre (transform); la pastilla es un hijo
+      // para poder escalarla sin romper la posición.
+      const root = document.createElement('div')
+      root.style.cursor = 'pointer'
+      root.style.zIndex = variant === 'ghost' ? '1' : '5'
+      const pill = document.createElement('div')
+      pill.className = variant === 'ghost' ? 'mkr ghost' : variant === 'proximity' ? 'mkr proximity' : 'mkr'
+      pill.textContent = `$${posada.precio}`
+      root.appendChild(pill)
 
-    marker.on('mouseover', () => onHover(posada.slug))
-    marker.on('mouseout',  () => onHover(null))
-    marker.on('click',     () => { onSelect(posada.slug); marker.closeTooltip() })
+      root.addEventListener('mouseenter', () => { onHoverRef.current(posada.slug); showPopup(posada) })
+      root.addEventListener('mouseleave', () => { onHoverRef.current(null); popupRef.current?.remove() })
+      root.addEventListener('click', e => { e.stopPropagation(); popupRef.current?.remove(); onSelectRef.current(posada.slug) })
 
-    return marker
+      const marker = new lib.Marker({ element: root, anchor: 'center' }).setLngLat([posada.lng, posada.lat]).addTo(map)
+      markersRef.current.set(posada.slug, { marker, pill, posada })
+    }
+
+    allPosadasRef.current.forEach(p => { if (!resultSlugs.has(p.slug)) add(p, 'ghost') })
+    res.forEach(({ posada, isProximity }) => add(posada, isProximity ? 'proximity' : 'active'))
+
+    if (!userHasPannedRef.current) fitTo(currentTargets())
   }
 
   return (
     <>
       <style>{`
         .mkr {
-          position: absolute;
-          left: 0; top: 0;
-          transform: translate(-50%, -50%);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          background: #1A2B4C;
-          color: white;
-          font-family: 'Inter', system-ui, sans-serif;
-          font-size: 12px;
-          font-weight: 700;
-          padding: 5px 11px;
-          border-radius: 999px;
-          border: 2.5px solid white;
-          box-shadow: 0 2px 10px rgba(26,43,76,0.28);
-          white-space: nowrap;
-          cursor: pointer;
-          transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-          pointer-events: all;
-          user-select: none;
+          display: inline-flex; align-items: center; justify-content: center;
+          background: #fff; color: #1A2B4C;
+          font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 800;
+          padding: 6px 12px; border-radius: 999px;
+          box-shadow: 0 2px 10px rgba(26,43,76,0.22), 0 0 0 1px rgba(26,43,76,0.08);
+          white-space: nowrap; user-select: none;
+          transition: transform .15s ease, background .15s ease, color .15s ease, box-shadow .15s ease;
         }
-        .mkr.ghost {
-          background: rgba(100,115,135,0.50);
-          border-color: rgba(255,255,255,0.85);
-          font-size: 11px;
-          padding: 4px 9px;
-          box-shadow: 0 1px 5px rgba(0,0,0,0.12);
+        .mkr:hover, .mkr.mkr-hov {
+          background: #1A2B4C; color: #fff; transform: scale(1.12);
+          box-shadow: 0 6px 18px rgba(26,43,76,0.35);
         }
-        .mkr.proximity { background: #7A8699; }
-        .mkr.mkr-hov {
-          background: #E67E22 !important;
-          transform: translate(-50%, -50%) scale(1.2) !important;
-          box-shadow: 0 5px 18px rgba(230,126,34,0.50) !important;
+        .mkr.ghost { background: rgba(255,255,255,0.8); color: #7A8699; font-size: 11px; padding: 4px 9px; font-weight: 700; }
+        .mkr.proximity { background: #F5EFE0; }
+        .mkr-tip .maplibregl-popup-content {
+          background: #1A2B4C; color: #fff; border-radius: 12px; padding: 8px 12px;
+          box-shadow: 0 8px 24px rgba(26,43,76,0.35); font-family: 'Inter', system-ui, sans-serif;
         }
-        .mkr-tip {
-          background: #1A2B4C !important;
-          color: white !important;
-          border: none !important;
-          border-radius: 10px !important;
-          box-shadow: 0 6px 20px rgba(26,43,76,0.35) !important;
-          padding: 7px 11px !important;
-          font-family: 'Inter', system-ui, sans-serif !important;
-        }
-        .mkr-tip::before { border-top-color: #1A2B4C !important; }
-        .mkr-tip-name { font-size: 12.5px; font-weight: 800; letter-spacing: -0.01em; }
-        .mkr-tip-meta { font-size: 11px; opacity: 0.8; margin-top: 1px; }
-        .leaflet-control-zoom a {
-          border-radius: 8px !important;
-          color: #1A2B4C !important;
-          font-weight: 600 !important;
-        }
-        .leaflet-control-attribution {
-          font-size: 9px !important;
-          background: rgba(255,255,255,0.75) !important;
-          backdrop-filter: blur(4px);
-        }
+        .mkr-tip.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: #1A2B4C; }
+        .mkr-tip.maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: #1A2B4C; }
+        .mkr-tip-name { font-size: 13px; font-weight: 800; }
+        .mkr-tip-meta { font-size: 11px; opacity: .8; margin-top: 2px; }
+        .maplibregl-ctrl-group { border-radius: 10px !important; overflow: hidden; box-shadow: 0 2px 10px rgba(26,43,76,.15) !important; }
       `}</style>
-      <div
-        ref={containerRef}
-        style={{
-          width: '100%',
-          height: '100%',
-          borderRadius: 'inherit',
-          touchAction: 'none',   // let Leaflet handle all touch events, no browser scroll interference
-        }}
-      />
+      <div ref={containerRef} style={{ width: '100%', height: '100%', borderRadius: 'inherit', overflow: 'hidden' }} />
     </>
   )
-}
-
-function fitBounds(L: any, map: any, posadas: Posada[]) {
-  if (posadas.length === 0) return
-  if (posadas.length === 1) {
-    map.setView([posadas[0].lat, posadas[0].lng], 11, { animate: true })
-    return
-  }
-  const bounds = L.latLngBounds(posadas.map(p => [p.lat, p.lng]))
-  map.fitBounds(bounds, { padding: [56, 56], maxZoom: 12, animate: true })
 }

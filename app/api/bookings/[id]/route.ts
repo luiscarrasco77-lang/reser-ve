@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { getDb } from '@/lib/db'
 import { bookings, posadas, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -68,13 +68,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // Send email notifications (fire-and-forget)
   if (status === 'confirmed' || status === 'cancelled') {
-    Promise.all([
-      db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, booking.guestId)).then(r => r[0]),
-      db.select({ nombre: posadas.nombre }).from(posadas).where(eq(posadas.id, booking.posadaId)).then(r => r[0]),
-    ]).then(([guest, posada]) => {
+    after(async () => {
+      const [guest] = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, booking.guestId))
+      const [posada] = await db.select({ nombre: posadas.nombre }).from(posadas).where(eq(posadas.id, booking.posadaId))
       if (!guest || !posada) return
       if (status === 'confirmed') {
-        emailGuestBookingConfirmed({
+        await emailGuestBookingConfirmed({
           guestEmail: guest.email, guestName: guest.name,
           posadaNombre: posada.nombre, bookingCode: booking.bookingCode,
           checkIn: booking.checkIn, checkOut: booking.checkOut,
@@ -82,13 +81,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           paymentMethod: booking.paymentMethod, hostNotes: hostNotes ?? null,
         })
       } else {
-        emailGuestBookingCancelled({
+        await emailGuestBookingCancelled({
           guestEmail: guest.email, guestName: guest.name,
           posadaNombre: posada.nombre, bookingCode: booking.bookingCode,
           reason: hostNotes ?? null,
         })
       }
-    }).catch(() => {})
+    })
   }
 
   return NextResponse.json(updated)

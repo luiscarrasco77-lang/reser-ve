@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { getDb } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
   const passwordHash = await bcrypt.hash(password, 12)
   const [user] = await db.insert(users).values({ name: cleanName, email: cleanEmail, passwordHash, role: safeRole }).returning()
 
-  // Fire-and-forget welcome email
-  emailWelcome({ email: user.email, name: user.name, role: user.role }).catch(() => {})
+  // Correo de bienvenida tras responder (after mantiene viva la función hasta enviarlo).
+  after(() => emailWelcome({ email: user.email, name: user.name, role: user.role }))
 
   return NextResponse.json({ id: user.id, name: user.name, email: user.email, role: user.role }, { status: 201 })
 }

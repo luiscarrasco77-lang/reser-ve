@@ -10,7 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "postinstall": "node scripts/copy-maplibre-worker.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.207",
@@ -22,6 +23,7 @@
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.2",
     "leaflet": "^1.9.4",
+    "maplibre-gl": "^6.11.2",
     "next": "16.2.2",
     "next-auth": "^5.0.0-beta.30",
     "react": "19.2.4",

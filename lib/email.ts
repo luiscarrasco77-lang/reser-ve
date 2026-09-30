@@ -9,6 +9,20 @@ function getResend() {
 // Use RESEND_FROM env var to override, or fall back to verified domain address
 const FROM = process.env.RESEND_FROM ?? 'RESER-VE <reservas@reser-ve.com>'
 
+type Payload = Parameters<Resend['emails']['send']>[0]
+
+// Envía y devuelve true/false. Registra el error en los logs de Vercel en vez de tragarlo.
+async function deliver(resend: Resend, payload: Payload): Promise<boolean> {
+  try {
+    const { error } = await resend.emails.send(payload)
+    if (error) { console.error('[email] fallo:', payload.subject, error); return false }
+    return true
+  } catch (e) {
+    console.error('[email] excepción:', payload.subject, e)
+    return false
+  }
+}
+
 // ─── Templates ────────────────────────────────────────────────────────────────
 
 function baseHtml(content: string) {
@@ -56,7 +70,7 @@ export async function emailHostNewBooking(opts: {
   notes?: string | null;
 }) {
   const resend = getResend()
-  if (!resend) return
+  if (!resend) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -78,7 +92,7 @@ export async function emailHostNewBooking(opts: {
     </div>
   `)
 
-  await resend.emails.send({
+  return deliver(resend, {
     from: FROM,
     to: opts.hostEmail,
     subject: `Nueva reserva: ${opts.bookingCode} · ${opts.posadaNombre}`,
@@ -94,7 +108,7 @@ export async function emailGuestBookingReceived(opts: {
   totalPrice: number; paymentMethod: string | null;
 }) {
   const resend = getResend()
-  if (!resend) return
+  if (!resend) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -115,7 +129,7 @@ export async function emailGuestBookingReceived(opts: {
     </div>
   `)
 
-  await resend.emails.send({
+  return deliver(resend, {
     from: FROM,
     to: opts.guestEmail,
     subject: `Solicitud recibida: ${opts.bookingCode} · ${opts.posadaNombre}`,
@@ -132,7 +146,7 @@ export async function emailGuestBookingConfirmed(opts: {
   hostNotes?: string | null;
 }) {
   const resend = getResend()
-  if (!resend) return
+  if (!resend) return false
 
   const instrucciones: Record<string, string> = {
     Zelle: `Transfiere $${opts.totalPrice} USD a zelle@reser-ve.com. Escribe el código ${opts.bookingCode} en el concepto.`,
@@ -160,7 +174,7 @@ export async function emailGuestBookingConfirmed(opts: {
     </div>
   `)
 
-  await resend.emails.send({
+  return deliver(resend, {
     from: FROM,
     to: opts.guestEmail,
     subject: `✓ Confirmada: ${opts.bookingCode} · ${opts.posadaNombre}`,
@@ -175,7 +189,7 @@ export async function emailGuestBookingCancelled(opts: {
   reason?: string | null;
 }) {
   const resend = getResend()
-  if (!resend) return
+  if (!resend) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -188,7 +202,7 @@ export async function emailGuestBookingCancelled(opts: {
     </div>
   `)
 
-  await resend.emails.send({
+  return deliver(resend, {
     from: FROM,
     to: opts.guestEmail,
     subject: `Reserva ${opts.bookingCode} — No confirmada`,
@@ -201,7 +215,7 @@ export async function emailHostPosadaApproved(opts: {
   hostEmail: string; hostName: string; posadaNombre: string; slug: string;
 }) {
   const resend = getResend()
-  if (!resend) return
+  if (!resend) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -211,7 +225,7 @@ export async function emailHostPosadaApproved(opts: {
     </div>
   `)
 
-  await resend.emails.send({
+  return deliver(resend, {
     from: FROM,
     to: opts.hostEmail,
     subject: `✓ ${opts.posadaNombre} ya está publicada en RESER-VE`,
@@ -224,7 +238,7 @@ export async function emailWelcome(opts: {
   email: string; name: string; role: 'traveler' | 'host' | 'admin';
 }) {
   const resend = getResend()
-  if (!resend) return
+  if (!resend) return false
 
   const isHost = opts.role === 'host'
   const html = baseHtml(`
@@ -239,7 +253,7 @@ export async function emailWelcome(opts: {
     </div>
   `)
 
-  await resend.emails.send({
+  return deliver(resend, {
     from: FROM,
     to: opts.email,
     subject: `Bienvenido/a a RESER-VE, ${opts.name}`,
@@ -255,7 +269,7 @@ export async function emailPosadaLead(opts: {
   metodoCobro: string[];
 }) {
   const resend = getResend()
-  if (!resend) return
+  if (!resend) return false
 
   const to = process.env.TEAM_EMAIL || 'hola@reser-ve.com'
   const html = baseHtml(`
@@ -278,7 +292,7 @@ export async function emailPosadaLead(opts: {
     </div>
   `)
 
-  await resend.emails.send({
+  return deliver(resend, {
     from: FROM,
     to,
     replyTo: opts.emailPosadero,
@@ -290,7 +304,7 @@ export async function emailPosadaLead(opts: {
 // ─── Email: restablecer contraseña ─────────────────────────────────────────────
 export async function emailPasswordReset(opts: { email: string; name: string; resetUrl: string }) {
   const resend = getResend()
-  if (!resend) return
+  if (!resend) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -301,7 +315,7 @@ export async function emailPasswordReset(opts: { email: string; name: string; re
     </div>
   `)
 
-  await resend.emails.send({
+  return deliver(resend, {
     from: FROM,
     to: opts.email,
     subject: 'Restablece tu contraseña · RESER-VE',
@@ -315,7 +329,7 @@ export async function emailNewMessage(opts: {
   senderName: string; subject: string; body: string; conversationId: number;
 }) {
   const resend = getResend()
-  if (!resend) return
+  if (!resend) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -326,7 +340,7 @@ export async function emailNewMessage(opts: {
     </div>
   `)
 
-  await resend.emails.send({
+  return deliver(resend, {
     from: FROM,
     to: opts.recipientEmail,
     subject: `Nuevo mensaje: ${opts.subject}`,
@@ -339,7 +353,7 @@ export async function emailHostPosadaRejected(opts: {
   hostEmail: string; hostName: string; posadaNombre: string; notes: string;
 }) {
   const resend = getResend()
-  if (!resend) return
+  if (!resend) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -351,7 +365,7 @@ export async function emailHostPosadaRejected(opts: {
     </div>
   `)
 
-  await resend.emails.send({
+  return deliver(resend, {
     from: FROM,
     to: opts.hostEmail,
     subject: `Tu posada ${opts.posadaNombre} necesita ajustes`,

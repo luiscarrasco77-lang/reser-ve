@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { getDb } from '@/lib/db'
 import { conversations, messages, users } from '@/lib/db/schema'
 import { auth } from '@/auth'
@@ -49,19 +49,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Notify the other participant (fire-and-forget)
   const recipientId = conv.userId === userId ? conv.hostId : conv.userId
   if (recipientId) {
-    db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, recipientId))
-      .then(([recipient]) => {
-        if (recipient) {
-          emailNewMessage({
-            recipientEmail: recipient.email,
-            recipientName: recipient.name,
-            senderName,
-            subject: conv.subject,
-            body: body.trim(),
-            conversationId: conv.id,
-          })
-        }
-      }).catch(() => {})
+    after(async () => {
+      const [recipient] = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, recipientId))
+      if (recipient) {
+        await emailNewMessage({
+          recipientEmail: recipient.email,
+          recipientName: recipient.name,
+          senderName,
+          subject: conv.subject,
+          body: body.trim(),
+          conversationId: conv.id,
+        })
+      }
+    })
   } else if (role !== 'admin') {
     // Support conversation — notify all admins (just send to the platform email as fallback)
     // In production you'd query users where role = 'admin'

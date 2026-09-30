@@ -7,18 +7,22 @@ export default function RecuperarPage() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!email.trim() || busy) return
     setBusy(true)
+    setError('')
     try {
-      await fetch('/api/password/forgot', {
+      const res = await fetch('/api/password/forgot', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) { setError(data.error || 'No pudimos procesar la solicitud.'); return }
       setSent(true)
-    } catch { setSent(true) } finally { setBusy(false) }
+    } catch { setError('Error de conexión. Intenta de nuevo.') } finally { setBusy(false) }
   }
 
   return (
@@ -49,7 +53,7 @@ export default function RecuperarPage() {
           {sent ? (
             <>
               <h1>Revisa tu correo</h1>
-              <div className="sub">Si <strong>{email}</strong> tiene una cuenta, te enviamos un enlace para crear una nueva contraseña. El enlace vence en 1 hora.</div>
+              <div className="sub">Te enviamos a <strong>{email}</strong> un enlace para crear una nueva contraseña. El enlace vence en 1 hora.</div>
               <div className="ok">📧 Revisa tu bandeja de entrada (y la carpeta de spam).</div>
               <Link href="/login" className="back">← Volver a iniciar sesión</Link>
             </>
@@ -59,7 +63,13 @@ export default function RecuperarPage() {
               <div className="sub">Ingresa tu correo y te enviaremos un enlace para restablecerla.</div>
               <form onSubmit={submit}>
                 <label>Correo electrónico</label>
-                <input type="email" required placeholder="tu@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+                <input type="email" required placeholder="tu@email.com" value={email} onChange={e => { setEmail(e.target.value); setError('') }} />
+                {error && (
+                  <div style={{ background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.25)', color: '#dc2626', borderRadius: 10, padding: '.7rem .9rem', fontSize: '.84rem', marginTop: '1rem', lineHeight: 1.5 }}>
+                    {error}
+                    {error.includes('No hay ninguna cuenta') && <> <Link href="/register" style={{ color: '#E67E22', fontWeight: 700 }}>Crear una cuenta →</Link></>}
+                  </div>
+                )}
                 <button type="submit" disabled={busy || !email.trim()}>{busy ? 'Enviando…' : 'Enviar enlace'}</button>
               </form>
               <Link href="/login" className="back">← Volver a iniciar sesión</Link>

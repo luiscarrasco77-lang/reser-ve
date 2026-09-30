@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { emailPosadaLead } from '@/lib/email'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Faltan campos requeridos o el email es inválido' }, { status: 400 })
   }
 
-  // Notifica al equipo (fire-and-forget: el lead se considera recibido aunque el email falle).
-  emailPosadaLead({
+  // Notifica al equipo tras responder (after mantiene viva la función hasta enviarlo).
+  after(() => emailPosadaLead({
     nombrePosada,
     destino,
     tipo: tipo ?? '—',
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     telefono: body.telefono,
     whatsapp: body.whatsapp,
     metodoCobro: Array.isArray(body.metodoCobro) ? body.metodoCobro : [],
-  }).catch(() => {})
+  }))
 
   return NextResponse.json({ ok: true }, { status: 201 })
 }
