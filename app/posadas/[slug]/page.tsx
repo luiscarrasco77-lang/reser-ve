@@ -21,6 +21,7 @@ export default function FichaPosada() {
   const [fechaEntrada, setFechaEntrada] = useState('')
   const [fechaSalida, setFechaSalida] = useState('')
   const [huespedes, setHuespedes] = useState(2)
+  const [contactando, setContactando] = useState(false)
 
   useEffect(() => {
     if (!slug) return
@@ -82,7 +83,6 @@ export default function FichaPosada() {
     router.push(`/reservar/${slug}?${qs.toString()}`)
   }
 
-  const [contactando, setContactando] = useState(false)
   const contactarPosadero = async () => {
     const id = (posada as any).id
     if (!id || contactando) return
