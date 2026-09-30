@@ -63,6 +63,10 @@ async function main() {
     }
   }
 
+  // Toda posada debe tener un posadero (para poder contactarlo). Rellena los nulos
+  // sin tocar los hosts reales ya asignados.
+  await sql`UPDATE posadas SET host_id = ${ownerRow.id} WHERE host_id IS NULL`
+
   const total = await db.select({ slug: schema.posadas.slug }).from(schema.posadas).where(eq(schema.posadas.status, 'active'))
   console.log(`✓ Listo. Posadas activas en prod: ${total.length}`)
   process.exit(0)
