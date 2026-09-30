@@ -1,17 +1,18 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-function instrucciones(metodo: string, total: number, codigo: string) {
-  const m: Record<string, string> = {
-    zelle: `Transfiere $${total} USD a zelle@reser-ve.com. Escribe el código ${codigo} en el concepto del pago.`,
-    zinli: `Envía $${total} USD a @reserveve en Zinli. Incluye el código ${codigo} en el mensaje.`,
-    pagomovil: `Pago Móvil al 0412-5550000 (Banco Mercantil), RIF J-40055123-4, RESER-VE C.A. Monto equivalente a $${total} USD al tipo oficial. Concepto: ${codigo}.`,
-    tarjeta: `El pago con tarjeta estará disponible próximamente. Contáctanos por WhatsApp con el código ${codigo} para procesar tu reserva.`,
-  }
-  return m[metodo] || `Contacta con RESER-VE con el código ${codigo} para completar el pago de $${total} USD.`
+// Acepta el método como etiqueta ("Zelle", "Pago Móvil"…) y da las instrucciones.
+function instrucciones(metodoLabel: string, total: number, codigo: string) {
+  const m = (metodoLabel || '').toLowerCase()
+  if (m.includes('zelle')) return `Transfiere $${total} USD a zelle@reser-ve.com. Escribe el código ${codigo} en el concepto del pago.`
+  if (m.includes('zinli')) return `Envía $${total} USD a @reserveve en Zinli. Incluye el código ${codigo} en el mensaje.`
+  if (m.includes('móvil') || m.includes('movil')) return `Pago Móvil al 0412-5550000 (Banco Mercantil), RIF J-40055123-4, RESER-VE C.A. Monto equivalente a $${total} USD al tipo oficial. Concepto: ${codigo}.`
+  if (m.includes('transfer')) return `Transferencia bancaria por $${total} USD (o su equivalente en Bs). Contáctanos con el código ${codigo} para los datos de la cuenta.`
+  if (m.includes('tarjeta')) return `El pago con tarjeta se coordina con el posadero. Usa el código ${codigo} como referencia.`
+  return `Coordina con el posadero el pago de $${total} USD usando el código ${codigo}.`
 }
 
 function fmt(fecha: string) {
@@ -22,29 +23,43 @@ function fmt(fecha: string) {
 
 function ConfirmadaContent() {
   const sp = useSearchParams()
+  const id = sp.get('id')
+  const [b, setB] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-  const code     = sp.get('code') ?? ''
-  const posada   = sp.get('posada') ?? ''
-  const img      = sp.get('img') ?? ''
-  const slug     = sp.get('slug') ?? ''
-  const llegada  = sp.get('llegada') ?? ''
-  const salida   = sp.get('salida') ?? ''
-  const noches   = Number(sp.get('noches') ?? 0)
-  const huespedes = Number(sp.get('huespedes') ?? 1)
-  const precio   = Number(sp.get('precio') ?? 0)
-  const subtotal = Number(sp.get('subtotal') ?? 0)
-  const total    = Number(sp.get('total') ?? 0)
-  const metodo   = sp.get('metodo') ?? ''
-  const metodoLabel = sp.get('metodoLabel') ?? ''
+  useEffect(() => {
+    if (!id) { setLoading(false); return }
+    fetch(`/api/bookings/${id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(setB)
+      .finally(() => setLoading(false))
+  }, [id])
 
-  if (!code) {
+  if (loading) {
+    return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>Cargando tu reserva…</div>
+  }
+  if (!b) {
     return (
       <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C',gap:'1rem'}}>
         <p style={{fontSize:'1rem',color:'#7A8699'}}>No se encontraron datos de reserva.</p>
-        <Link href="/buscar" style={{color:'#E67E22',textDecoration:'none',fontWeight:600}}>Explorar posadas →</Link>
+        <Link href="/mis-reservas" style={{color:'#E67E22',textDecoration:'none',fontWeight:600}}>Ver mis reservas →</Link>
       </div>
     )
   }
+
+  const code     = b.bookingCode ?? ''
+  const posada   = b.posadaNombre ?? ''
+  const img      = b.posadaImg ?? ''
+  const slug     = b.posadaSlug ?? ''
+  const llegada  = b.checkIn ?? ''
+  const salida   = b.checkOut ?? ''
+  const noches   = b.nights ?? 0
+  const huespedes = b.guestCount ?? 1
+  const precio   = b.precioNoche ?? 0
+  const subtotal = (b.precioNoche ?? 0) * (b.nights ?? 0)
+  const total    = b.totalPrice ?? 0
+  const metodoLabel = b.paymentMethod ?? ''
+  const metodo   = metodoLabel
 
   return (
     <>

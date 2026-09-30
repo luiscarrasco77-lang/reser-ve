@@ -16,13 +16,22 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   // Only the guest, the posada's host, or an admin may view a booking.
   const userId = parseInt((session.user as any).id)
   const role = (session.user as any).role
+  const [posada] = await db.select({ hostId: posadas.hostId, nombre: posadas.nombre, slug: posadas.slug, imgs: posadas.imgs, precio: posadas.precio, destino: posadas.destino })
+    .from(posadas).where(eq(posadas.id, booking.posadaId))
   if (role !== 'admin' && booking.guestId !== userId) {
-    const [posada] = await db.select({ hostId: posadas.hostId }).from(posadas).where(eq(posadas.id, booking.posadaId))
     if (!posada || posada.hostId !== userId) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
   }
-  return NextResponse.json(booking)
+  // Enriquecido para la página de confirmación (evita pasar datos por la URL).
+  return NextResponse.json({
+    ...booking,
+    posadaNombre: posada?.nombre ?? '',
+    posadaSlug: posada?.slug ?? '',
+    posadaImg: ((posada?.imgs as string[]) ?? [])[0] ?? '',
+    posadaDestino: posada?.destino ?? '',
+    precioNoche: posada?.precio ?? 0,
+  })
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

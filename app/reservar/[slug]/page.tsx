@@ -107,21 +107,8 @@ function ReservarContent() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Error al crear la reserva'); return }
-      const params = new URLSearchParams({
-        code: data.bookingCode,
-        posada: posada.nombre,
-        img: posada.imgs[0] ?? '',
-        slug,
-        llegada, salida,
-        noches: String(noches),
-        huespedes: String(huespedes),
-        precio: String(posada.precio),
-        subtotal: String(subtotal),
-        total: String(total),
-        metodo: metodoPago,
-        metodoLabel: metodos[metodoPago].label,
-      })
-      router.push(`/reserva/confirmada?${params.toString()}`)
+      // Solo pasamos el id; la página de confirmación obtiene los detalles de forma segura.
+      router.push(`/reserva/confirmada?id=${data.id}`)
     } catch {
       setError('Error de red. Intenta de nuevo.')
     } finally {

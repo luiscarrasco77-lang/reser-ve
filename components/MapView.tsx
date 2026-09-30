@@ -75,6 +75,7 @@ export default function MapView({
       const map = L.map(containerRef.current, {
         center: [8.0, -66.5],
         zoom: 6,
+        maxZoom: 16,
         zoomControl: false,
         attributionControl: false,
         scrollWheelZoom: true,
@@ -85,23 +86,23 @@ export default function MapView({
       })
       mapRef.current = map
 
-      // Esri World Imagery (satélite) — sin API key, precioso para playas y naturaleza.
-      // Nota: Esri usa el orden {z}/{y}/{x}.
+      // Esri "Light Gray Canvas" — basemap minimalista y claro, sin API key,
+      // liviano y rápido (mejor que el satélite, que era pesado). Orden {z}/{y}/{x}.
       L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        { maxZoom: 19 }
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 16 }
       ).addTo(map)
-      // Capa de etiquetas/lugares encima del satélite para ubicarse mejor.
+      // Etiquetas de lugares encima del canvas gris.
       L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-        { maxZoom: 19 }
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 16 }
       ).addTo(map)
 
       // 'topright' evita que el control de zoom choque con el botón flotante del asistente (abajo-derecha)
       L.control.zoom({ position: 'topright' }).addTo(map)
       L.control.attribution({
         position: 'bottomleft',
-        prefix: 'Imágenes © <a href="https://www.esri.com" target="_blank">Esri</a>',
+        prefix: '© <a href="https://www.esri.com" target="_blank">Esri</a>',
       }).addTo(map)
 
       map.on('dragstart', () => {
