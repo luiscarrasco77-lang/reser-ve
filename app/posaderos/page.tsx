@@ -2,8 +2,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Para posaderos | RESER-VE',
-  description: 'Publica tu posada venezolana y llega a miles de viajeros que buscan experiencias auténticas. Sin comisiones, sin complicaciones.',
+  title: 'Para posaderos',
+  description: 'Publica tu posada venezolana y llega a miles de viajeros que buscan experiencias auténticas. Publicar es gratis y solo pagas un 10% cuando recibes una reserva confirmada.',
 }
 
 const benefits = [
@@ -25,8 +25,8 @@ const benefits = [
         <line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
     ),
-    title: 'Sin comisiones',
-    desc: 'RESER-VE no cobra comisiones sobre tus reservas. El dinero va directo a ti. Los viajeros pagan con Zelle, efectivo, transferencia — tú decides.',
+    title: 'Solo pagas si ganas',
+    desc: 'Publicar es gratis y sin mensualidad. Solo aplica un 10% sobre las reservas confirmadas — muy por debajo del 15–18% de las grandes plataformas. El huésped nunca paga comisión extra.',
   },
   {
     icon: (
@@ -37,8 +37,8 @@ const benefits = [
         <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
       </svg>
     ),
-    title: 'Comunicación directa con el huésped',
-    desc: 'Sin intermediarios. El viajero se comunica contigo directamente para coordinar la llegada, preferencias y cualquier detalle especial. Tú construyes la relación.',
+    title: 'Chat seguro con el huésped',
+    desc: 'Coordina llegada, preferencias y detalles con cada viajero desde la mensajería de RESER-VE. Todo queda registrado, lo que te protege a ti y al huésped ante cualquier malentendido o fraude.',
   },
   {
     icon: (
@@ -76,12 +76,12 @@ const steps = [
   {
     n: '01',
     title: 'Regístrate',
-    desc: 'Completa el formulario de registro con los datos de tu posada. El proceso toma menos de 10 minutos.',
+    desc: 'Crea tu cuenta de posadero y publica tu posada desde tu panel: fotos, habitaciones, precios y métodos de cobro. Toma unos 10 minutos.',
   },
   {
     n: '02',
     title: 'Revisamos tu perfil',
-    desc: 'Nuestro equipo verifica la información y te contacta para completar los detalles. Queremos que tu posada brille.',
+    desc: 'Nuestro equipo verifica la información en 24–72 horas y te avisa por correo. Si falta algo, te ayudamos a completarlo.',
   },
   {
     n: '03',
@@ -91,7 +91,7 @@ const steps = [
   {
     n: '04',
     title: 'Recibe huéspedes',
-    desc: 'Coordina directamente con cada viajero. Cobra como siempre lo has hecho. Sin plataformas intermediarias.',
+    desc: 'Te llega un correo con cada solicitud. La confirmas desde tu panel, coordinas por el chat de la app y cobras con tus métodos habituales.',
   },
 ]
 
@@ -217,6 +217,17 @@ export default function PosaderosPage() {
         .benefit-title { font-size:0.98rem; font-weight:700; margin-bottom:0.48rem; color:var(--indigo); }
         .benefit-desc { font-size:0.86rem; color:var(--muted); line-height:1.65; }
 
+        /* Terms */
+        .terms-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1.2rem; }
+        @media(max-width:860px){ .terms-grid { grid-template-columns:repeat(2,1fr); } }
+        @media(max-width:480px){ .terms-grid { grid-template-columns:1fr; } }
+        .term { background:white; border:1.5px solid var(--line); border-radius:18px; padding:1.5rem 1.3rem; box-shadow:var(--sh); }
+        .term-big { font-family:'Playfair Display',Georgia,serif; font-size:2.1rem; font-weight:800; color:var(--cacao); line-height:1; margin-bottom:.7rem; }
+        .term-t { font-size:.95rem; font-weight:700; margin-bottom:.4rem; }
+        .term p { font-size:.84rem; color:var(--muted); line-height:1.6; }
+        .mvp-note { margin-top:1.6rem; background:var(--cream); border:1.5px solid rgba(230,126,34,0.18); border-radius:16px; padding:1.1rem 1.3rem; font-size:.88rem; line-height:1.65; color:var(--indigo); }
+        .mvp-note a { color:var(--cacao-dark); font-weight:700; text-decoration:none; }
+
         /* Steps */
         .steps-section { background:var(--indigo); padding:4.5rem 2rem; }
         .steps-inner { max-width:1100px; margin:0 auto; }
@@ -284,7 +295,7 @@ export default function PosaderosPage() {
       {/* Nav */}
       <nav className="nav">
         <a href="/" className="logo">RESER<span>-VE</span></a>
-        <a href="/registro-posada" className="nav-cta">Registra tu posada</a>
+        <a href="/register?role=host" className="nav-cta">Registra tu posada</a>
       </nav>
 
       {/* Hero */}
@@ -296,10 +307,10 @@ export default function PosaderosPage() {
             <div className="hero-eyebrow">Para posaderos</div>
             <h1>Tu posada merece<br/><em>más viajeros</em></h1>
             <p className="hero-sub">
-              RESER-VE conecta tu posada con miles de viajeros que buscan experiencias auténticas venezolanas. Sin comisiones, sin intermediarios, sin complicaciones.
+              RESER-VE conecta tu posada con viajeros de Venezuela y de la diáspora que buscan experiencias auténticas. Publicar es gratis: solo pagas un 10% cuando recibes una reserva confirmada.
             </p>
             <div className="hero-btns">
-              <a href="/registro-posada" className="btn-primary">
+              <a href="/register?role=host" className="btn-primary">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
                 Publicar mi posada gratis
               </a>
@@ -313,7 +324,7 @@ export default function PosaderosPage() {
       <div className="section">
         <div className="sec-eyebrow">Por qué RESER-VE</div>
         <h2 className="sec-title">Todo lo que necesitas,<br/>nada que no necesitas</h2>
-        <p className="sec-sub">Una plataforma pensada para el posadero venezolano: simple, directa y sin cargos sorpresa.</p>
+        <p className="sec-sub">Una plataforma pensada para el posadero venezolano: simple, transparente y sin cargos sorpresa.</p>
         <div className="benefits-grid">
           {benefits.map(b => (
             <div key={b.title} className="benefit-card">
@@ -333,6 +344,22 @@ export default function PosaderosPage() {
           <a href="/vision" className="vision-link">Leer nuestra visión →</a>
         </div>
       </div>
+
+      {/* Condiciones */}
+      <section className="section" id="condiciones" style={{paddingTop:0}}>
+        <div className="sec-eyebrow">Condiciones claras</div>
+        <h2 className="sec-title">Reglas simples, sin letra pequeña</h2>
+        <div className="terms-grid">
+          <div className="term"><div className="term-big">0 $</div><div className="term-t">Publicar y mantener tu posada</div><p>Sin mensualidad, sin costo de alta, sin permanencia. Puedes pausar tu publicación cuando quieras.</p></div>
+          <div className="term"><div className="term-big">10%</div><div className="term-t">Solo por reserva confirmada</div><p>Se calcula sobre el total de la estadía y lo asume la posada. El viajero ve y paga exactamente tu precio publicado.</p></div>
+          <div className="term"><div className="term-big">=</div><div className="term-t">Paridad de precio</div><p>El precio que publiques en RESER-VE debe ser el mismo que ofreces por otros canales (teléfono, redes, otras plataformas).</p></div>
+          <div className="term"><div className="term-big">💬</div><div className="term-t">Todo por la app</div><p>La comunicación con huéspedes se hace por el chat de RESER-VE. Así evitamos fraudes y protegemos a ambas partes.</p></div>
+        </div>
+        <div className="mvp-note">
+          <strong>Estamos en fase de lanzamiento (MVP).</strong> Las primeras posadas nos ayudan a darle forma a la plataforma: tu opinión cuenta y pronto sumaremos más herramientas de pago y gestión.
+          {' '}<a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener">Lee la guía completa para posaderos →</a>
+        </div>
+      </section>
 
       {/* Steps */}
       <section className="steps-section" id="como-funciona">
@@ -358,8 +385,8 @@ export default function PosaderosPage() {
           <h2>¿Listo para recibir más huéspedes?</h2>
           <p>Únete a las posadas que ya confían en RESER-VE para conectar con viajeros que valoran lo auténtico.</p>
           <div className="cta-btns">
-            <a href="/registro-posada" className="btn-primary">Registrar mi posada</a>
-            <a href="/buscar" className="btn-indigo">Ver posadas de ejemplo</a>
+            <a href="/register?role=host" className="btn-primary">Registrar mi posada</a>
+            <a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener" className="btn-indigo">Descargar guía (PDF)</a>
           </div>
         </div>
       </section>

@@ -209,12 +209,7 @@ function BookingCard({ b, onCancel, cancelling }: { b: Booking; onCancel: (id: n
   const s = STATUS[b.status] ?? STATUS.pending
   const canCancel = b.status === 'pending'
 
-  const payInstructions: Record<string, string> = {
-    Zelle: `Transfiere $${b.totalPrice} USD a zelle@reser-ve.com. Concepto: ${b.bookingCode}`,
-    Zinli: `Envía $${b.totalPrice} USD a @reserveve en Zinli. Mensaje: ${b.bookingCode}`,
-    'Pago Móvil': `Pago Móvil al 0412-5550000. Monto equivalente a $${b.totalPrice} USD. Concepto: ${b.bookingCode}`,
-  }
-  const instruction = payInstructions[b.paymentMethod ?? '']
+  const instruction = `El posadero te enviará sus datos de pago${b.paymentMethod ? ` (${b.paymentMethod})` : ''} por el chat de RESER-VE. Monto: $${b.totalPrice} USD · referencia ${b.bookingCode}. Paga solo a datos recibidos dentro de la app.`
 
   return (
     <div className="card">

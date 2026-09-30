@@ -16,7 +16,7 @@ const faqs = [
       },
       {
         q: '¿RESER-VE cobra comisiones?',
-        a: 'No. RESER-VE no cobra comisiones al viajero. El precio que ves es el precio que pagas directamente al posadero. Sin sorpresas, sin cargos ocultos.',
+        a: 'No. RESER-VE no cobra nada al viajero. El precio que ves es el precio final que pagas al posadero. Sin sorpresas, sin cargos ocultos.',
       },
       {
         q: '¿Cómo está respaldada la plataforma?',
@@ -29,7 +29,7 @@ const faqs = [
     items: [
       {
         q: '¿Cómo funciona el proceso de reserva?',
-        a: 'Encuentra tu posada ideal usando nuestro buscador, selecciona tus fechas y método de pago, y serás contactado directamente con el posadero. La coordinación final de la reserva ocurre de forma directa entre tú y el anfitrión.',
+        a: 'Encuentra tu posada en el buscador, elige fechas, huéspedes y método de pago, y envía tu solicitud. El posadero la confirma desde su panel y te llega un correo. Toda la coordinación (llegada, pago, detalles) se hace por el chat de RESER-VE, que deja registro y te protege ante fraudes.',
       },
       {
         q: '¿Qué métodos de pago se aceptan?',
@@ -37,11 +37,11 @@ const faqs = [
       },
       {
         q: '¿Puedo cancelar mi reserva?',
-        a: 'Las políticas de cancelación las define cada posadero de forma individual. Encontrarás los detalles en la página de cada posada. Te recomendamos leerlas antes de confirmar tu reserva y comunicarte directamente con el anfitrión ante cualquier cambio.',
+        a: 'Las políticas de cancelación las define cada posadero de forma individual. Encontrarás los detalles en la página de cada posada. Te recomendamos leerlas antes de confirmar tu reserva y escribirle al anfitrión por el chat de RESER-VE ante cualquier cambio.',
       },
       {
         q: '¿Es seguro pagar por Zelle?',
-        a: 'Zelle es el método de pago más utilizado entre venezolanos en el exterior. Es un servicio seguro vinculado a cuentas bancarias de EE.UU. Sin embargo, siempre recomendamos confirmar los datos del posadero antes de hacer cualquier transferencia, y comunicarte directamente con el anfitrión.',
+        a: 'Zelle es el método de pago más utilizado entre venezolanos en el exterior. Es un servicio seguro vinculado a cuentas bancarias de EE.UU. Sin embargo, siempre recomendamos pagar solo después de que el posadero confirme tu reserva y confirmar sus datos de pago por el chat de RESER-VE. Nunca envíes dinero a datos recibidos fuera de la plataforma.',
       },
     ],
   },
@@ -71,15 +71,15 @@ const faqs = [
     items: [
       {
         q: '¿Cómo publico mi posada en RESER-VE?',
-        a: 'Visita nuestra página para posaderos y completa el formulario de registro. Nuestro equipo revisará tu solicitud y te contactará para completar el proceso. Es gratuito publicar tu posada.',
+        a: 'Crea una cuenta como posadero, entra a tu panel y pulsa "Publicar mi primera posada". Sube fotos, habitaciones, precios y métodos de cobro. Nuestro equipo la revisa en 24–72 horas y te avisa por correo cuando esté publicada. Publicar es gratis.',
       },
       {
         q: '¿Cuánto cobra RESER-VE a los posaderos?',
-        a: 'El listado básico es completamente gratuito. RESER-VE cree en apoyar el ecosistema de posadas venezolanas sin barreras económicas. En el futuro podríamos ofrecer planes premium opcionales con mayor visibilidad.',
+        a: 'Publicar es gratis y sin mensualidad. RESER-VE solo cobra un 10% sobre las reservas confirmadas, que asume la posada (el viajero no paga nada extra). Pedimos paridad de precio: el precio publicado debe ser el mismo que ofreces por otros canales.',
       },
       {
         q: '¿Quién controla los precios y disponibilidad?',
-        a: 'Tú como posadero tienes control total sobre tus precios, métodos de pago aceptados y políticas de la posada. RESER-VE es solo el canal de visibilidad; la relación con el huésped es siempre directa contigo.',
+        a: 'Tú como posadero tienes control total sobre tus precios, métodos de pago aceptados y políticas de la posada. La comunicación con el huésped se hace por el chat de RESER-VE, para proteger a ambas partes.',
       },
     ],
   },

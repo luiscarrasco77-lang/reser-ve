@@ -19,6 +19,4 @@ export function serviceFee(subtotal: number): number {
 // URL pública del sitio (para metadata/SEO/sitemap).
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://reser-ve.com'
 
-// WhatsApp de soporte de la plataforma (formato internacional sin +).
-export const SUPPORT_WHATSAPP = '584125550000'
 export const SUPPORT_EMAIL = 'hola@reser-ve.com'

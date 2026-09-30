@@ -4,15 +4,11 @@ import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-// Acepta el método como etiqueta ("Zelle", "Pago Móvil"…) y da las instrucciones.
+// MVP: RESER-VE aún no cobra a nombre de la posada. El posadero envía sus datos de
+// pago por el chat de la app una vez confirmada la reserva (nunca por fuera).
 function instrucciones(metodoLabel: string, total: number, codigo: string) {
-  const m = (metodoLabel || '').toLowerCase()
-  if (m.includes('zelle')) return `Transfiere $${total} USD a zelle@reser-ve.com. Escribe el código ${codigo} en el concepto del pago.`
-  if (m.includes('zinli')) return `Envía $${total} USD a @reserveve en Zinli. Incluye el código ${codigo} en el mensaje.`
-  if (m.includes('móvil') || m.includes('movil')) return `Pago Móvil al 0412-5550000 (Banco Mercantil), RIF J-40055123-4, RESER-VE C.A. Monto equivalente a $${total} USD al tipo oficial. Concepto: ${codigo}.`
-  if (m.includes('transfer')) return `Transferencia bancaria por $${total} USD (o su equivalente en Bs). Contáctanos con el código ${codigo} para los datos de la cuenta.`
-  if (m.includes('tarjeta')) return `El pago con tarjeta se coordina con el posadero. Usa el código ${codigo} como referencia.`
-  return `Coordina con el posadero el pago de $${total} USD usando el código ${codigo}.`
+  const via = metodoLabel ? ` por ${metodoLabel}` : ''
+  return `No pagues todavía. Cuando el posadero confirme tu reserva te llegará un correo y te enviará sus datos de pago${via} por el chat de RESER-VE (Mis mensajes). Monto: $${total} USD · referencia ${codigo}. Nunca envíes dinero a datos recibidos fuera de la plataforma.`
 }
 
 function fmt(fecha: string) {

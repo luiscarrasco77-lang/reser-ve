@@ -2,14 +2,15 @@
 
 import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 function RegisterForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState<'traveler' | 'host'>('traveler')
+  const [role, setRole] = useState<'traveler' | 'host'>(searchParams.get('role') === 'host' ? 'host' : 'traveler')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 

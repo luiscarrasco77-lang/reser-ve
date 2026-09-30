@@ -251,8 +251,8 @@ export default function VisionPage() {
         </Link>
         <div className="vis-nav-links">
           <Link href="/buscar" className="vis-nav-link">Explorar posadas</Link>
-          <Link href="/registro-posada" className="vis-nav-link">Posaderos</Link>
-          <Link href="/registro-posada" className="vis-nav-cta">Registra tu posada</Link>
+          <Link href="/posaderos" className="vis-nav-link">Posaderos</Link>
+          <Link href="/register?role=host" className="vis-nav-cta">Registra tu posada</Link>
         </div>
       </nav>
 
@@ -339,7 +339,7 @@ export default function VisionPage() {
               <Link href="/buscar" className="vis-cta-btn">
                 Ver todas las posadas →
               </Link>
-              <Link href="/registro-posada" className="vis-cta-sec">
+              <Link href="/register?role=host" className="vis-cta-sec">
                 Tengo una posada
               </Link>
             </div>

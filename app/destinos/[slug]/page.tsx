@@ -301,9 +301,9 @@ export default async function DestinoPage({
           <a href="/" className="logo">RESER<span>-VE</span></a>
           <div className="nav-actions">
             <a href="/buscar" className="nav-btn">Destinos</a>
-            <a href="/registro-posada" className="nav-btn">Posaderos</a>
+            <a href="/posaderos" className="nav-btn">Posaderos</a>
             <a href="/#como-funciona" className="nav-btn">Cómo funciona</a>
-            <a href="/registro-posada" className="nav-cta">Registra tu posada</a>
+            <a href="/register?role=host" className="nav-cta">Registra tu posada</a>
           </div>
         </nav>
 

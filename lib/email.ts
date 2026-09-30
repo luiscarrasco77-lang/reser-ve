@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { SITE_URL } from './constants'
 
 // Only initialize if API key is present — avoids build-time crash
 function getResend() {
@@ -88,7 +89,7 @@ export async function emailHostNewBooking(opts: {
       <div class="divider"/>
       <div class="total"><span>Total a cobrar</span><span>$${opts.totalPrice} USD</span></div>
       ${opts.notes ? `<div class="info-box"><strong>Nota del viajero:</strong> ${opts.notes}</div>` : ''}
-      <a href="https://reserve-ve.vercel.app/dashboard/reservas" class="btn">Gestionar reserva →</a>
+      <a href="${SITE_URL}/dashboard/reservas" class="btn">Gestionar reserva →</a>
     </div>
   `)
 
@@ -125,7 +126,7 @@ export async function emailGuestBookingReceived(opts: {
       <div class="divider"/>
       <div class="total"><span>Total</span><span>$${opts.totalPrice} USD</span></div>
       <div class="info-box">Sin cargos hasta que el posadero confirme. Guarda tu código de reserva para cualquier consulta.</div>
-      <a href="https://reserve-ve.vercel.app/mis-reservas" class="btn">Ver mis reservas →</a>
+      <a href="${SITE_URL}/mis-reservas" class="btn">Ver mis reservas →</a>
     </div>
   `)
 
@@ -148,12 +149,7 @@ export async function emailGuestBookingConfirmed(opts: {
   const resend = getResend()
   if (!resend) return false
 
-  const instrucciones: Record<string, string> = {
-    Zelle: `Transfiere $${opts.totalPrice} USD a zelle@reser-ve.com. Escribe el código ${opts.bookingCode} en el concepto.`,
-    Zinli: `Envía $${opts.totalPrice} USD a @reserveve en Zinli. Incluye el código ${opts.bookingCode}.`,
-    'Pago Móvil': `Pago Móvil al 0412-5550000, RIF J-40055123-4. Monto equivalente a $${opts.totalPrice} USD. Concepto: ${opts.bookingCode}.`,
-  }
-  const instruccion = instrucciones[opts.paymentMethod ?? ''] ?? `Contacta a RESER-VE con el código ${opts.bookingCode} para coordinar el pago de $${opts.totalPrice} USD.`
+  const instruccion = `El posadero te enviará sus datos de pago${opts.paymentMethod ? ` (${opts.paymentMethod})` : ''} por el chat de RESER-VE: entra a <a href="${SITE_URL}/mensajes">Mis mensajes</a>. Monto: $${opts.totalPrice} USD · referencia ${opts.bookingCode}. Por tu seguridad, paga solo a datos recibidos dentro de la plataforma.`
 
   const html = baseHtml(`
     <div class="card">
@@ -198,7 +194,7 @@ export async function emailGuestBookingCancelled(opts: {
       <div class="code-box"><div class="code">${opts.bookingCode}</div></div>
       ${opts.reason ? `<div class="info-box"><strong>Motivo:</strong> ${opts.reason}</div>` : ''}
       <div style="margin-top:1rem;font-size:0.85rem;color:#7A8699;">Sin cargos — no se realizó ningún cobro. Te invitamos a explorar otras posadas disponibles.</div>
-      <a href="https://reserve-ve.vercel.app/buscar" class="btn">Explorar otras posadas →</a>
+      <a href="${SITE_URL}/buscar" class="btn">Explorar otras posadas →</a>
     </div>
   `)
 
@@ -221,7 +217,7 @@ export async function emailHostPosadaApproved(opts: {
     <div class="card">
       <div class="title">✓ Tu posada está publicada</div>
       <div class="sub">Hola ${opts.hostName}, revisamos y aprobamos <strong>${opts.posadaNombre}</strong>. Ya está visible para los viajeros.</div>
-      <a href="https://reserve-ve.vercel.app/posadas/${opts.slug}" class="btn">Ver mi posada →</a>
+      <a href="${SITE_URL}/posadas/${opts.slug}" class="btn">Ver mi posada →</a>
     </div>
   `)
 
@@ -246,8 +242,8 @@ export async function emailWelcome(opts: {
       <div class="title">Bienvenido/a a RESER-VE 🎉</div>
       <div class="sub">Hola ${opts.name}, tu cuenta ha sido creada. ${isHost ? 'Como posadero ya puedes publicar tu primera posada y comenzar a recibir viajeros.' : 'Ya puedes explorar las mejores posadas de Venezuela y hacer tu primera reserva.'}</div>
       ${isHost
-        ? `<a href="https://reserve-ve.vercel.app/dashboard/posada/nueva" class="btn">Publicar mi posada →</a>`
-        : `<a href="https://reserve-ve.vercel.app/buscar" class="btn">Explorar posadas →</a>`
+        ? `<a href="${SITE_URL}/dashboard/posada/nueva" class="btn">Publicar mi posada →</a>`
+        : `<a href="${SITE_URL}/buscar" class="btn">Explorar posadas →</a>`
       }
       <div class="info-box" style="margin-top:1.25rem">¿Tienes alguna pregunta? Escríbenos a través del servicio al cliente en la plataforma o responde a este correo.</div>
     </div>
@@ -336,7 +332,7 @@ export async function emailNewMessage(opts: {
       <div class="title">Nuevo mensaje de ${opts.senderName}</div>
       <div class="sub">Tienes un mensaje nuevo en la conversación: <strong>${opts.subject}</strong></div>
       <div style="background:rgba(26,43,76,0.04);border-radius:12px;padding:1rem 1.2rem;margin:1rem 0;font-size:0.88rem;line-height:1.6;color:#1A2B4C;">${opts.body}</div>
-      <a href="https://reserve-ve.vercel.app/mensajes/${opts.conversationId}" class="btn">Responder →</a>
+      <a href="${SITE_URL}/mensajes/${opts.conversationId}" class="btn">Responder →</a>
     </div>
   `)
 
@@ -361,7 +357,7 @@ export async function emailHostPosadaRejected(opts: {
       <div class="sub">Hola ${opts.hostName}, revisamos <strong>${opts.posadaNombre}</strong> y necesitamos que hagas algunos ajustes antes de publicarla.</div>
       <div class="info-box"><strong>Comentarios del equipo RESER-VE:</strong><br/>${opts.notes}</div>
       <div style="margin-top:1rem;font-size:0.85rem;color:#7A8699;">Realiza los cambios y vuelve a enviar desde tu dashboard. Estamos aquí para ayudarte.</div>
-      <a href="https://reserve-ve.vercel.app/dashboard" class="btn">Ir a mi dashboard →</a>
+      <a href="${SITE_URL}/dashboard" class="btn">Ir a mi dashboard →</a>
     </div>
   `)
 

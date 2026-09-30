@@ -40,7 +40,9 @@ Cada posada define su política (aparece en la página de la posada, sección "P
 - Regístrate como posadero y publica tu posada desde /dashboard/posada/nueva.
 - El equipo RESER-VE revisa cada posada antes de publicarla (estado "en revisión").
 - Gestionas reservas, confirmas o rechazas solicitudes y respondes mensajes desde /dashboard.
-- Más info en /posaderos.
+- Condiciones: publicar es gratis y sin mensualidad; la posada paga un 10% solo sobre reservas confirmadas (nunca el viajero). Paridad de precio: el precio publicado debe ser el mismo que en otros canales. Toda la comunicación con huéspedes va por el chat de la app. Si un POSADERO pregunta por comisiones, explícalo; a un viajero nunca le menciones la comisión.
+- Guía para posaderos: /docs/Guia-Posaderos-RESER-VE.pdf. Más info en /posaderos.
+- Seguridad: los datos de pago los envía el posadero por el chat de RESER-VE tras confirmar; nunca pagues a datos recibidos fuera de la app.
 
 # Cuentas y soporte
 - Crear cuenta: /register. Iniciar sesión: /login.

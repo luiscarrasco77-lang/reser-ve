@@ -1157,7 +1157,7 @@ export default function Home() {
             </p>
             <div className={`hero-btns ${loaded ? 'anim-3' : ''}`}>
               <a href="/buscar" className="btn-primary">Explorar posadas →</a>
-              <a href="/registro-posada" className="btn-secondary">¿Tienes una posada?</a>
+              <a href="/posaderos" className="btn-secondary">¿Tienes una posada?</a>
             </div>
             {/* Slide indicators — inline below buttons, no overlap with search bar */}
             <div className="slide-dots">
@@ -1687,7 +1687,7 @@ export default function Home() {
                 <li>Optimización visual y descripción</li>
                 <li>1 mes de visibilidad premium</li>
               </ul>
-              <a href="/registro-posada" className="btn-primary full-btn">Quiero digitalizar mi posada →</a>
+              <a href="/posaderos" className="btn-primary full-btn">Quiero digitalizar mi posada →</a>
             </div>
           </div>
         </div>
@@ -1704,7 +1704,7 @@ export default function Home() {
           </div>
           <div className="dark-cta-btns reveal d2">
             <a href="/buscar" className="btn-light">Explorar posadas →</a>
-            <a href="/registro-posada" className="btn-outline-light">Registra tu posada</a>
+            <a href="/posaderos" className="btn-outline-light">Registra tu posada</a>
           </div>
         </div>
       </section>
@@ -1726,15 +1726,14 @@ export default function Home() {
           </div>
           <div className="footer-col">
             <h4>Posaderos</h4>
-            <a href="/registro-posada">Registra tu posada</a>
+            <a href="/register?role=host">Registra tu posada</a>
             <a href="/posaderos">Cómo funciona</a>
-            <a href="/posaderos">Paquete digitalización</a>
+            <a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener">Guía para posaderos (PDF)</a>
             <a href="/faq">Preguntas frecuentes</a>
           </div>
           <div className="footer-col">
             <h4>Contacto</h4>
             <a href="mailto:hola@reser-ve.com">hola@reser-ve.com</a>
-            <a href="https://wa.me/584125550000" target="_blank" rel="noopener noreferrer">WhatsApp</a>
             <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer">Instagram</a>
             <a href="/faq">Centro de ayuda</a>
           </div>
