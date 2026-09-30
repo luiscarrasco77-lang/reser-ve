@@ -75,6 +75,8 @@ export default function Home() {
   const [stats, setStats] = useState<{ posadas: number; destinos: number; reviews: number; ratingPromedio: number } | null>(null)
   const [destCounts, setDestCounts] = useState<Record<string, number>>({})
   useEffect(() => {
+    // Respaldo: si el IntersectionObserver no dispara, anima los contadores igual (nunca se quedan en 0).
+    const t = setTimeout(() => setStatsVisible(true), 1800)
     fetch('/api/stats').then(r => r.ok ? r.json() : null).then(d => { if (d) setStats(d) }).catch(() => {})
     fetch('/api/posadas').then(r => r.ok ? r.json() : []).then((list: { destinoSlug: string }[]) => {
       if (!Array.isArray(list)) return
@@ -82,6 +84,7 @@ export default function Home() {
       for (const p of list) counts[p.destinoSlug] = (counts[p.destinoSlug] ?? 0) + 1
       setDestCounts(counts)
     }).catch(() => {})
+    return () => clearTimeout(t)
   }, [])
   const destCount = (slug: string | null) => slug && destCounts[slug] ? `${destCounts[slug]} posada${destCounts[slug] > 1 ? 's' : ''}` : null
 
