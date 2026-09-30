@@ -11,6 +11,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
   const { id } = await params
   const { role } = await req.json()
+  if (!['traveler', 'host', 'admin'].includes(role)) {
+    return NextResponse.json({ error: 'Rol inválido' }, { status: 400 })
+  }
   const db = getDb()
   const [updated] = await db.update(users).set({ role }).where(eq(users.id, parseInt(id))).returning()
   return NextResponse.json(updated)
