@@ -55,7 +55,7 @@
   <div class="sub">Posadas auténticas de Venezuela<br/>Guía de uso y administración</div>
   <div class="meta">
     Documento operativo · Viajeros · Posaderos · Administradores<br/>
-    Versión 2.0 — Plataforma de reservas profesional
+    Versión 3.0 — Plataforma de reservas con agentes de IA
   </div>
 </div>
 
@@ -68,7 +68,7 @@
     <li><b>Guía del viajero</b> — buscar, reservar, pagar, mensajes</li>
     <li><b>Guía del posadero</b> — registrar, publicar, gestionar reservas</li>
     <li><b>Guía del administrador</b> — revisar posadas, reservas, usuarios, soporte</li>
-    <li><b>Atención al cliente con IA (Vera)</b> — cómo funciona y el escalado</li>
+    <li><b>Agentes de IA (Vera y Aurora)</b> — soporte y concierge de viaje</li>
     <li><b>Puesta en marcha técnica</b> — base de datos, variables de entorno, despliegue</li>
     <li><b>Funciones avanzadas</b> — favoritos, reseñas, disponibilidad, automatización, SEO</li>
     <li><b>Credenciales de demostración y checklist de lanzamiento</b></li>
@@ -86,7 +86,7 @@
 <div class="section">
   <h2>1 · Qué es RESER-VE</h2>
   <p class="lead">RESER-VE es un <b>marketplace de posadas auténticas de Venezuela</b>. Conecta viajeros con anfitriones locales (posaderos) en los destinos más bellos del país: Los Roques, Mérida, Mochima, Morrocoy, Canaima, la Gran Sabana, Isla Margarita y Coro.</p>
-  <p>No somos un hotel ni un intermediario frío: destacamos la hospitalidad local. El viajero descubre, reserva y coordina el pago directamente con el posadero; RESER-VE aporta la vitrina, la confianza y una comisión de servicio del <b>10%</b> incluida en el total mostrado.</p>
+  <p>No somos un hotel ni un intermediario frío: destacamos la hospitalidad local. El viajero descubre, reserva y coordina el pago directamente con el posadero. <b>El viajero no paga comisión</b>: el precio que ve es el precio final. La comisión de servicio de RESER-VE (10%) la asume la posada, de forma invisible para el cliente.</p>
   <h3>El modelo en una frase</h3>
   <p>El viajero <b>solicita</b> una reserva → el posadero <b>confirma</b> en 24h → el viajero <b>paga</b> con el método acordado (Zelle, Pago Móvil, transferencia, efectivo) → disfruta su estancia. Sin cobros automáticos.</p>
   <h3>Pilares de la plataforma</h3>
@@ -133,7 +133,7 @@
   <div class="step"><div class="step-n">2</div><div>Explora los resultados en lista o en el mapa interactivo. Cada tarjeta muestra precio por noche, calificación y servicios.</div></div>
   <div class="step"><div class="step-n">3</div><div>Abre una posada para ver galería de fotos, descripción, servicios, políticas, anfitrión y reseñas.</div></div>
   <h3>3.2 Reservar</h3>
-  <div class="step"><div class="step-n">1</div><div>En la ficha de la posada elige <b>llegada</b>, <b>salida</b> y número de <b>huéspedes</b>. Verás el desglose: noches × precio + comisión 10%.</div></div>
+  <div class="step"><div class="step-n">1</div><div>En la ficha de la posada elige <b>llegada</b>, <b>salida</b> y número de <b>huéspedes</b>. El total es simplemente noches × precio, sin comisiones para el viajero.</div></div>
   <div class="step"><div class="step-n">2</div><div>Pulsa <b>Reservar</b>. Si no tienes cuenta, crea una gratis (correo y contraseña). Volverás automáticamente al flujo de reserva.</div></div>
   <div class="step"><div class="step-n">3</div><div>Elige tu <b>método de pago preferido</b>, agrega notas opcionales y confirma la solicitud.</div></div>
   <div class="step"><div class="step-n">4</div><div>Recibirás un <b>código de reserva</b> (ej. <code>RV-2026-1001</code>) y un correo de confirmación. El estado inicial es <b>pendiente</b>.</div></div>
@@ -187,8 +187,10 @@
 
 <!-- ───────── 6 ───────── -->
 <div class="section">
-  <h2>6 · Atención al cliente con IA — "Vera"</h2>
-  <p class="lead">Vera es la asistente virtual de RESER-VE. Aparece como un botón flotante 🌴 en todas las páginas y responde al instante.</p>
+  <h2>6 · Agentes de IA — Vera y Aurora</h2>
+  <p class="lead">RESER-VE tiene dos asistentes de IA, ambos con <b>Google Gemini 2.5 Flash</b> vía Vercel AI Gateway. <b>Vera</b> es soporte; <b>Aurora</b> es un agente concierge que planifica viajes.</p>
+  <h3 style="margin-top:1rem">6.A · Vera (soporte)</h3>
+  <p>Vera es la asistente de soporte. Aparece como un botón flotante 🌴 en todas las páginas y responde al instante.</p>
   <h3>6.1 Qué resuelve sola</h3>
   <p>Vera conoce el funcionamiento de la plataforma (cómo reservar, métodos de pago, cancelaciones, cómo publicar una posada, destinos disponibles) y responde estas preguntas básicas de inmediato, en español, las 24 horas.</p>
   <h3>6.2 Cuándo escala a un humano</h3>
@@ -203,6 +205,15 @@
     <li>Vera <b>no</b> inventa precios ni disponibilidad de fechas; ante la duda, escala.</li>
     <li>Nunca pide datos sensibles de pago (números de tarjeta completos, claves).</li>
     <li>El conocimiento de Vera vive en <code>lib/support-kb.ts</code>: edítalo cuando cambien políticas, métodos de pago o destinos.</li>
+  </ul>
+
+  <h3 style="margin-top:1.5rem">6.B · Aurora (concierge de viaje IA)</h3>
+  <p>Aurora es un <b>agente</b> (no un simple chatbot): recibe un deseo de viaje en lenguaje natural y arma un itinerario reservable con posadas reales. Vive en <code>/aurora</code> (enlace ✨ Aurora en el menú).</p>
+  <div class="box"><b>Cómo funciona:</b> Aurora <b>usa herramientas</b> — busca posadas reales en el catálogo (por destino, precio, vibra) y verifica disponibilidad contra las reservas — y <b>razona en varios pasos</b> hasta proponer un plan día por día con enlaces para reservar. Ejemplo: "5 días entre playa y aventura, presupuesto $500".</div>
+  <ul>
+    <li>Muestra en vivo las posadas que encuentra como tarjetas con foto y precio.</li>
+    <li>No inventa datos: solo usa lo que devuelven sus herramientas.</li>
+    <li>Requiere la variable <code>AI_GATEWAY_API_KEY</code> (igual que Vera). El código está en <code>app/api/aurora/route.ts</code> y <code>lib/posadas-query.ts</code>.</li>
   </ul>
 </div>
 
@@ -270,7 +281,7 @@ vercel --prod     # despliega a producción</pre>
   <p>La página de inicio muestra números reales (posadas activas, destinos, reseñas) desde <code>/api/stats</code>, no datos fijos. La plataforma incluye <code>sitemap.xml</code>, <code>robots.txt</code>, metadatos Open Graph y datos estructurados (schema.org) en cada posada para mejor posicionamiento en Google y mejor vista al compartir en redes.</p>
 
   <h3>8.6 Precio seguro en el servidor</h3>
-  <p>El total de cada reserva (noches × precio + 10% de servicio) se recalcula en el servidor; el cliente no puede manipularlo. La comisión vive en una sola constante (<code>SERVICE_FEE_RATE</code>) para cambiarla en un solo lugar.</p>
+  <p>El total de cada reserva (noches × precio) se recalcula en el servidor; el cliente no puede manipularlo. El viajero no paga comisión: la posada asume el 10% por su lado.</p>
 </div>
 
 <!-- ───────── 9 ───────── -->
