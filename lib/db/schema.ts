@@ -113,6 +113,15 @@ export const favorites = pgTable('favorites', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
+// ─── Recuperación de contraseña ─────────────────────────────────────────────────
+export const passwordResets = pgTable('password_resets', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull(),
+  token: text('token').notNull().unique(),
+  expires: timestamp('expires').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
 // ─── NextAuth tables (required by @auth/drizzle-adapter) ───────────────────────
 export const accounts = pgTable('accounts', {
   id: serial('id').primaryKey(),

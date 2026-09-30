@@ -287,6 +287,28 @@ export async function emailPosadaLead(opts: {
   })
 }
 
+// ─── Email: restablecer contraseña ─────────────────────────────────────────────
+export async function emailPasswordReset(opts: { email: string; name: string; resetUrl: string }) {
+  const resend = getResend()
+  if (!resend) return
+
+  const html = baseHtml(`
+    <div class="card">
+      <div class="title">Restablece tu contraseña</div>
+      <div class="sub">Hola ${opts.name}, recibimos una solicitud para restablecer tu contraseña en RESER-VE. Pulsa el botón para crear una nueva. El enlace vence en 1 hora.</div>
+      <a href="${opts.resetUrl}" class="btn">Crear nueva contraseña →</a>
+      <div class="info-box" style="margin-top:1.25rem">Si no solicitaste esto, ignora este correo — tu contraseña seguirá igual.</div>
+    </div>
+  `)
+
+  await resend.emails.send({
+    from: FROM,
+    to: opts.email,
+    subject: 'Restablece tu contraseña · RESER-VE',
+    html,
+  })
+}
+
 // ─── Email: new message notification ──────────────────────────────────────────
 export async function emailNewMessage(opts: {
   recipientEmail: string; recipientName: string;

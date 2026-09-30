@@ -74,6 +74,7 @@ function LoginForm() {
               <div className="field">
                 <label>Contraseña</label>
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" />
+                <a href="/recuperar" style={{ display: 'block', textAlign: 'right', marginTop: '0.5rem', fontSize: '0.8rem', color: '#E67E22', textDecoration: 'none', fontWeight: 600 }}>¿Olvidaste tu contraseña?</a>
               </div>
               <button type="submit" className="btn-submit" disabled={loading}>
                 {loading ? 'Iniciando sesión…' : 'Iniciar sesión'}
