@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { type Posada } from '@/lib/data'
 import NavUser from '@/components/NavUser'
 import FavoriteButton from '@/components/FavoriteButton'
-import { SUPPORT_WHATSAPP, SITE_URL } from '@/lib/constants'
+import { SITE_URL } from '@/lib/constants'
 
 export default function FichaPosada() {
   const rawParams = useParams<{ slug: string }>()
@@ -80,6 +80,22 @@ export default function FichaPosada() {
     if (fechaSalida) qs.set('salida', fechaSalida)
     qs.set('huespedes', String(huespedes))
     router.push(`/reservar/${slug}?${qs.toString()}`)
+  }
+
+  const [contactando, setContactando] = useState(false)
+  const contactarPosadero = async () => {
+    const id = (posada as any).id
+    if (!id || contactando) return
+    setContactando(true)
+    try {
+      const res = await fetch('/api/conversations/with-host', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ posadaId: id }),
+      })
+      if (res.status === 401) { router.push(`/login?callbackUrl=/posadas/${slug}`); return }
+      const data = await res.json()
+      if (res.ok && data.id) router.push(`/mensajes/${data.id}`)
+    } catch { /* noop */ } finally { setContactando(false) }
   }
 
   const isSuperhost = posada.rating >= 4.7
@@ -374,15 +390,12 @@ export default function FichaPosada() {
                 </svg>
                 Reserva protegida · Sin cobro automático
               </div>
-              <a
-                className="btn-whatsapp"
-                href={`https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(`Hola RESER-VE, quiero información sobre la posada "${posada.nombre}" (${posada.destino}).`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}
-              >
-                Consultar por WhatsApp
-              </a>
+              <button className="btn-whatsapp" style={{ fontWeight: 700, color: 'var(--cacao)', borderColor: 'rgba(230,126,34,0.4)' }} onClick={contactarPosadero} disabled={contactando}>
+                {contactando ? 'Abriendo chat…' : '💬 Contactar al posadero'}
+              </button>
+              <p style={{ fontSize: '0.68rem', color: 'var(--muted)', textAlign: 'center', marginTop: '0.4rem' }}>
+                Chatea con el posadero dentro de RESER-VE. Por tu seguridad, mantén la comunicación y el pago en la plataforma.
+              </p>
               {(posada as any).id && (
                 <div style={{ marginTop: '0.6rem', display: 'flex', justifyContent: 'center' }}>
                   <FavoriteButton posadaId={(posada as any).id} variant="full" />

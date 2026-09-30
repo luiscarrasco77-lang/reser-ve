@@ -85,17 +85,23 @@ export default function MapView({
       })
       mapRef.current = map
 
-      // OpenStreetMap standard tiles — sin API key (CartoDB ahora exige key)
+      // Esri World Imagery (satélite) — sin API key, precioso para playas y naturaleza.
+      // Nota: Esri usa el orden {z}/{y}/{x}.
       L.tileLayer(
-        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        { subdomains: 'abc', maxZoom: 19 }
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19 }
+      ).addTo(map)
+      // Capa de etiquetas/lugares encima del satélite para ubicarse mejor.
+      L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19 }
       ).addTo(map)
 
       // 'topright' evita que el control de zoom choque con el botón flotante del asistente (abajo-derecha)
       L.control.zoom({ position: 'topright' }).addTo(map)
       L.control.attribution({
         position: 'bottomleft',
-        prefix: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
+        prefix: 'Imágenes © <a href="https://www.esri.com" target="_blank">Esri</a>',
       }).addTo(map)
 
       map.on('dragstart', () => {

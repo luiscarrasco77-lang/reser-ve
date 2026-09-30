@@ -250,6 +250,13 @@ function BookingCard({ b, onCancel, cancelling }: { b: Booking; onCancel: (id: n
           {b.posadaSlug && (
             <Link href={`/posadas/${b.posadaSlug}`} className="btn-view">Ver posada →</Link>
           )}
+          <button className="btn-view" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }} onClick={async () => {
+            const res = await fetch('/api/conversations/with-host', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ posadaId: b.posadaId, bookingId: b.id }),
+            }).catch(() => null)
+            if (res && res.ok) { const d = await res.json(); if (d.id) window.location.href = `/mensajes/${d.id}` }
+          }}>Mensaje al posadero →</button>
           {canCancel && (
             <button className="btn-cancel" disabled={cancelling} onClick={() => onCancel(b.id)}>
               {cancelling ? 'Cancelando…' : 'Cancelar solicitud'}
