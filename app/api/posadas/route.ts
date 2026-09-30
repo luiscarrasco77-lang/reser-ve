@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { getDb } from '@/lib/db'
-import { posadas } from '@/lib/db/schema'
+import { posadas, users } from '@/lib/db/schema'
+import { emailAdminPosadaPending } from '@/lib/email'
 import { eq } from 'drizzle-orm'
 import { auth } from '@/auth'
 import { normalizeStr } from '@/lib/search'
@@ -81,16 +82,48 @@ export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const role = (session.user as any).role
+  if (role !== 'host' && role !== 'admin') return NextResponse.json({ error: 'Solo los posaderos pueden publicar posadas' }, { status: 403 })
+
   const body = await req.json()
-  const slug = body.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now().toString(36)
+  const nombre = String(body.nombre ?? '').trim()
+  const precio = parseInt(body.precio)
+  const lat = Number(body.lat), lng = Number(body.lng)
+  if (!nombre || !body.destino || !body.destinoSlug || !String(body.descripcion ?? '').trim()) {
+    return NextResponse.json({ error: 'Completa nombre, destino y descripción' }, { status: 400 })
+  }
+  if (!(precio > 0)) return NextResponse.json({ error: 'El precio por noche debe ser mayor a 0' }, { status: 400 })
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return NextResponse.json({ error: 'Ubicación inválida' }, { status: 400 })
+
+  const arr = (v: unknown) => Array.isArray(v) ? v.map(String) : []
+  const slug = nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now().toString(36)
+  const hostId = parseInt((session.user as any).id)
 
   const db = getDb()
+  // Lista blanca: el posadero no puede fijar rating, reseñas, estado, etc.
   const [created] = await db.insert(posadas).values({
-    ...body,
-    slug,
-    hostId: parseInt((session.user as any).id),
+    slug, hostId, nombre,
+    destino: String(body.destino), destinoSlug: String(body.destinoSlug),
+    tipo: String(body.tipo || 'Posada'),
+    precio,
+    habitaciones: Math.max(1, parseInt(body.habitaciones) || 1),
+    capacidad: Math.max(1, parseInt(body.capacidad) || 2),
+    descripcion: String(body.descripcion).trim(),
+    tags: arr(body.tags), servicios: arr(body.servicios), politicas: arr(body.politicas),
+    imgs: arr(body.imgs), metodoPago: arr(body.metodoPago),
+    lat, lng,
+    hostNombre: session.user.name ?? null,
     status: 'pending_review',
   }).returning()
+
+  // Avisa a los admins para que la revisen.
+  after(async () => {
+    const admins = await db.select({ email: users.email }).from(users).where(eq(users.role, 'admin'))
+    await emailAdminPosadaPending({
+      to: admins.map(a => a.email), nombre, destino: created.destino, precio,
+      hostName: session.user?.name ?? 'Posadero', hostEmail: session.user?.email ?? '',
+    })
+  })
 
   return NextResponse.json(created, { status: 201 })
 }

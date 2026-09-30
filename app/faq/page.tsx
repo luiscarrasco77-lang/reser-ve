@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Preguntas frecuentes | RESER-VE',
+  title: 'Preguntas frecuentes',
   description: 'Respuestas a las preguntas más comunes sobre RESER-VE, reservas, pagos y posadas venezolanas.',
 }
 

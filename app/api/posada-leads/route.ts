@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse, after } from 'next/server'
 import { emailPosadaLead } from '@/lib/email'
+import { getDb } from '@/lib/db'
+import { users } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -14,7 +17,10 @@ export async function POST(req: NextRequest) {
   }
 
   // Notifica al equipo tras responder (after mantiene viva la función hasta enviarlo).
-  after(() => emailPosadaLead({
+  after(async () => {
+    const admins = await getDb().select({ email: users.email }).from(users).where(eq(users.role, 'admin'))
+    await emailPosadaLead({
+    to: admins.map(a => a.email),
     nombrePosada,
     destino,
     tipo: tipo ?? '—',
@@ -28,7 +34,8 @@ export async function POST(req: NextRequest) {
     telefono: body.telefono,
     whatsapp: body.whatsapp,
     metodoCobro: Array.isArray(body.metodoCobro) ? body.metodoCobro : [],
-  }))
+    })
+  })
 
   return NextResponse.json({ ok: true }, { status: 201 })
 }

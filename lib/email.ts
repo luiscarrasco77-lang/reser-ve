@@ -263,11 +263,12 @@ export async function emailPosadaLead(opts: {
   habitaciones: string; capacidad: string; precio: string; servicios: string[];
   nombrePosadero: string; emailPosadero: string; telefono?: string; whatsapp?: string;
   metodoCobro: string[];
+  to?: string[];
 }) {
   const resend = getResend()
   if (!resend) return false
 
-  const to = process.env.TEAM_EMAIL || 'hola@reser-ve.com'
+  const to = opts.to?.length ? opts.to : (process.env.TEAM_EMAIL || 'hola@reser-ve.com')
   const html = baseHtml(`
     <div class="card">
       <div class="title">Nueva solicitud de posada</div>
@@ -294,6 +295,30 @@ export async function emailPosadaLead(opts: {
     replyTo: opts.emailPosadero,
     subject: `Nueva posada: ${opts.nombrePosada} (${opts.destino})`,
     html,
+  })
+}
+
+// ─── Email: posada enviada a revisión (a los admins) ─────────────────────────
+export async function emailAdminPosadaPending(opts: {
+  to: string[]; nombre: string; destino: string; precio: number;
+  hostName: string; hostEmail: string;
+}) {
+  const resend = getResend()
+  if (!resend || opts.to.length === 0) return false
+  const html = baseHtml(`
+    <div class="card">
+      <div class="title">Posada pendiente de revisión</div>
+      <div class="sub">Un posadero acaba de enviar su posada. Revísala y apruébala para que aparezca en el buscador.</div>
+      <div class="row"><span>Posada</span><strong>${opts.nombre}</strong></div>
+      <div class="row"><span>Destino</span><strong>${opts.destino}</strong></div>
+      <div class="row"><span>Precio</span><strong>$${opts.precio} USD/noche</strong></div>
+      <div class="row"><span>Posadero/a</span><strong>${opts.hostName} · ${opts.hostEmail}</strong></div>
+      <a href="${SITE_URL}/admin" class="btn">Revisar en el panel →</a>
+    </div>
+  `)
+  return deliver(resend, {
+    from: FROM, to: opts.to, replyTo: opts.hostEmail,
+    subject: `Revisar posada: ${opts.nombre} (${opts.destino})`, html,
   })
 }
 
