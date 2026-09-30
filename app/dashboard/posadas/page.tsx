@@ -9,7 +9,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
   draft:          { label: 'Borrador',             color: '#7A8699', bg: 'rgba(122,134,153,0.1)',  icon: '📝' },
   pending_review: { label: 'Pendiente de revisión', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  icon: '⏳' },
   active:         { label: 'Publicada',             color: '#10b981', bg: 'rgba(16,185,129,0.1)',  icon: '✓' },
-  suspended:      { label: 'Suspendida',            color: '#ef4444', bg: 'rgba(239,68,68,0.08)',  icon: '⚠' },
+  suspended:      { label: 'Pausada',               color: '#7A8699', bg: 'rgba(122,134,153,0.12)', icon: '⏸' },
   rejected:       { label: 'Rechazada',             color: '#ef4444', bg: 'rgba(239,68,68,0.08)',  icon: '✕' },
 }
 
@@ -116,15 +116,12 @@ export default async function MisPosadasPage() {
                           Ver en RESER-VE
                         </a>
                       )}
-                      {(p.status === 'rejected' || p.status === 'draft') && (
-                        <>
-                          <a href={`/dashboard/posada/${p.slug}/editar`} className="btn btn-primary">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      <a href={`/dashboard/posada/${p.slug}/editar`} className="btn btn-primary">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             Editar
                           </a>
-                          <ResubmitButton slug={p.slug} status={p.status} />
-                        </>
-                      )}
+                      {['rejected', 'draft', 'suspended'].includes(p.status) && <ResubmitButton slug={p.slug} status={p.status} />}
+                      {(p.status === 'active' || p.status === 'pending_review') && <ResubmitButton slug={p.slug} status={p.status} action="pause" />}
                     </div>
                   </div>
                 </div>
@@ -145,7 +142,7 @@ export default async function MisPosadasPage() {
                 {/* Pending review panel */}
                 {p.status === 'pending_review' && (
                   <div className="pending-panel">
-                    ⏳ <strong>En revisión</strong> — El equipo de RESER-VE está revisando tu posada. Recibirás una notificación en cuanto haya una respuesta (normalmente en 24-48h).
+                    ⏳ <strong>En revisión</strong> — El equipo de RESER-VE está revisando tu posada. Recibirás una notificación en cuanto haya una respuesta (normalmente en 24–72 h).
                   </div>
                 )}
 

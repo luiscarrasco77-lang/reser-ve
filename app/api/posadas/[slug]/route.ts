@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db'
 import { posadas, reviews } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import { auth } from '@/auth'
+import { parsePosadaInput } from '@/lib/posada-input'
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -54,71 +55,62 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
   return NextResponse.json({ ...posada, reseñas })
 }
 
-const EDITABLE_FIELDS = ['nombre', 'descripcion', 'precio', 'habitaciones', 'capacidad',
-  'tags', 'servicios', 'metodoPago', 'imgs', 'politicas', 'tipo', 'destino', 'destinoSlug', 'lat', 'lng']
-
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+// PUT/PATCH comparten reglas: solo el dueño (o un admin), campos en lista blanca y validados.
+async function update(req: NextRequest, slug: string) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { slug } = await params
-  const body = await req.json()
-  const db = getDb()
-
-  // Whitelist: nunca dejar que el host cambie status, hostId, rating, etc.
-  const updates: Record<string, any> = { updatedAt: new Date() }
-  for (const key of EDITABLE_FIELDS) {
-    if (body[key] !== undefined) updates[key] = body[key]
-  }
-
-  const [updated] = await db.update(posadas).set(updates)
-    .where(and(eq(posadas.slug, slug), eq(posadas.hostId, parseInt((session.user as any).id))))
-    .returning()
-  if (!updated) return NextResponse.json({ error: 'Not found or forbidden' }, { status: 404 })
-  return NextResponse.json(updated)
-}
-
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { slug } = await params
   const userId = parseInt((session.user as any).id)
   const role = (session.user as any).role
-  const body = await req.json()
+  const body = await req.json().catch(() => null)
+  if (!body) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
   const db = getDb()
 
   const [posada] = await db.select().from(posadas).where(eq(posadas.slug, slug))
   if (!posada) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  if (posada.hostId !== userId && role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  if (posada.hostId !== userId && role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
+  // Pausar / reactivar. Reactivar (o reenviar una rechazada) vuelve a pasar por revisión.
+  if (body.action === 'pause') {
+    if (posada.status !== 'active' && posada.status !== 'pending_review') {
+      return NextResponse.json({ error: 'Solo puedes pausar una posada publicada o en revisión' }, { status: 400 })
+    }
+    const [updated] = await db.update(posadas).set({ status: 'suspended', updatedAt: new Date() }).where(eq(posadas.id, posada.id)).returning()
+    return NextResponse.json(updated)
+  }
   if (body.action === 'resubmit') {
-    if (posada.status !== 'rejected' && posada.status !== 'draft') {
-      return NextResponse.json({ error: 'Solo puedes reenviar posadas rechazadas o en borrador' }, { status: 400 })
+    if (!['rejected', 'draft', 'suspended'].includes(posada.status)) {
+      return NextResponse.json({ error: 'Solo puedes reenviar posadas rechazadas, en borrador o pausadas' }, { status: 400 })
     }
     const [updated] = await db.update(posadas)
       .set({ status: 'pending_review', reviewNotes: null, updatedAt: new Date() })
-      .where(eq(posadas.slug, slug))
-      .returning()
+      .where(eq(posadas.id, posada.id)).returning()
     return NextResponse.json(updated)
   }
 
-  const allowed = ['nombre', 'descripcion', 'precio', 'habitaciones', 'capacidad',
-    'tags', 'servicios', 'metodoPago', 'imgs', 'politicas', 'tipo']
-  const updates: Record<string, any> = { updatedAt: new Date() }
-  for (const key of allowed) {
-    if (body[key] !== undefined) updates[key] = body[key]
-  }
-  const [updated] = await db.update(posadas).set(updates).where(eq(posadas.slug, slug)).returning()
+  const parsed = parsePosadaInput(body, true)
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
+  const [updated] = await db.update(posadas).set({ ...parsed.data, updatedAt: new Date() } as any)
+    .where(eq(posadas.id, posada.id)).returning()
   return NextResponse.json(updated)
 }
 
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  return update(req, (await params).slug)
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  return update(req, (await params).slug)
+}
+
+// "Eliminar" = pausar (se conserva el historial de reservas).
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { slug } = await params
   const db = getDb()
-  await db.update(posadas).set({ status: 'suspended' })
+  const [updated] = await db.update(posadas).set({ status: 'suspended', updatedAt: new Date() })
     .where(and(eq(posadas.slug, slug), eq(posadas.hostId, parseInt((session.user as any).id))))
+    .returning({ id: posadas.id })
+  if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json({ ok: true })
 }

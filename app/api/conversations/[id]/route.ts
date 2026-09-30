@@ -13,7 +13,9 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   const role = (session.user as any).role
   const db = getDb()
 
-  const [conv] = await db.select().from(conversations).where(eq(conversations.id, parseInt(id)))
+  const convId = Number(id)
+  if (!Number.isInteger(convId)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const [conv] = await db.select().from(conversations).where(eq(conversations.id, convId))
   if (!conv) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   // Access check: participant or admin
@@ -26,8 +28,8 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
     .where(eq(messages.conversationId, conv.id))
     .orderBy(asc(messages.createdAt))
 
-  // Mark unread messages as read
-  const unread = msgs.filter(m => !m.readAt && m.senderId !== userId)
+  // Marca como leídos (solo si quien lee es participante: un admin revisando no los marca).
+  const unread = isParticipant ? msgs.filter(m => !m.readAt && m.senderId !== userId) : []
   if (unread.length > 0) {
     await Promise.all(unread.map(m =>
       db.update(messages).set({ readAt: new Date() }).where(eq(messages.id, m.id))

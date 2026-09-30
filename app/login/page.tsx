@@ -7,7 +7,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') || '/'
+  // Solo rutas internas (evita redirecciones abiertas a otros dominios).
+  const rawCb = searchParams.get('callbackUrl') || ''
+  const callbackUrl = rawCb.startsWith('/') && !rawCb.startsWith('//') ? rawCb : ''
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -23,7 +25,10 @@ function LoginForm() {
       setError('Email o contraseña incorrectos')
       return
     }
-    router.push(callbackUrl)
+    if (callbackUrl) { router.push(callbackUrl); return }
+    // Sin destino: cada rol a su panel.
+    const role = (await fetch('/api/auth/session').then(r => r.json()).catch(() => null))?.user?.role
+    router.push(role === 'host' ? '/dashboard' : role === 'admin' ? '/admin' : '/')
   }
 
   return (

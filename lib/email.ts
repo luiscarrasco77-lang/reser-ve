@@ -24,6 +24,11 @@ async function deliver(resend: Resend, payload: Payload): Promise<boolean> {
   }
 }
 
+// Escapa texto del usuario antes de insertarlo en el HTML de un correo (evita phishing/HTML inyectado).
+function esc(v: unknown): string {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
+}
+
 // ─── Templates ────────────────────────────────────────────────────────────────
 
 function baseHtml(content: string) {
@@ -77,18 +82,18 @@ export async function emailHostNewBooking(opts: {
     <div class="card">
       <div class="title">Nueva solicitud de reserva</div>
       <div class="sub">Tienes 24 horas para confirmar o rechazar. Si no respondes, la reserva se cancela automáticamente.</div>
-      <div class="code-box"><div class="code">${opts.bookingCode}</div></div>
-      <div class="row"><span>Posada</span><strong>${opts.posadaNombre}</strong></div>
-      <div class="row"><span>Viajero</span><strong>${opts.guestName}</strong></div>
-      <div class="row"><span>Email</span><strong>${opts.guestEmail}</strong></div>
-      <div class="row"><span>Check-in</span><strong>${opts.checkIn}</strong></div>
-      <div class="row"><span>Check-out</span><strong>${opts.checkOut}</strong></div>
+      <div class="code-box"><div class="code">${esc(opts.bookingCode)}</div></div>
+      <div class="row"><span>Posada</span><strong>${esc(opts.posadaNombre)}</strong></div>
+      <div class="row"><span>Viajero</span><strong>${esc(opts.guestName)}</strong></div>
+      <div class="row"><span>Check-in</span><strong>${esc(opts.checkIn)}</strong></div>
+      <div class="row"><span>Check-out</span><strong>${esc(opts.checkOut)}</strong></div>
       <div class="row"><span>Noches</span><strong>${opts.nights}</strong></div>
       <div class="row"><span>Huéspedes</span><strong>${opts.guestCount}</strong></div>
-      <div class="row"><span>Método de pago</span><strong>${opts.paymentMethod ?? '—'}</strong></div>
+      <div class="row"><span>Método de pago</span><strong>${esc(opts.paymentMethod ?? '—')}</strong></div>
       <div class="divider"/>
-      <div class="total"><span>Total a cobrar</span><span>$${opts.totalPrice} USD</span></div>
-      ${opts.notes ? `<div class="info-box"><strong>Nota del viajero:</strong> ${opts.notes}</div>` : ''}
+      <div class="total"><span>Total de la estadía</span><span>$${opts.totalPrice} USD</span></div>
+      ${opts.notes ? `<div class="info-box"><strong>Nota del viajero:</strong> ${esc(opts.notes)}</div>` : ''}
+      <div class="info-box"><strong>Próximos pasos:</strong> confirma o rechaza desde tu panel. Si confirmas, envíale tus datos de pago al viajero por el <strong>chat de RESER-VE</strong> (nunca por fuera de la plataforma). La comisión de RESER-VE es el 10% de las reservas confirmadas.</div>
       <a href="${SITE_URL}/dashboard/reservas" class="btn">Gestionar reserva →</a>
     </div>
   `)
@@ -114,14 +119,14 @@ export async function emailGuestBookingReceived(opts: {
   const html = baseHtml(`
     <div class="card">
       <div class="title">¡Solicitud enviada!</div>
-      <div class="sub">Hola ${opts.guestName}, recibimos tu solicitud. El posadero tiene 24h para confirmar. Te avisamos en cuanto haya respuesta.</div>
+      <div class="sub">Hola ${esc(opts.guestName)}, recibimos tu solicitud. El posadero tiene 24h para confirmar. Te avisamos en cuanto haya respuesta.</div>
       <div class="code-box">
         <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#7A8699;margin-bottom:0.4rem;">Código de reserva</div>
-        <div class="code">${opts.bookingCode}</div>
+        <div class="code">${esc(opts.bookingCode)}</div>
       </div>
-      <div class="row"><span>Posada</span><strong>${opts.posadaNombre}</strong></div>
-      <div class="row"><span>Check-in</span><strong>${opts.checkIn}</strong></div>
-      <div class="row"><span>Check-out</span><strong>${opts.checkOut}</strong></div>
+      <div class="row"><span>Posada</span><strong>${esc(opts.posadaNombre)}</strong></div>
+      <div class="row"><span>Check-in</span><strong>${esc(opts.checkIn)}</strong></div>
+      <div class="row"><span>Check-out</span><strong>${esc(opts.checkOut)}</strong></div>
       <div class="row"><span>Noches</span><strong>${opts.nights}</strong></div>
       <div class="divider"/>
       <div class="total"><span>Total</span><span>$${opts.totalPrice} USD</span></div>
@@ -149,24 +154,24 @@ export async function emailGuestBookingConfirmed(opts: {
   const resend = getResend()
   if (!resend) return false
 
-  const instruccion = `El posadero te enviará sus datos de pago${opts.paymentMethod ? ` (${opts.paymentMethod})` : ''} por el chat de RESER-VE: entra a <a href="${SITE_URL}/mensajes">Mis mensajes</a>. Monto: $${opts.totalPrice} USD · referencia ${opts.bookingCode}. Por tu seguridad, paga solo a datos recibidos dentro de la plataforma.`
+  const instruccion = `El posadero te enviará sus datos de pago${opts.paymentMethod ? ` (${esc(opts.paymentMethod)})` : ''} por el chat de RESER-VE: entra a <a href="${SITE_URL}/mensajes">Mis mensajes</a>. Monto: $${opts.totalPrice} USD · referencia ${opts.bookingCode}. Por tu seguridad, paga solo a datos recibidos dentro de la plataforma.`
 
   const html = baseHtml(`
     <div class="card">
       <div class="title">✓ Reserva confirmada</div>
-      <div class="sub">Hola ${opts.guestName}, el posadero confirmó tu reserva. Procede con el pago para asegurar tu lugar.</div>
+      <div class="sub">Hola ${esc(opts.guestName)}, el posadero confirmó tu reserva. Procede con el pago para asegurar tu lugar.</div>
       <div class="code-box">
         <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#7A8699;margin-bottom:0.4rem;">Código de reserva</div>
-        <div class="code">${opts.bookingCode}</div>
+        <div class="code">${esc(opts.bookingCode)}</div>
       </div>
-      <div class="row"><span>Posada</span><strong>${opts.posadaNombre}</strong></div>
-      <div class="row"><span>Check-in</span><strong>${opts.checkIn}</strong></div>
-      <div class="row"><span>Check-out</span><strong>${opts.checkOut}</strong></div>
+      <div class="row"><span>Posada</span><strong>${esc(opts.posadaNombre)}</strong></div>
+      <div class="row"><span>Check-in</span><strong>${esc(opts.checkIn)}</strong></div>
+      <div class="row"><span>Check-out</span><strong>${esc(opts.checkOut)}</strong></div>
       <div class="row"><span>Noches</span><strong>${opts.nights}</strong></div>
       <div class="divider"/>
       <div class="total"><span>Total a pagar</span><span>$${opts.totalPrice} USD</span></div>
       <div class="info-box"><strong>Instrucciones de pago:</strong><br/>${instruccion}</div>
-      ${opts.hostNotes ? `<div class="info-box" style="margin-top:0.75rem"><strong>Mensaje del posadero:</strong> ${opts.hostNotes}</div>` : ''}
+      ${opts.hostNotes ? `<div class="info-box" style="margin-top:0.75rem"><strong>Mensaje del posadero:</strong> ${esc(opts.hostNotes)}</div>` : ''}
     </div>
   `)
 
@@ -183,16 +188,17 @@ export async function emailGuestBookingCancelled(opts: {
   guestEmail: string; guestName: string;
   posadaNombre: string; bookingCode: string;
   reason?: string | null;
+  wasConfirmed?: boolean;
 }) {
   const resend = getResend()
   if (!resend) return false
 
   const html = baseHtml(`
     <div class="card">
-      <div class="title">Reserva no confirmada</div>
-      <div class="sub">Hola ${opts.guestName}, lamentablemente el posadero no pudo confirmar tu solicitud para <strong>${opts.posadaNombre}</strong>.</div>
-      <div class="code-box"><div class="code">${opts.bookingCode}</div></div>
-      ${opts.reason ? `<div class="info-box"><strong>Motivo:</strong> ${opts.reason}</div>` : ''}
+      <div class="title">${opts.wasConfirmed ? 'Reserva cancelada' : 'Reserva no confirmada'}</div>
+      <div class="sub">Hola ${esc(opts.guestName)}, ${opts.wasConfirmed ? 'el posadero canceló tu reserva en' : 'lamentablemente el posadero no pudo confirmar tu solicitud para'} <strong>${esc(opts.posadaNombre)}</strong>. Si ya habías pagado, escríbele por el chat de RESER-VE o contáctanos para gestionar el reembolso.</div>
+      <div class="code-box"><div class="code">${esc(opts.bookingCode)}</div></div>
+      ${opts.reason ? `<div class="info-box"><strong>Motivo:</strong> ${esc(opts.reason)}</div>` : ''}
       <div style="margin-top:1rem;font-size:0.85rem;color:#7A8699;">Sin cargos — no se realizó ningún cobro. Te invitamos a explorar otras posadas disponibles.</div>
       <a href="${SITE_URL}/buscar" class="btn">Explorar otras posadas →</a>
     </div>
@@ -201,9 +207,39 @@ export async function emailGuestBookingCancelled(opts: {
   return deliver(resend, {
     from: FROM,
     to: opts.guestEmail,
-    subject: `Reserva ${opts.bookingCode} — No confirmada`,
+    subject: `Reserva ${opts.bookingCode} — ${opts.wasConfirmed ? 'Cancelada' : 'No confirmada'}`,
     html,
   })
+}
+
+// ─── Email: posada recibida y en revisión (al posadero) ─────────────────────
+export async function emailHostPosadaReceived(opts: { hostEmail: string; hostName: string; posadaNombre: string }) {
+  const resend = getResend()
+  if (!resend) return false
+  const html = baseHtml(`
+    <div class="card">
+      <div class="title">Recibimos tu posada 🙌</div>
+      <div class="sub">Hola ${esc(opts.hostName)}, <strong>${esc(opts.posadaNombre)}</strong> está en revisión. Nuestro equipo la revisará en 24–72 horas y te avisaremos por correo en cuanto esté publicada. Si falta algo, te diremos exactamente qué ajustar.</div>
+      <div class="info-box">RESER-VE está en fase privada: tu posada se verá en la web y estará lista desde el primer día cuando abramos las reservas al público.</div>
+      <a href="${SITE_URL}/dashboard" class="btn">Ir a mi panel →</a>
+    </div>
+  `)
+  return deliver(resend, { from: FROM, to: opts.hostEmail, subject: `Recibimos ${opts.posadaNombre} · en revisión`, html })
+}
+
+// ─── Email: el viajero canceló (al posadero) ─────────────────────────────────
+export async function emailHostGuestCancelled(opts: { hostEmail: string; hostName: string; guestName: string; posadaNombre: string; bookingCode: string; checkIn: string; checkOut: string }) {
+  const resend = getResend()
+  if (!resend) return false
+  const html = baseHtml(`
+    <div class="card">
+      <div class="title">Reserva cancelada por el viajero</div>
+      <div class="sub">Hola ${esc(opts.hostName)}, ${esc(opts.guestName)} canceló su reserva en <strong>${esc(opts.posadaNombre)}</strong> (${esc(opts.checkIn)} → ${esc(opts.checkOut)}). Esas fechas vuelven a estar disponibles.</div>
+      <div class="code-box"><div class="code">${esc(opts.bookingCode)}</div></div>
+      <a href="${SITE_URL}/dashboard/reservas" class="btn">Ver mis reservas →</a>
+    </div>
+  `)
+  return deliver(resend, { from: FROM, to: opts.hostEmail, subject: `Cancelada por el viajero: ${opts.bookingCode} · ${opts.posadaNombre}`, html })
 }
 
 // ─── Email: posada approved (to host) ─────────────────────────────────────────
@@ -216,7 +252,7 @@ export async function emailHostPosadaApproved(opts: {
   const html = baseHtml(`
     <div class="card">
       <div class="title">✓ Tu posada está publicada</div>
-      <div class="sub">Hola ${opts.hostName}, revisamos y aprobamos <strong>${opts.posadaNombre}</strong>. Ya está visible para los viajeros.</div>
+      <div class="sub">Hola ${esc(opts.hostName)}, revisamos y aprobamos <strong>${esc(opts.posadaNombre)}</strong>. Ya está visible para los viajeros.</div>
       <a href="${SITE_URL}/posadas/${opts.slug}" class="btn">Ver mi posada →</a>
     </div>
   `)
@@ -240,12 +276,15 @@ export async function emailWelcome(opts: {
   const html = baseHtml(`
     <div class="card">
       <div class="title">Bienvenido/a a RESER-VE 🎉</div>
-      <div class="sub">Hola ${opts.name}, tu cuenta ha sido creada. ${isHost ? 'Como posadero ya puedes publicar tu primera posada y comenzar a recibir viajeros.' : 'Ya puedes explorar las mejores posadas de Venezuela y hacer tu primera reserva.'}</div>
+      <div class="sub">Hola ${esc(opts.name)}, tu cuenta ha sido creada. ${isHost
+        ? 'Ya puedes publicar tu posada desde tu panel: fotos, habitaciones, precio y métodos de pago. Nuestro equipo la revisa en 24–72 horas y te avisamos por correo cuando esté publicada.'
+        : 'Ya puedes explorar las posadas más auténticas de Venezuela y guardar tus favoritas. Estamos en fase privada: te avisaremos por correo cuando se abran las reservas.'}</div>
       ${isHost
         ? `<a href="${SITE_URL}/dashboard/posada/nueva" class="btn">Publicar mi posada →</a>`
         : `<a href="${SITE_URL}/buscar" class="btn">Explorar posadas →</a>`
       }
-      <div class="info-box" style="margin-top:1.25rem">¿Tienes alguna pregunta? Escríbenos a través del servicio al cliente en la plataforma o responde a este correo.</div>
+      ${isHost ? `<div class="info-box" style="margin-top:1.25rem"><strong>Condiciones:</strong> publicar es gratis y sin mensualidad; solo pagas un 10% sobre las reservas confirmadas. El precio publicado debe ser el mismo que en tus otros canales. <a href="${SITE_URL}/docs/Guia-Posaderos-RESER-VE.pdf">Descarga la guía para posaderos</a>.</div>` : ''}
+      <div class="info-box" style="margin-top:1rem">¿Dudas? Escríbenos a hola@reser-ve.com o usa el asistente de ayuda (botón naranja) en la web.</div>
     </div>
   `)
 
@@ -273,19 +312,19 @@ export async function emailPosadaLead(opts: {
     <div class="card">
       <div class="title">Nueva solicitud de posada</div>
       <div class="sub">Un posadero quiere unirse a RESER-VE. Contáctalo para verificar y activar el perfil.</div>
-      <div class="row"><span>Posada</span><strong>${opts.nombrePosada}</strong></div>
-      <div class="row"><span>Destino</span><strong>${opts.destino}</strong></div>
-      <div class="row"><span>Tipo</span><strong>${opts.tipo}</strong></div>
-      <div class="row"><span>Habitaciones</span><strong>${opts.habitaciones} · ${opts.capacidad} personas</strong></div>
-      <div class="row"><span>Precio base</span><strong>$${opts.precio} USD/noche</strong></div>
-      <div class="row"><span>Servicios</span><strong>${opts.servicios.join(', ') || '—'}</strong></div>
+      <div class="row"><span>Posada</span><strong>${esc(opts.nombrePosada)}</strong></div>
+      <div class="row"><span>Destino</span><strong>${esc(opts.destino)}</strong></div>
+      <div class="row"><span>Tipo</span><strong>${esc(opts.tipo)}</strong></div>
+      <div class="row"><span>Habitaciones</span><strong>${esc(opts.habitaciones)} · ${esc(opts.capacidad)} personas</strong></div>
+      <div class="row"><span>Precio base</span><strong>$${esc(opts.precio)} USD/noche</strong></div>
+      <div class="row"><span>Servicios</span><strong>${esc(opts.servicios.join(', ')) || '—'}</strong></div>
       <div class="divider"/>
-      <div class="row"><span>Posadero/a</span><strong>${opts.nombrePosadero}</strong></div>
-      <div class="row"><span>Email</span><strong>${opts.emailPosadero}</strong></div>
-      <div class="row"><span>Teléfono</span><strong>${opts.telefono || '—'}</strong></div>
-      <div class="row"><span>WhatsApp</span><strong>${opts.whatsapp || '—'}</strong></div>
-      <div class="row"><span>Métodos de cobro</span><strong>${opts.metodoCobro.join(', ') || '—'}</strong></div>
-      <div class="info-box" style="margin-top:1rem"><strong>Descripción:</strong><br/>${opts.descripcion}</div>
+      <div class="row"><span>Posadero/a</span><strong>${esc(opts.nombrePosadero)}</strong></div>
+      <div class="row"><span>Email</span><strong>${esc(opts.emailPosadero)}</strong></div>
+      <div class="row"><span>Teléfono</span><strong>${esc(opts.telefono || '—')}</strong></div>
+      <div class="row"><span>WhatsApp</span><strong>${esc(opts.whatsapp || '—')}</strong></div>
+      <div class="row"><span>Métodos de cobro</span><strong>${esc(opts.metodoCobro.join(', ')) || '—'}</strong></div>
+      <div class="info-box" style="margin-top:1rem"><strong>Descripción:</strong><br/>${esc(opts.descripcion)}</div>
     </div>
   `)
 
@@ -309,10 +348,10 @@ export async function emailAdminPosadaPending(opts: {
     <div class="card">
       <div class="title">Posada pendiente de revisión</div>
       <div class="sub">Un posadero acaba de enviar su posada. Revísala y apruébala para que aparezca en el buscador.</div>
-      <div class="row"><span>Posada</span><strong>${opts.nombre}</strong></div>
-      <div class="row"><span>Destino</span><strong>${opts.destino}</strong></div>
-      <div class="row"><span>Precio</span><strong>$${opts.precio} USD/noche</strong></div>
-      <div class="row"><span>Posadero/a</span><strong>${opts.hostName} · ${opts.hostEmail}</strong></div>
+      <div class="row"><span>Posada</span><strong>${esc(opts.nombre)}</strong></div>
+      <div class="row"><span>Destino</span><strong>${esc(opts.destino)}</strong></div>
+      <div class="row"><span>Precio</span><strong>$${esc(opts.precio)} USD/noche</strong></div>
+      <div class="row"><span>Posadero/a</span><strong>${esc(opts.hostName)} · ${esc(opts.hostEmail)}</strong></div>
       <a href="${SITE_URL}/admin" class="btn">Revisar en el panel →</a>
     </div>
   `)
@@ -330,7 +369,7 @@ export async function emailPasswordReset(opts: { email: string; name: string; re
   const html = baseHtml(`
     <div class="card">
       <div class="title">Restablece tu contraseña</div>
-      <div class="sub">Hola ${opts.name}, recibimos una solicitud para restablecer tu contraseña en RESER-VE. Pulsa el botón para crear una nueva. El enlace vence en 1 hora.</div>
+      <div class="sub">Hola ${esc(opts.name)}, recibimos una solicitud para restablecer tu contraseña en RESER-VE. Pulsa el botón para crear una nueva. El enlace vence en 1 hora.</div>
       <a href="${opts.resetUrl}" class="btn">Crear nueva contraseña →</a>
       <div class="info-box" style="margin-top:1.25rem">Si no solicitaste esto, ignora este correo — tu contraseña seguirá igual.</div>
     </div>
@@ -354,9 +393,9 @@ export async function emailNewMessage(opts: {
 
   const html = baseHtml(`
     <div class="card">
-      <div class="title">Nuevo mensaje de ${opts.senderName}</div>
-      <div class="sub">Tienes un mensaje nuevo en la conversación: <strong>${opts.subject}</strong></div>
-      <div style="background:rgba(26,43,76,0.04);border-radius:12px;padding:1rem 1.2rem;margin:1rem 0;font-size:0.88rem;line-height:1.6;color:#1A2B4C;">${opts.body}</div>
+      <div class="title">Nuevo mensaje de ${esc(opts.senderName)}</div>
+      <div class="sub">Tienes un mensaje nuevo en la conversación: <strong>${esc(opts.subject)}</strong></div>
+      <div style="background:rgba(26,43,76,0.04);border-radius:12px;padding:1rem 1.2rem;margin:1rem 0;font-size:0.88rem;line-height:1.6;color:#1A2B4C;">${esc(opts.body)}</div>
       <a href="${SITE_URL}/mensajes/${opts.conversationId}" class="btn">Responder →</a>
     </div>
   `)
@@ -379,8 +418,8 @@ export async function emailHostPosadaRejected(opts: {
   const html = baseHtml(`
     <div class="card">
       <div class="title">Posada en revisión</div>
-      <div class="sub">Hola ${opts.hostName}, revisamos <strong>${opts.posadaNombre}</strong> y necesitamos que hagas algunos ajustes antes de publicarla.</div>
-      <div class="info-box"><strong>Comentarios del equipo RESER-VE:</strong><br/>${opts.notes}</div>
+      <div class="sub">Hola ${esc(opts.hostName)}, revisamos <strong>${esc(opts.posadaNombre)}</strong> y necesitamos que hagas algunos ajustes antes de publicarla.</div>
+      <div class="info-box"><strong>Comentarios del equipo RESER-VE:</strong><br/>${esc(opts.notes)}</div>
       <div style="margin-top:1rem;font-size:0.85rem;color:#7A8699;">Realiza los cambios y vuelve a enviar desde tu dashboard. Estamos aquí para ayudarte.</div>
       <a href="${SITE_URL}/dashboard" class="btn">Ir a mi dashboard →</a>
     </div>

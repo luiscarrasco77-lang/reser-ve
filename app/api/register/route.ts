@@ -8,14 +8,14 @@ import { emailWelcome } from '@/lib/email'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(req: NextRequest) {
-  const { name, email, password, role } = await req.json()
-  if (!name || !email || !password) return NextResponse.json({ error: 'Faltan campos' }, { status: 400 })
+  const { name, email, password, role } = await req.json().catch(() => ({}))
+  if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string' || !name.trim() || !email || !password) return NextResponse.json({ error: 'Faltan campos' }, { status: 400 })
 
   // Never trust the client for privilege: only traveler/host can self-register.
   // Admins are promoted server-side via scripts/make-admin.ts.
   const safeRole = role === 'host' ? 'host' : 'traveler'
 
-  const cleanName = String(name).trim()
+  const cleanName = name.trim().slice(0, 80)
   const cleanEmail = String(email).trim().toLowerCase()
   if (!EMAIL_RE.test(cleanEmail)) return NextResponse.json({ error: 'Email inválido' }, { status: 400 })
   if (String(password).length < 8) return NextResponse.json({ error: 'La contraseña debe tener al menos 8 caracteres' }, { status: 400 })

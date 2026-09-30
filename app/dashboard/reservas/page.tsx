@@ -50,11 +50,18 @@ export default function ReservasPage() {
   useEffect(() => {
     fetch('/api/bookings')
       .then(r => r.json())
-      .then(data => { setBookings(data); setLoading(false) })
+      .then(data => { setBookings(Array.isArray(data) ? data : []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
 
   async function updateStatus(id: number, status: string, hostNotes?: string) {
+    if (status === 'cancelled') {
+      const b = bookings.find(x => x.id === id)
+      const msg = b?.status === 'confirmed'
+        ? '¿Cancelar esta reserva confirmada? El viajero recibirá un correo. Si ya pagó, coordina el reembolso por el chat.'
+        : '¿Rechazar esta solicitud? El viajero recibirá un correo.'
+      if (!confirm(msg)) return
+    }
     setUpdating(id)
     const body: Record<string, string> = { status }
     if (hostNotes) body.hostNotes = hostNotes
@@ -67,6 +74,8 @@ export default function ReservasPage() {
       const updated = await res.json()
       setBookings(prev => prev.map(b => b.id === id ? { ...b, ...updated } : b))
       setExpanded(null)
+    } else {
+      alert((await res.json().catch(() => ({}))).error ?? 'No se pudo actualizar la reserva')
     }
     setUpdating(null)
   }
@@ -258,7 +267,7 @@ export default function ReservasPage() {
                           </div>
                           <textarea
                             className="note-textarea"
-                            placeholder="Instrucciones de llegada, detalles de pago, etc."
+                            placeholder="Mensaje de bienvenida o instrucciones de llegada. Los datos de pago envíalos por el chat de RESER-VE."
                             value={hostNoteInput[b.id] ?? ''}
                             onChange={e => setHostNoteInput(prev => ({ ...prev, [b.id]: e.target.value }))}
                           />

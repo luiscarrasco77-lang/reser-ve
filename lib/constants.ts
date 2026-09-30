@@ -5,16 +5,9 @@
 export const AI_MODEL = 'google/gemini-2.5-flash'
 
 
-// Comisión de servicio que paga el viajero (incluida en el total mostrado).
-export const SERVICE_FEE_RATE = 0.10
-
-export function withServiceFee(subtotal: number): number {
-  return Math.round(subtotal * (1 + SERVICE_FEE_RATE))
-}
-
-export function serviceFee(subtotal: number): number {
-  return Math.round(subtotal * SERVICE_FEE_RATE)
-}
+// Comisión de RESER-VE sobre reservas confirmadas. La asume la posada; NUNCA se suma
+// al precio del viajero ni se le muestra.
+export const HOST_COMMISSION_RATE = 0.10
 
 // URL pública del sitio (para metadata/SEO/sitemap).
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://reser-ve.com'
@@ -26,3 +19,6 @@ export const SUPPORT_EMAIL = 'hola@reser-ve.com'
 // Los admins pueden reservar siempre (para pruebas internas).
 export const BOOKINGS_OPEN = process.env.NEXT_PUBLIC_BOOKINGS_OPEN === 'true'
 export const PRIVATE_PHASE_MSG = 'Estamos en fase privada: las posadas se están sumando y las reservas abren muy pronto.'
+
+// Longitud máxima de un mensaje de chat.
+export const MAX_MESSAGE = 4000

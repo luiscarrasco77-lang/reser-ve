@@ -417,7 +417,7 @@ export default function FichaPosada() {
                   </div>
                 </div>
               )}
-              <p className="booking-nota">Sin cargos hasta confirmar. El posadero acepta en 24h.</p>
+              {bookingsOpen && <p className="booking-nota">Sin cargos hasta confirmar. El posadero acepta en 24h.</p>}
               <div className="booking-badges">
                 {(posada.metodoPago.length ? posada.metodoPago : ['Zelle', 'Pago Móvil', 'Transferencia']).map(m => (
                   <span className="booking-badge" key={m}>{m}</span>

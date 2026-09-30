@@ -5,6 +5,7 @@ import { auth } from '@/auth'
 import { eq } from 'drizzle-orm'
 import { emailNewMessage } from '@/lib/email'
 import { generateVeraReply } from '@/lib/vera'
+import { MAX_MESSAGE } from '@/lib/constants'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -13,13 +14,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params
   const userId = parseInt((session.user as any).id)
   const role = (session.user as any).role
-  const { body } = await req.json()
+  const { body } = await req.json().catch(() => ({}))
 
-  if (!body?.trim()) return NextResponse.json({ error: 'Mensaje vacío' }, { status: 400 })
+  if (typeof body !== 'string' || !body.trim()) return NextResponse.json({ error: 'Mensaje vacío' }, { status: 400 })
+  if (body.length > MAX_MESSAGE) return NextResponse.json({ error: `El mensaje no puede superar ${MAX_MESSAGE} caracteres` }, { status: 400 })
+  const convId = Number(id)
+  if (!Number.isInteger(convId)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const db = getDb()
 
-  const [conv] = await db.select().from(conversations).where(eq(conversations.id, parseInt(id)))
+  const [conv] = await db.select().from(conversations).where(eq(conversations.id, convId))
   if (!conv) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const isParticipant = conv.userId === userId || conv.hostId === userId
@@ -63,8 +67,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
     })
   } else if (role !== 'admin') {
-    // Support conversation — notify all admins (just send to the platform email as fallback)
-    // In production you'd query users where role = 'admin'
+    // Ticket de soporte: avisa a los admins.
+    after(async () => {
+      const admins = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.role, 'admin'))
+      await Promise.all(admins.map(a => emailNewMessage({
+        recipientEmail: a.email, recipientName: a.name, senderName,
+        subject: `[Soporte] ${conv.subject}`, body: body.trim(), conversationId: conv.id,
+      })))
+    })
   }
 
   return NextResponse.json(msg, { status: 201 })

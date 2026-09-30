@@ -6,7 +6,8 @@ import { SUPPORT_SYSTEM_PROMPT } from './support-kb'
 import { AI_MODEL } from './constants'
 
 const MODEL = AI_MODEL
-const VERA_EMAIL = 'vera@reser-ve.app'
+// Cuenta de sistema sin contraseña ni permisos: no puede iniciar sesión ni restablecer contraseña.
+const VERA_EMAIL = 'vera@system.reser-ve.com'
 const VERA_NAME = 'Vera · Asistente RESER-VE'
 
 // Usuario "bot" que firma las respuestas de la IA dentro de /mensajes.
@@ -15,7 +16,7 @@ async function getVeraUserId(): Promise<number> {
   const [existing] = await db.select().from(users).where(eq(users.email, VERA_EMAIL))
   if (existing) return existing.id
   const [created] = await db.insert(users).values({
-    name: VERA_NAME, email: VERA_EMAIL, role: 'admin',
+    name: VERA_NAME, email: VERA_EMAIL, role: 'traveler',
   }).returning()
   return created.id
 }

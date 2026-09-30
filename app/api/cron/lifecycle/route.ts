@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
-import { bookings } from '@/lib/db/schema'
+import { bookings, posadas, users } from '@/lib/db/schema'
+import { emailGuestBookingCancelled } from '@/lib/email'
 import { eq } from 'drizzle-orm'
 
 // Cron de ciclo de vida de reservas (configurado en vercel.json):
@@ -9,7 +10,8 @@ import { eq } from 'drizzle-orm'
 // Protegido con CRON_SECRET (Vercel envía Authorization: Bearer <CRON_SECRET>).
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET
-  if (secret && req.headers.get('authorization') !== `Bearer ${secret}`) {
+  // Falla cerrado: sin CRON_SECRET configurado nadie puede ejecutarlo.
+  if (!secret || req.headers.get('authorization') !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   if (!process.env.DATABASE_URL) return NextResponse.json({ ok: true, skipped: 'no-db' })
@@ -30,6 +32,13 @@ export async function GET(req: NextRequest) {
         .set({ status: 'cancelled', hostNotes: 'Cancelada automáticamente: el posadero no respondió en 24h.', updatedAt: new Date() })
         .where(eq(bookings.id, b.id))
       expired++
+      // Avisa al viajero.
+      const [guest] = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, b.guestId))
+      const [p] = await db.select({ nombre: posadas.nombre }).from(posadas).where(eq(posadas.id, b.posadaId))
+      if (guest && p) await emailGuestBookingCancelled({
+        guestEmail: guest.email, guestName: guest.name, posadaNombre: p.nombre, bookingCode: b.bookingCode,
+        reason: 'El posadero no respondió a tiempo (24 h). No se realizó ningún cobro.',
+      })
       continue
     }
     // 2. Confirmada y ya pasó el check-out → completada

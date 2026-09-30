@@ -6,6 +6,7 @@ import { useSearchParams, useRouter, useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { type Posada } from '@/lib/data'
 import { useBookingsOpen, PrivatePhaseNotice } from '@/components/PrivatePhase'
+import { BOOKINGS_OPEN } from '@/lib/constants'
 
 const MONTHS_SHORT = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
 function fmt(fecha: string) {
@@ -69,7 +70,7 @@ function ReservarContent() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (authStatus === 'unauthenticated') {
+    if (authStatus === 'unauthenticated' && BOOKINGS_OPEN) {
       router.push(`/login?callbackUrl=/reservar/${slug}${window.location.search}`)
     }
   }, [authStatus, slug, router])
@@ -133,10 +134,6 @@ function ReservarContent() {
     )
   }
 
-  if (authStatus === 'unauthenticated') {
-    return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>Redirigiendo…</div>
-  }
-
   if (!bookingsOpen) {
     return (
       <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'2rem 1.25rem',gap:'1rem'}}>
@@ -144,6 +141,10 @@ function ReservarContent() {
         <Link href={`/posadas/${slug}`} style={{color:'#E67E22',textDecoration:'none',fontFamily:'Inter,sans-serif',fontWeight:700,fontSize:'0.9rem'}}>← Volver a {posada.nombre}</Link>
       </div>
     )
+  }
+
+  if (authStatus === 'unauthenticated') {
+    return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>Redirigiendo…</div>
   }
 
   return (

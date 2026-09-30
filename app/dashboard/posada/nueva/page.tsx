@@ -33,7 +33,7 @@ const serviciosOpciones = [
 ]
 
 const metodosOpciones = [
-  'Zelle', 'Transferencia bancaria', 'Efectivo USD', 'Efectivo Bs', 'Tarjeta de crédito',
+  'Zelle', 'Pago Móvil', 'Transferencia bancaria', 'Efectivo USD', 'Efectivo Bs', 'Binance / USDT', 'Zinli', 'Tarjeta de crédito',
 ]
 
 export default function NuevaPosadaPage() {

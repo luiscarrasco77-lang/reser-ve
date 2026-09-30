@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation'
 import { getDestino, getPosadasByDestino } from '@/lib/data'
 
 export default async function DestinoPage({
@@ -9,32 +10,7 @@ export default async function DestinoPage({
   const destino = getDestino(slug)
   const posadas = getPosadasByDestino(slug)
 
-  if (!destino) {
-    return (
-      <main
-        style={{
-          minHeight: '100vh',
-          fontFamily: 'Inter, sans-serif',
-          background:
-            'radial-gradient(circle at top left, rgba(230,126,34,0.08) 0%, transparent 28%), radial-gradient(circle at top right, rgba(26,43,76,0.06) 0%, transparent 30%), linear-gradient(180deg, #fffefb 0%, #FDFBF7 42%, #f8f3ea 100%)',
-          color: '#23324A',
-          padding: '3rem 1.5rem',
-        }}
-      >
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <a href="/" style={{ display: 'inline-block', marginBottom: '1.5rem', color: '#1A2B4C', textDecoration: 'none', fontWeight: 700 }}>
-            ← Volver al inicio
-          </a>
-          <h1 style={{ fontSize: 'clamp(2.3rem, 6vw, 4rem)', lineHeight: 1, letterSpacing: '-0.06em', fontWeight: 800, color: '#1A2B4C', marginBottom: '1rem' }}>
-            Destino no encontrado
-          </h1>
-          <p style={{ fontSize: '1rem', lineHeight: 1.8, color: '#6B7482', maxWidth: '700px' }}>
-            Este destino todavía no está disponible en RESER-VE.
-          </p>
-        </div>
-      </main>
-    )
-  }
+  if (!destino) notFound()
 
   const avgRating =
     posadas.length > 0

@@ -17,10 +17,5 @@ export default async function EditarPosadaPage({ params }: { params: Promise<{ s
   const userId = parseInt((session.user as any).id)
   if (posada.hostId !== userId) redirect('/dashboard/posadas')
 
-  // Only allow editing if draft or rejected
-  if (posada.status !== 'draft' && posada.status !== 'rejected') {
-    redirect('/dashboard/posadas')
-  }
-
   return <EditarPosadaForm posada={posada} />
 }

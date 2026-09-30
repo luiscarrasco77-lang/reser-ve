@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server'
 import { getDb } from '@/lib/db'
-import { conversations, messages, posadas } from '@/lib/db/schema'
+import { conversations, messages, posadas, bookings } from '@/lib/db/schema'
+import { BOOKINGS_OPEN, PRIVATE_PHASE_MSG, MAX_MESSAGE } from '@/lib/constants'
 import { and, eq } from 'drizzle-orm'
 import { auth } from '@/auth'
 import { emailNewMessage } from '@/lib/email'
@@ -15,12 +16,25 @@ export async function POST(req: NextRequest) {
   const userId = parseInt((session.user as any).id)
   const userName = session.user.name ?? 'Viajero'
   const userRole = (session.user as any).role
-  const { posadaId, bookingId, message } = await req.json()
-  if (!posadaId) return NextResponse.json({ error: 'posadaId requerido' }, { status: 400 })
+  const payload = await req.json().catch(() => ({}))
+  const posadaId = Number(payload.posadaId)
+  const message = typeof payload.message === 'string' ? payload.message : ''
+  if (!Number.isInteger(posadaId)) return NextResponse.json({ error: 'posadaId requerido' }, { status: 400 })
+  if (message.length > MAX_MESSAGE) return NextResponse.json({ error: `El mensaje no puede superar ${MAX_MESSAGE} caracteres` }, { status: 400 })
 
   const db = getDb()
   const [posada] = await db.select().from(posadas).where(eq(posadas.id, posadaId))
-  if (!posada) return NextResponse.json({ error: 'Posada no encontrada' }, { status: 404 })
+  if (!posada || (posada.status !== 'active' && userRole !== 'admin')) return NextResponse.json({ error: 'Posada no encontrada' }, { status: 404 })
+
+  // Solo se adjunta una reserva si es del propio viajero y de esta posada.
+  const myBookings = await db.select({ id: bookings.id }).from(bookings)
+    .where(and(eq(bookings.guestId, userId), eq(bookings.posadaId, posadaId)))
+  const bookingId = myBookings.some(b => b.id === Number(payload.bookingId)) ? Number(payload.bookingId) : (myBookings[0]?.id ?? null)
+
+  // Fase privada: sin reservas abiertas, solo se chatea si ya existe una reserva (o si es admin).
+  if (!BOOKINGS_OPEN && userRole !== 'admin' && myBookings.length === 0) {
+    return NextResponse.json({ error: PRIVATE_PHASE_MSG }, { status: 403 })
+  }
   if (!posada.hostId) return NextResponse.json({ error: 'Esta posada aún no tiene un posadero asignado' }, { status: 400 })
   if (posada.hostId === userId) return NextResponse.json({ error: 'No puedes contactarte a ti mismo' }, { status: 400 })
 
@@ -42,7 +56,7 @@ export async function POST(req: NextRequest) {
       type: 'booking',
       userId,
       hostId: posada.hostId,
-      bookingId: bookingId ?? null,
+      bookingId,
       subject,
       lastMessageAt: new Date(),
     }).returning()

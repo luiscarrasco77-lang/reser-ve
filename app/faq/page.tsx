@@ -15,7 +15,7 @@ const faqs = [
         a: 'RESER-VE es la primera plataforma especializada en posadas auténticas venezolanas. Conectamos a viajeros con anfitriones locales en los destinos más hermosos de Venezuela — desde Los Roques hasta los Andes, pasando por Mochima, Canaima y mucho más.',
       },
       {
-        q: '¿RESER-VE cobra comisiones?',
+        q: '¿El viajero paga alguna comisión?',
         a: 'No. RESER-VE no cobra nada al viajero. El precio que ves es el precio final que pagas al posadero. Sin sorpresas, sin cargos ocultos.',
       },
       {
@@ -75,7 +75,7 @@ const faqs = [
       },
       {
         q: '¿Cuánto cobra RESER-VE a los posaderos?',
-        a: 'Publicar es gratis y sin mensualidad. RESER-VE solo cobra un 10% sobre las reservas confirmadas, que asume la posada (el viajero no paga nada extra). Pedimos paridad de precio: el precio publicado debe ser el mismo que ofreces por otros canales.',
+        a: 'Publicar es gratis y sin mensualidad. Encontrarás las condiciones completas (comisión por reserva confirmada y paridad de precio) en la página para posaderos: reser-ve.com/posaderos.',
       },
       {
         q: '¿Quién controla los precios y disponibilidad?',

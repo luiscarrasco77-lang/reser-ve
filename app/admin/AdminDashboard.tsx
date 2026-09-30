@@ -90,18 +90,22 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
   }
 
   async function suspendPosada(id: number, suspend: boolean) {
-    await fetch(`/api/admin/posadas/${id}/review`, {
+    if (suspend && !confirm('¿Suspender esta posada? Dejará de verse en el buscador.')) return
+    const res = await fetch(`/api/admin/posadas/${id}/review`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: suspend ? 'reject' : 'approve', notes: suspend ? 'Suspendida por el administrador.' : '' }),
+      body: JSON.stringify({ action: suspend ? 'suspend' : 'approve', notes: suspend ? 'Suspendida por el administrador.' : '' }),
     })
+    if (!res.ok) { alert((await res.json().catch(() => ({}))).error ?? 'No se pudo actualizar'); return }
     setPosadas(prev => prev.map(p => p.id === id ? { ...p, status: suspend ? 'suspended' : 'active' } : p))
   }
 
   async function changeRole(id: number, role: string) {
-    await fetch(`/api/admin/users/${id}`, {
+    if (!confirm(`¿Cambiar el rol de este usuario a "${role}"?`)) return
+    const res = await fetch(`/api/admin/users/${id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role }),
     })
+    if (!res.ok) { alert((await res.json().catch(() => ({}))).error ?? 'No se pudo cambiar el rol'); return }
     setUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u))
   }
 

@@ -8,13 +8,14 @@ import { SITE_URL } from '@/lib/constants'
 
 // Solicita un enlace para restablecer la contraseña.
 export async function POST(req: NextRequest) {
-  const { email } = await req.json()
+  const { email } = await req.json().catch(() => ({}))
   const clean = String(email ?? '').trim().toLowerCase()
   if (!clean) return NextResponse.json({ error: 'Escribe tu correo' }, { status: 400 })
 
   const db = getDb()
   const [user] = await db.select().from(users).where(eq(users.email, clean))
-  if (!user) {
+  // Las cuentas sin contraseña (p. ej. la de sistema de Vera) no se pueden restablecer.
+  if (!user || !user.passwordHash) {
     return NextResponse.json({ error: 'No hay ninguna cuenta registrada con ese correo.' }, { status: 404 })
   }
 

@@ -33,7 +33,7 @@ const serviciosOpciones = [
 ]
 
 const metodosOpciones = [
-  'Zelle', 'Transferencia bancaria', 'Efectivo USD', 'Efectivo Bs', 'Tarjeta de crédito',
+  'Zelle', 'Pago Móvil', 'Transferencia bancaria', 'Efectivo USD', 'Efectivo Bs', 'Binance / USDT', 'Zinli', 'Tarjeta de crédito',
 ]
 
 type Posada = {
@@ -364,12 +364,18 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
           </div>
 
           <div className="actions-bar">
-            <button type="button" className="btn-submit" disabled={submitting || saving || uploadingImg} onClick={handleSaveAndSubmit}>
-              {submitting ? 'Enviando a revisión…' : '↩ Guardar y enviar a revisión'}
-            </button>
-            <button type="button" className="btn-save" disabled={saving || submitting || uploadingImg} onClick={handleSave}>
-              {saving ? 'Guardando…' : 'Guardar borrador'}
-            </button>
+            {['draft', 'rejected', 'suspended'].includes(posada.status) ? (<>
+              <button type="button" className="btn-submit" disabled={submitting || saving || uploadingImg} onClick={handleSaveAndSubmit}>
+                {submitting ? 'Enviando a revisión…' : '↩ Guardar y enviar a revisión'}
+              </button>
+              <button type="button" className="btn-save" disabled={saving || submitting || uploadingImg} onClick={handleSave}>
+                {saving ? 'Guardando…' : 'Guardar borrador'}
+              </button>
+            </>) : (
+              <button type="button" className="btn-submit" disabled={saving || uploadingImg} onClick={handleSave}>
+                {saving ? 'Guardando…' : 'Guardar cambios'}
+              </button>
+            )}
             <a href="/dashboard/posadas" style={{ fontSize: '0.86rem', color: 'var(--muted)', textDecoration: 'none' }}>Cancelar</a>
           </div>
         </form>

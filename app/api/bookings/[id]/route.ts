@@ -3,14 +3,16 @@ import { getDb } from '@/lib/db'
 import { bookings, posadas, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { auth } from '@/auth'
-import { emailGuestBookingConfirmed, emailGuestBookingCancelled } from '@/lib/email'
+import { emailGuestBookingConfirmed, emailGuestBookingCancelled, emailHostGuestCancelled } from '@/lib/email'
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { id } = await params
+  const bookingId = Number(id)
+  if (!Number.isInteger(bookingId)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   const db = getDb()
-  const [booking] = await db.select().from(bookings).where(eq(bookings.id, parseInt(id)))
+  const [booking] = await db.select().from(bookings).where(eq(bookings.id, bookingId))
   if (!booking) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   // Only the guest, the posada's host, or an admin may view a booking.
@@ -34,61 +36,83 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   })
 }
 
+// Transiciones permitidas por rol. El posadero confirma/rechaza solicitudes y puede cancelar
+// una confirmada; el viajero solo cancela su solicitud pendiente; "completed" lo pone el cron.
+const HOST_TRANSITIONS: Record<string, string[]> = { pending: ['confirmed', 'cancelled'], confirmed: ['cancelled'] }
+const ADMIN_STATUSES = ['pending', 'confirmed', 'cancelled', 'completed']
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const { status, hostNotes } = await req.json()
+  const bookingId = Number(id)
+  if (!Number.isInteger(bookingId)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const body = await req.json().catch(() => null)
+  if (!body) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
+  const status = String(body.status ?? '')
+  const hostNotes = typeof body.hostNotes === 'string' ? body.hostNotes.trim().slice(0, 1000) || null : null
   const userId = parseInt((session.user as any).id)
   const role = (session.user as any).role
 
   const db = getDb()
-
-  // Hosts can only update bookings for their own posadas
-  const [booking] = await db.select().from(bookings).where(eq(bookings.id, parseInt(id)))
+  const [booking] = await db.select().from(bookings).where(eq(bookings.id, bookingId))
   if (!booking) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const [posada] = await db.select({ hostId: posadas.hostId, nombre: posadas.nombre }).from(posadas).where(eq(posadas.id, booking.posadaId))
 
-  if (role === 'host') {
-    const [posada] = await db.select({ hostId: posadas.hostId }).from(posadas).where(eq(posadas.id, booking.posadaId))
-    if (!posada || posada.hostId !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-  } else if (role !== 'admin') {
-    // Travelers can only cancel their own pending bookings
-    if (booking.guestId !== userId || status !== 'cancelled') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+  const isHost = !!posada && posada.hostId === userId
+  const isGuest = booking.guestId === userId
+  let allowed = false
+  let actor: 'host' | 'guest' | 'admin' = 'admin'
+  if (role === 'admin') {
+    allowed = ADMIN_STATUSES.includes(status) && status !== booking.status
+  } else if (isHost) {
+    actor = 'host'
+    allowed = (HOST_TRANSITIONS[booking.status] ?? []).includes(status)
+  } else if (isGuest) {
+    actor = 'guest'
+    allowed = booking.status === 'pending' && status === 'cancelled'
+  } else {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+  if (!allowed) {
+    return NextResponse.json({ error: `No se puede pasar una reserva de "${booking.status}" a "${status}"` }, { status: 400 })
   }
 
   const [updated] = await db.update(bookings)
-    .set({ status, hostNotes: hostNotes ?? booking.hostNotes, updatedAt: new Date() })
-    .where(eq(bookings.id, parseInt(id)))
+    .set({ status: status as any, hostNotes: actor === 'guest' ? booking.hostNotes : (hostNotes ?? booking.hostNotes), updatedAt: new Date() })
+    .where(eq(bookings.id, bookingId))
     .returning()
 
-  // Send email notifications (fire-and-forget)
-  if (status === 'confirmed' || status === 'cancelled') {
-    after(async () => {
-      const [guest] = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, booking.guestId))
-      const [posada] = await db.select({ nombre: posadas.nombre }).from(posadas).where(eq(posadas.id, booking.posadaId))
-      if (!guest || !posada) return
-      if (status === 'confirmed') {
-        await emailGuestBookingConfirmed({
-          guestEmail: guest.email, guestName: guest.name,
-          posadaNombre: posada.nombre, bookingCode: booking.bookingCode,
-          checkIn: booking.checkIn, checkOut: booking.checkOut,
-          nights: booking.nights, totalPrice: booking.totalPrice,
-          paymentMethod: booking.paymentMethod, hostNotes: hostNotes ?? null,
-        })
-      } else {
-        await emailGuestBookingCancelled({
-          guestEmail: guest.email, guestName: guest.name,
-          posadaNombre: posada.nombre, bookingCode: booking.bookingCode,
-          reason: hostNotes ?? null,
-        })
-      }
-    })
-  }
+  // Correos tras responder.
+  after(async () => {
+    if (!posada) return
+    const [guest] = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, booking.guestId))
+    if (!guest) return
+    if (status === 'confirmed') {
+      await emailGuestBookingConfirmed({
+        guestEmail: guest.email, guestName: guest.name,
+        posadaNombre: posada.nombre, bookingCode: booking.bookingCode,
+        checkIn: booking.checkIn, checkOut: booking.checkOut,
+        nights: booking.nights, totalPrice: booking.totalPrice,
+        paymentMethod: booking.paymentMethod, hostNotes,
+      })
+    } else if (status === 'cancelled' && actor === 'guest') {
+      if (!posada.hostId) return
+      const [host] = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, posada.hostId))
+      if (host) await emailHostGuestCancelled({
+        hostEmail: host.email, hostName: host.name, guestName: guest.name,
+        posadaNombre: posada.nombre, bookingCode: booking.bookingCode,
+        checkIn: booking.checkIn, checkOut: booking.checkOut,
+      })
+    } else if (status === 'cancelled') {
+      await emailGuestBookingCancelled({
+        guestEmail: guest.email, guestName: guest.name,
+        posadaNombre: posada.nombre, bookingCode: booking.bookingCode,
+        reason: hostNotes, wasConfirmed: booking.status === 'confirmed',
+      })
+    }
+  })
 
   return NextResponse.json(updated)
 }

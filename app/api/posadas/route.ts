@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse, after } from 'next/server'
 import { getDb } from '@/lib/db'
 import { posadas, users } from '@/lib/db/schema'
-import { emailAdminPosadaPending } from '@/lib/email'
+import { emailAdminPosadaPending, emailHostPosadaReceived } from '@/lib/email'
+import { parsePosadaInput } from '@/lib/posada-input'
 import { eq } from 'drizzle-orm'
 import { auth } from '@/auth'
 import { normalizeStr } from '@/lib/search'
@@ -85,39 +86,27 @@ export async function POST(req: NextRequest) {
   const role = (session.user as any).role
   if (role !== 'host' && role !== 'admin') return NextResponse.json({ error: 'Solo los posaderos pueden publicar posadas' }, { status: 403 })
 
-  const body = await req.json()
-  const nombre = String(body.nombre ?? '').trim()
-  const precio = parseInt(body.precio)
-  const lat = Number(body.lat), lng = Number(body.lng)
-  if (!nombre || !body.destino || !body.destinoSlug || !String(body.descripcion ?? '').trim()) {
-    return NextResponse.json({ error: 'Completa nombre, destino y descripción' }, { status: 400 })
-  }
-  if (!(precio > 0)) return NextResponse.json({ error: 'El precio por noche debe ser mayor a 0' }, { status: 400 })
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return NextResponse.json({ error: 'Ubicación inválida' }, { status: 400 })
-
-  const arr = (v: unknown) => Array.isArray(v) ? v.map(String) : []
+  const body = await req.json().catch(() => null)
+  const parsed = parsePosadaInput(body)
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
+  const input = parsed.data as any
+  const nombre: string = input.nombre
+  const precio: number = input.precio
   const slug = nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now().toString(36)
   const hostId = parseInt((session.user as any).id)
 
   const db = getDb()
   // Lista blanca: el posadero no puede fijar rating, reseñas, estado, etc.
   const [created] = await db.insert(posadas).values({
-    slug, hostId, nombre,
-    destino: String(body.destino), destinoSlug: String(body.destinoSlug),
-    tipo: String(body.tipo || 'Posada'),
-    precio,
-    habitaciones: Math.max(1, parseInt(body.habitaciones) || 1),
-    capacidad: Math.max(1, parseInt(body.capacidad) || 2),
-    descripcion: String(body.descripcion).trim(),
-    tags: arr(body.tags), servicios: arr(body.servicios), politicas: arr(body.politicas),
-    imgs: arr(body.imgs), metodoPago: arr(body.metodoPago),
-    lat, lng,
+    ...input,
+    slug, hostId,
     hostNombre: session.user.name ?? null,
     status: 'pending_review',
   }).returning()
 
   // Avisa a los admins para que la revisen.
   after(async () => {
+    if (session.user?.email) await emailHostPosadaReceived({ hostEmail: session.user.email, hostName: session.user.name ?? 'Posadero', posadaNombre: nombre })
     const admins = await db.select({ email: users.email }).from(users).where(eq(users.role, 'admin'))
     await emailAdminPosadaPending({
       to: admins.map(a => a.email), nombre, destino: created.destino, precio,

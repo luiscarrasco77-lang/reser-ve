@@ -37,7 +37,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null
         if (!process.env.DATABASE_URL) return null
         const db = getDb()
-        const [user] = await db.select().from(users).where(eq(users.email, credentials.email as string))
+        const email = String(credentials.email).trim().toLowerCase()
+        const [user] = await db.select().from(users).where(eq(users.email, email))
         if (!user || !user.passwordHash) return null
         const ok = await bcrypt.compare(credentials.password as string, user.passwordHash)
         if (!ok) return null
@@ -46,31 +47,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
-      // On initial sign-in, user object is present
+    async jwt({ token, user }) {
+      // En el login inicial viene el usuario.
       if (user) {
         token.id = (user as any).id ?? user.id
         token.role = (user as any).role
       }
-      // For OAuth sign-ins (Google), role may not be on the user object
-      // Look it up from DB using the email in the token
-      if (!token.role && token.email && process.env.DATABASE_URL) {
+      // El rol se relee de la BD en cada comprobación: así, promover o quitar admin
+      // surte efecto de inmediato (sin esperar a que caduque el token).
+      if (token.email && process.env.DATABASE_URL) {
         try {
-          const db = getDb()
-          const [u] = await db
+          const [u] = await getDb()
             .select({ id: users.id, role: users.role })
             .from(users)
-            .where(eq(users.email, token.email))
-          if (u) {
-            token.id = String(u.id)
-            token.role = u.role
-          }
+            .where(eq(users.email, String(token.email).toLowerCase()))
+          if (!u) return null // cuenta borrada → cerrar sesión
+          token.id = String(u.id)
+          token.role = u.role
         } catch {
-          // Non-blocking — fallback to traveler
-          token.role = 'traveler'
+          // Si la BD falla, se mantiene el rol del token.
         }
       }
-      // Default role if still missing
       if (!token.role) token.role = 'traveler'
       return token
     },

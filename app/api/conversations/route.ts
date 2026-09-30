@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
+import { emailNewMessage } from '@/lib/email'
 import { getDb } from '@/lib/db'
 import { conversations, messages, users, bookings, posadas } from '@/lib/db/schema'
 import { auth } from '@/auth'
 import { eq, or, desc } from 'drizzle-orm'
 import { generateVeraReply } from '@/lib/vera'
+import { MAX_MESSAGE } from '@/lib/constants'
 
 export async function GET() {
   const session = await auth()
@@ -69,25 +71,23 @@ export async function POST(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const userId = parseInt((session.user as any).id)
-  const { type, bookingId, hostId, subject, body } = await req.json()
+  const payload = await req.json().catch(() => ({}))
+  const subject = String(payload.subject ?? '').trim().slice(0, 150)
+  const body = String(payload.body ?? '').trim()
 
-  if (!type || !subject || !body) {
-    return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
-  }
+  // Esta ruta solo abre tickets de soporte. Los chats con posaderos se abren desde
+  // /api/conversations/with-host, que deriva el posadero de la posada (nunca del cliente).
+  if (payload.type !== 'support') return NextResponse.json({ error: 'Tipo de conversación inválido' }, { status: 400 })
+  if (!subject || !body) return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
+  if (body.length > MAX_MESSAGE) return NextResponse.json({ error: `El mensaje no puede superar ${MAX_MESSAGE} caracteres` }, { status: 400 })
 
   const db = getDb()
-
-  // For booking conversations, verify the booking belongs to this user or their posada
-  if (type === 'booking' && bookingId) {
-    const [bk] = await db.select().from(bookings).where(eq(bookings.id, bookingId))
-    if (!bk) return NextResponse.json({ error: 'Reserva no encontrada' }, { status: 404 })
-  }
-
+  const type = 'support' as const
   const [conv] = await db.insert(conversations).values({
     type,
-    bookingId: bookingId ?? null,
+    bookingId: null,
     userId,
-    hostId: hostId ?? null,
+    hostId: null,
     subject,
     lastMessageAt: new Date(),
   }).returning()
@@ -101,6 +101,15 @@ export async function POST(req: NextRequest) {
     senderName: userName,
     senderRole: userRole,
     body,
+  })
+
+  // Avisa a los admins del nuevo ticket.
+  after(async () => {
+    const admins = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.role, 'admin'))
+    await Promise.all(admins.map(a => emailNewMessage({
+      recipientEmail: a.email, recipientName: a.name, senderName: userName,
+      subject: `[Soporte] ${subject}`, body, conversationId: conv.id,
+    })))
   })
 
   // En tickets de soporte, Vera (IA) responde de inmediato al primer mensaje.

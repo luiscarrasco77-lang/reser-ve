@@ -169,7 +169,7 @@ export default async function DashboardPage() {
                     En revisión: {p.nombre}
                   </div>
                   <div style={{fontSize:'0.78rem',color:'var(--muted)',marginTop:2}}>
-                    El equipo RESER-VE está revisando tu posada (24–48h)
+                    El equipo RESER-VE está revisando tu posada (24–72 h)
                   </div>
                 </div>
               </div>
