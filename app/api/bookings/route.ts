@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
+import { BOOKINGS_OPEN, PRIVATE_PHASE_MSG } from '@/lib/constants'
 import { getDb } from '@/lib/db'
 import { bookings, posadas, users } from '@/lib/db/schema'
 import { eq, inArray } from 'drizzle-orm'
@@ -65,6 +66,9 @@ export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Inicia sesión para reservar' }, { status: 401 })
 
+  if (!BOOKINGS_OPEN && (session.user as any).role !== 'admin') {
+    return NextResponse.json({ error: PRIVATE_PHASE_MSG }, { status: 403 })
+  }
   const { posadaId, checkIn, checkOut, paymentMethod, guestCount, notes } = await req.json()
 
   // ── Validate dates server-side (never trust the client) ──

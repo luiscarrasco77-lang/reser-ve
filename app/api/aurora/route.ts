@@ -1,7 +1,7 @@
 import { convertToModelMessages, streamText, stepCountIs, tool, type UIMessage } from 'ai'
 import { z } from 'zod'
 import { queryPosadas, isAvailable } from '@/lib/posadas-query'
-import { AI_MODEL } from '@/lib/constants'
+import { AI_MODEL, BOOKINGS_OPEN } from '@/lib/constants'
 
 export const maxDuration = 30
 
@@ -19,7 +19,8 @@ const SYSTEM = `Eres **Aurora**, la concierge de viajes IA de RESER-VE, la plata
 - Cálida, venezolana, concreta. Español. Usa **negritas** para los nombres de posadas y títulos.
 - Para cada posada recomendada menciona: nombre, destino, precio/noche y por qué encaja.
 - Incluye un **estimado de costo total** calculado SOLO como noches × precio por noche de cada posada. NO menciones comisiones, cargos de servicio ni ningún "10%": el precio que ve el viajero es el precio final.
-- Cierra con un llamado claro a reservar (cada posada se reserva en su página /posadas/<slug>).
+- Cierra invitando a ver cada posada en su página /posadas/<slug> y a guardarla en favoritos.
+- IMPORTANTE: ${BOOKINGS_OPEN ? 'las reservas están abiertas; cada posada se reserva en su página.' : 'RESER-VE está en FASE PRIVADA: las reservas aún no están abiertas al público (abren muy pronto). Si el usuario quiere reservar, dilo con naturalidad y sugiere guardar sus favoritas para cuando abran. No inventes otra forma de reservar ni des contactos externos.'}
 - Si el presupuesto no alcanza, dilo con honestidad y ofrece la mejor alternativa.
 - Sé concisa: es un plan para leer rápido, no un ensayo.
 

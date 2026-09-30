@@ -86,7 +86,7 @@ const steps = [
   {
     n: '03',
     title: 'Sal en vivo',
-    desc: 'Tu posada aparece en el buscador, el mapa y las sugerencias. Los viajeros empiezan a encontrarte.',
+    desc: 'Tu posada aparece en el buscador, el mapa y las sugerencias. Durante la fase privada ya se ve en la web; al abrir las reservas, estarás lista desde el día uno.',
   },
   {
     n: '04',
@@ -304,7 +304,7 @@ export default function PosaderosPage() {
         <div className="hero-overlay" />
         <div className="hero-content">
           <div className="hero-panel">
-            <div className="hero-eyebrow">Para posaderos</div>
+            <div className="hero-eyebrow">Para posaderos · Fase privada</div>
             <h1>Tu posada merece<br/><em>más viajeros</em></h1>
             <p className="hero-sub">
               RESER-VE conecta tu posada con viajeros de Venezuela y de la diáspora que buscan experiencias auténticas. Publicar es gratis: solo pagas un 10% cuando recibes una reserva confirmada.
@@ -356,7 +356,7 @@ export default function PosaderosPage() {
           <div className="term"><div className="term-big">💬</div><div className="term-t">Todo por la app</div><p>La comunicación con huéspedes se hace por el chat de RESER-VE. Así evitamos fraudes y protegemos a ambas partes.</p></div>
         </div>
         <div className="mvp-note">
-          <strong>Estamos en fase de lanzamiento (MVP).</strong> Las primeras posadas nos ayudan a darle forma a la plataforma: tu opinión cuenta y pronto sumaremos más herramientas de pago y gestión.
+          <strong>Estamos en fase privada (MVP).</strong> Ya puedes crear tu cuenta y publicar tu posada; las reservas del público se abrirán en unas semanas, cuando terminemos de perfeccionar el proceso de pago y reserva. Las posadas fundadoras salen primero en el lanzamiento y nos ayudan a darle forma a la plataforma: tu opinión cuenta.
           {' '}<a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener">Lee la guía completa para posaderos →</a>
         </div>
       </section>

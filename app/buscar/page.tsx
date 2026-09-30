@@ -9,6 +9,7 @@ import { venezuelaLocations } from '@/lib/locations-ve'
 import { searchPosadas, resolveLocation, type SearchOptions } from '@/lib/search'
 import { regions, findRegionsByQuery, type Region } from '@/lib/regions'
 import NavUser from '@/components/NavUser'
+import { useBookingsOpen, PrivatePhaseNotice } from '@/components/PrivatePhase'
 
 const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
@@ -206,6 +207,7 @@ function FlexiblePicker({
 // ─── Posada Detail Drawer ─────────────────────────────────────────────────────
 function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }) {
   const router = useRouter()
+  const bookingsOpen = useBookingsOpen()
   const [imgIdx,   setImgIdx]   = useState(0)
   const [checkIn,  setCheckIn]  = useState<Date|null>(null)
   const [checkOut, setCheckOut] = useState<Date|null>(null)
@@ -310,9 +312,11 @@ function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }
           </div>
         )}
         <div className="drw-ctas">
-          <button className="drw-btn-res" onClick={handleReserve}>
-            {nights>0 ? `Reservar · $${total} USD` : 'Reservar ahora'}
-          </button>
+          {bookingsOpen ? (
+            <button className="drw-btn-res" onClick={handleReserve}>
+              {nights>0 ? `Reservar · $${total} USD` : 'Reservar ahora'}
+            </button>
+          ) : <PrivatePhaseNotice compact />}
           <Link href={`/posadas/${posada.slug}`} className="drw-btn-det">
             Ver todos los detalles →
           </Link>

@@ -20,3 +20,9 @@ export function serviceFee(subtotal: number): number {
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://reser-ve.com'
 
 export const SUPPORT_EMAIL = 'hola@reser-ve.com'
+
+// Fase privada: los posaderos ya pueden publicar, pero las reservas aún no están abiertas
+// al público mientras perfeccionamos el pago. Para abrirlas: NEXT_PUBLIC_BOOKINGS_OPEN=true.
+// Los admins pueden reservar siempre (para pruebas internas).
+export const BOOKINGS_OPEN = process.env.NEXT_PUBLIC_BOOKINGS_OPEN === 'true'
+export const PRIVATE_PHASE_MSG = 'Estamos en fase privada: las posadas se están sumando y las reservas abren muy pronto.'

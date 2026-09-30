@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams, useRouter, useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { type Posada } from '@/lib/data'
+import { useBookingsOpen, PrivatePhaseNotice } from '@/components/PrivatePhase'
 
 const MONTHS_SHORT = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
 function fmt(fecha: string) {
@@ -19,6 +20,7 @@ function ReservarContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { data: session, status: authStatus } = useSession()
+  const bookingsOpen = useBookingsOpen()
 
   const [posada, setPosada] = useState<Posada & { id: number } | null>(null)
   const [loadingPosada, setLoadingPosada] = useState(true)
@@ -133,6 +135,15 @@ function ReservarContent() {
 
   if (authStatus === 'unauthenticated') {
     return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>Redirigiendo…</div>
+  }
+
+  if (!bookingsOpen) {
+    return (
+      <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'2rem 1.25rem',gap:'1rem'}}>
+        <div style={{maxWidth:420,width:'100%'}}><PrivatePhaseNotice /></div>
+        <Link href={`/posadas/${slug}`} style={{color:'#E67E22',textDecoration:'none',fontFamily:'Inter,sans-serif',fontWeight:700,fontSize:'0.9rem'}}>← Volver a {posada.nombre}</Link>
+      </div>
+    )
   }
 
   return (

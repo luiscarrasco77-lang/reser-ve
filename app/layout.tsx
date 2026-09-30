@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import SupportChat from "@/components/SupportChat";
+import { PrivatePhaseBar } from "@/components/PrivatePhase";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,6 +66,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
           <SessionProviderWrapper>
+            <PrivatePhaseBar />
             {children}
             <SupportChat />
           </SessionProviderWrapper>

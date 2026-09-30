@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { type Posada } from '@/lib/data'
 import NavUser from '@/components/NavUser'
+import { useBookingsOpen, PrivatePhaseNotice } from '@/components/PrivatePhase'
 import FavoriteButton from '@/components/FavoriteButton'
 import { SITE_URL } from '@/lib/constants'
 
@@ -12,6 +13,7 @@ export default function FichaPosada() {
   const rawParams = useParams<{ slug: string }>()
   const slug = rawParams?.slug ?? ''
   const router = useRouter()
+  const bookingsOpen = useBookingsOpen()
 
   const [posada, setPosada] = useState<Posada | null>(null)
   const [loading, setLoading] = useState(true)
@@ -379,6 +381,7 @@ export default function FichaPosada() {
                   {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n} {n === 1 ? 'huésped' : 'huéspedes'}</option>)}
                 </select>
               </div>
+              {bookingsOpen ? (<>
               <button className="btn-reservar" onClick={handleReservar}>
                 <span>{noches > 0 ? `Reservar · ${noches} noche${noches > 1 ? 's' : ''}` : 'Reservar ahora'}</span>
                 <span className="btn-reservar-arrow">→</span>
@@ -396,6 +399,7 @@ export default function FichaPosada() {
               <p style={{ fontSize: '0.68rem', color: 'var(--muted)', textAlign: 'center', marginTop: '0.4rem' }}>
                 Chatea con el posadero dentro de RESER-VE. Por tu seguridad, mantén la comunicación y el pago en la plataforma.
               </p>
+              </>) : <PrivatePhaseNotice />}
               {(posada as any).id && (
                 <div style={{ marginTop: '0.6rem', display: 'flex', justifyContent: 'center' }}>
                   <FavoriteButton posadaId={(posada as any).id} variant="full" />

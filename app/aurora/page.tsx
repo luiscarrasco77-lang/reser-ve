@@ -154,7 +154,7 @@ export default function AuroraPage() {
                                   <div className="pcard-m">★ {c.rating} · {c.reviews} reseñas</div>
                                   <div className="pcard-f">
                                     <div className="pcard-p">${c.precio}<span>/noche</span></div>
-                                    <div className="pcard-cta">Reservar →</div>
+                                    <div className="pcard-cta">Ver posada →</div>
                                   </div>
                                 </div>
                               </Link>
