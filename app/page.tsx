@@ -1739,8 +1739,8 @@ export default function Home() {
         <div className="footer-bottom">
           <p>© 2026 RESER-VE · Impulsado por <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>dos locos de viaje</a></p>
           <div style={{display:'flex',gap:'1.5rem'}}>
-            <a href="/faq">Términos</a>
-            <a href="/faq">Privacidad</a>
+            <a href="/terminos">Términos</a>
+            <a href="/privacidad">Privacidad</a>
             <a href="/vision">Por qué posadas?</a>
             <a href="/vision">Sobre nosotros</a>
           </div>
