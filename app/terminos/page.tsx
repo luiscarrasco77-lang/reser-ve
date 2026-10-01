@@ -46,7 +46,7 @@ export default function TerminosPage() {
         :root{--indigo:#1A2B4C;--cacao:#E67E22;--sand:#FDFBF7;--muted:#5d6b80;--line:rgba(26,43,76,0.1);}
         *,*::before,*::after{box-sizing:border-box;}
         body{margin:0;font-family:'Inter',system-ui,sans-serif;background:var(--sand);color:var(--indigo);}
-        .nav{background:white;border-bottom:1.5px solid var(--line);padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+        .nav{background:white;border-bottom:1.5px solid var(--line);padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:var(--pp-h,0px);z-index:50;}
         .logo{font-size:1.25rem;font-weight:800;letter-spacing:-0.04em;color:var(--indigo);text-decoration:none;}
         .logo span{color:var(--cacao);}
         .back{font-size:0.85rem;color:var(--muted);text-decoration:none;font-weight:600;}

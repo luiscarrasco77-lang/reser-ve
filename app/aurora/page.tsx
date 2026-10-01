@@ -50,7 +50,7 @@ export default function AuroraPage() {
           radial-gradient(1200px 500px at 80% -10%, rgba(230,126,34,0.10), transparent 60%),
           radial-gradient(900px 500px at 0% 0%, rgba(26,43,76,0.06), transparent 55%),
           linear-gradient(180deg,#fffdf9,#FDFBF7);min-height:100vh;}
-        .nav{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.75rem;position:sticky;top:0;z-index:50;background:rgba(253,251,247,0.8);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);}
+        .nav{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.75rem;position:sticky;top:var(--pp-h,0px);z-index:50;background:rgba(253,251,247,0.8);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);}
         .logo{font-size:1.3rem;font-weight:800;letter-spacing:-0.04em;color:var(--indigo);text-decoration:none;}
         .logo span{color:var(--cacao);}
         .wrap{max-width:760px;margin:0 auto;padding:1.5rem 1.25rem 8rem;}

@@ -426,7 +426,7 @@ export default function Home() {
 
         /* ─── NAV ─── */
         .nav {
-          position:fixed; top:0; left:0; right:0; z-index:60;
+          position:fixed; top:var(--pp-h,0px); left:0; right:0; z-index:60;
           display:flex; align-items:center; justify-content:space-between;
           padding:1rem 2rem; transition:all 0.38s ease;
         }
@@ -1570,12 +1570,12 @@ export default function Home() {
               <div className="step-num">02</div>
               <div className="step-title">Te ayudamos con el contenido</div>
               <div className="step-desc">Fotografía profesional y acompañamiento para presentar tu posada de forma premium.</div>
-              <span className="step-optional">Servicio opcional · consulta nuestros planes</span>
+              <span className="step-optional">Próximamente · servicio opcional</span>
             </div>
             <div className="step-card anim-3">
               <div className="step-num">03</div>
-              <div className="step-title">Empieza a recibir reservas</div>
-              <div className="step-desc">Tu perfil queda activo para viajeros locales, internacionales y diáspora venezolana.</div>
+              <div className="step-title">Prepárate para recibir reservas</div>
+              <div className="step-desc">Tu perfil queda listo para viajeros locales, internacionales y la diáspora venezolana. Las reservas abren muy pronto.</div>
             </div>
             <div className="step-card anim-4">
               <div className="step-num">04</div>
@@ -1657,11 +1657,11 @@ export default function Home() {
               Tu posada merece <br /><em>visibilidad real</em>
             </h2>
             <p className="section-sub" style={{marginBottom:'0'}}>
-              Deja de depender solo de WhatsApp. Muestra tu posada con imagen premium, recibe reservas con más confianza y cobra con total flexibilidad.
+              Deja de depender solo de WhatsApp. Muestra tu posada con imagen premium y prepárate para recibir reservas con más confianza. Publicar es gratis.
             </p>
             <div className="feature-list">
               {[
-                'Fotografía profesional incluida en el paquete de digitalización',
+                'Publicación gratuita, sin mensualidad: solo una comisión cuando recibes una reserva confirmada',
                 'Perfil activo visible para viajeros locales, internacionales y la diáspora venezolana',
                 'Cobros flexibles vía Zelle, Pago Móvil, transferencia, Zinli o Binance',
               ].map((f,i) => (
@@ -1678,8 +1678,8 @@ export default function Home() {
           </div>
           <div className="posadero-right reveal-right">
             <div className="plan-card">
-              <div className="plan-label">Paquete digitalización</div>
-              <div className="plan-desc" style={{marginTop:'0.2rem', marginBottom:'0.6rem', fontSize:'0.9rem', color:'var(--indigo)', fontWeight:'600'}}>Contáctanos para más información sobre precios y disponibilidad.</div>
+              <div className="plan-label">Paquete digitalización · Próximamente</div>
+              <div className="plan-desc" style={{marginTop:'0.2rem', marginBottom:'0.6rem', fontSize:'0.9rem', color:'var(--indigo)', fontWeight:'600'}}>Lo ofreceremos más adelante en el desarrollo de RESER-VE. Hoy ya puedes publicar tu posada gratis con tus propias fotos.</div>
               <div className="plan-desc">Todo lo que necesitas para empezar a recibir reservas desde cualquier parte del mundo.</div>
               <ul className="plan-items">
                 <li>Sesión fotográfica profesional</li>
@@ -1687,7 +1687,7 @@ export default function Home() {
                 <li>Optimización visual y descripción</li>
                 <li>1 mes de visibilidad premium</li>
               </ul>
-              <a href="/posaderos" className="btn-primary full-btn">Quiero digitalizar mi posada →</a>
+              <a href="/posaderos" className="btn-primary full-btn">Publicar mi posada gratis →</a>
             </div>
           </div>
         </div>

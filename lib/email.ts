@@ -12,16 +12,51 @@ const FROM = process.env.RESEND_FROM ?? 'RESER-VE <reservas@reser-ve.com>'
 
 type Payload = Parameters<Resend['emails']['send']>[0]
 
-// Envía y devuelve true/false. Registra el error en los logs de Vercel en vez de tragarlo.
-async function deliver(resend: Resend, payload: Payload): Promise<boolean> {
+// Correos a buzones de prueba (QA automático) no se envían: no gastan cuota.
+const isTestRecipient = (to: unknown) =>
+  (Array.isArray(to) ? to : [to]).every(t => /@resend\.dev$|@reserve\.test$/i.test(String(t)))
+
+// Respaldo: Brevo (300 correos/día gratis). Se usa si Resend falla (p. ej. cuota agotada)
+// o si no hay RESEND_API_KEY. Requiere BREVO_API_KEY y el dominio verificado en Brevo.
+async function sendViaBrevo(p: Payload): Promise<boolean> {
+  const key = process.env.BREVO_API_KEY
+  if (!key) return false
+  const m = String(p.from).match(/^(.*)<(.+)>$/)
+  const toList = (Array.isArray(p.to) ? p.to : [p.to]).map(email => ({ email: String(email) }))
+  const replyTo = Array.isArray(p.replyTo) ? p.replyTo[0] : p.replyTo
   try {
-    const { error } = await resend.emails.send(payload)
-    if (error) { console.error('[email] fallo:', payload.subject, error); return false }
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': key, 'Content-Type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({
+        sender: m ? { name: m[1].trim(), email: m[2].trim() } : { email: String(p.from) },
+        to: toList,
+        subject: p.subject,
+        htmlContent: (p as any).html,
+        ...(replyTo ? { replyTo: { email: String(replyTo) } } : {}),
+      }),
+    })
+    if (!res.ok) { console.error('[email] Brevo fallo:', p.subject, res.status, await res.text()); return false }
     return true
   } catch (e) {
-    console.error('[email] excepción:', payload.subject, e)
+    console.error('[email] Brevo excepción:', p.subject, e)
     return false
   }
+}
+
+// Envía y devuelve true/false. Registra el error en los logs de Vercel en vez de tragarlo.
+async function deliver(resend: Resend | null, payload: Payload): Promise<boolean> {
+  if (isTestRecipient(payload.to)) { console.log('[email] prueba, no enviado:', payload.subject); return true }
+  if (resend) {
+    try {
+      const { error } = await resend.emails.send(payload)
+      if (!error) return true
+      console.error('[email] Resend fallo:', payload.subject, error)
+    } catch (e) {
+      console.error('[email] Resend excepción:', payload.subject, e)
+    }
+  }
+  return sendViaBrevo(payload)
 }
 
 // Escapa texto del usuario antes de insertarlo en el HTML de un correo (evita phishing/HTML inyectado).
@@ -76,7 +111,7 @@ export async function emailHostNewBooking(opts: {
   notes?: string | null;
 }) {
   const resend = getResend()
-  if (!resend) return false
+  if (!resend && !process.env.BREVO_API_KEY) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -114,7 +149,7 @@ export async function emailGuestBookingReceived(opts: {
   totalPrice: number; paymentMethod: string | null;
 }) {
   const resend = getResend()
-  if (!resend) return false
+  if (!resend && !process.env.BREVO_API_KEY) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -152,7 +187,7 @@ export async function emailGuestBookingConfirmed(opts: {
   hostNotes?: string | null;
 }) {
   const resend = getResend()
-  if (!resend) return false
+  if (!resend && !process.env.BREVO_API_KEY) return false
 
   const instruccion = `El posadero te enviará sus datos de pago${opts.paymentMethod ? ` (${esc(opts.paymentMethod)})` : ''} por el chat de RESER-VE: entra a <a href="${SITE_URL}/mensajes">Mis mensajes</a>. Monto: $${opts.totalPrice} USD · referencia ${opts.bookingCode}. Por tu seguridad, paga solo a datos recibidos dentro de la plataforma.`
 
@@ -191,7 +226,7 @@ export async function emailGuestBookingCancelled(opts: {
   wasConfirmed?: boolean;
 }) {
   const resend = getResend()
-  if (!resend) return false
+  if (!resend && !process.env.BREVO_API_KEY) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -215,7 +250,7 @@ export async function emailGuestBookingCancelled(opts: {
 // ─── Email: posada recibida y en revisión (al posadero) ─────────────────────
 export async function emailHostPosadaReceived(opts: { hostEmail: string; hostName: string; posadaNombre: string }) {
   const resend = getResend()
-  if (!resend) return false
+  if (!resend && !process.env.BREVO_API_KEY) return false
   const html = baseHtml(`
     <div class="card">
       <div class="title">Recibimos tu posada 🙌</div>
@@ -230,7 +265,7 @@ export async function emailHostPosadaReceived(opts: { hostEmail: string; hostNam
 // ─── Email: el viajero canceló (al posadero) ─────────────────────────────────
 export async function emailHostGuestCancelled(opts: { hostEmail: string; hostName: string; guestName: string; posadaNombre: string; bookingCode: string; checkIn: string; checkOut: string }) {
   const resend = getResend()
-  if (!resend) return false
+  if (!resend && !process.env.BREVO_API_KEY) return false
   const html = baseHtml(`
     <div class="card">
       <div class="title">Reserva cancelada por el viajero</div>
@@ -247,7 +282,7 @@ export async function emailHostPosadaApproved(opts: {
   hostEmail: string; hostName: string; posadaNombre: string; slug: string;
 }) {
   const resend = getResend()
-  if (!resend) return false
+  if (!resend && !process.env.BREVO_API_KEY) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -270,7 +305,7 @@ export async function emailWelcome(opts: {
   email: string; name: string; role: 'traveler' | 'host' | 'admin';
 }) {
   const resend = getResend()
-  if (!resend) return false
+  if (!resend && !process.env.BREVO_API_KEY) return false
 
   const isHost = opts.role === 'host'
   const html = baseHtml(`
@@ -305,7 +340,7 @@ export async function emailPosadaLead(opts: {
   to?: string[];
 }) {
   const resend = getResend()
-  if (!resend) return false
+  if (!resend && !process.env.BREVO_API_KEY) return false
 
   const to = opts.to?.length ? opts.to : (process.env.TEAM_EMAIL || 'hola@reser-ve.com')
   const html = baseHtml(`
@@ -343,7 +378,7 @@ export async function emailAdminPosadaPending(opts: {
   hostName: string; hostEmail: string;
 }) {
   const resend = getResend()
-  if (!resend || opts.to.length === 0) return false
+  if ((!resend && !process.env.BREVO_API_KEY) || opts.to.length === 0) return false
   const html = baseHtml(`
     <div class="card">
       <div class="title">Posada pendiente de revisión</div>
@@ -364,7 +399,7 @@ export async function emailAdminPosadaPending(opts: {
 // ─── Email: restablecer contraseña ─────────────────────────────────────────────
 export async function emailPasswordReset(opts: { email: string; name: string; resetUrl: string }) {
   const resend = getResend()
-  if (!resend) return false
+  if (!resend && !process.env.BREVO_API_KEY) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -389,7 +424,7 @@ export async function emailNewMessage(opts: {
   senderName: string; subject: string; body: string; conversationId: number;
 }) {
   const resend = getResend()
-  if (!resend) return false
+  if (!resend && !process.env.BREVO_API_KEY) return false
 
   const html = baseHtml(`
     <div class="card">
@@ -413,7 +448,7 @@ export async function emailHostPosadaRejected(opts: {
   hostEmail: string; hostName: string; posadaNombre: string; notes: string;
 }) {
   const resend = getResend()
-  if (!resend) return false
+  if (!resend && !process.env.BREVO_API_KEY) return false
 
   const html = baseHtml(`
     <div class="card">

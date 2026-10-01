@@ -157,7 +157,7 @@ export default function MensajesPage() {
         :root{--indigo:#1A2B4C;--cacao:#E67E22;--sand:#FDFBF7;--muted:#7A8699;--line:rgba(26,43,76,0.08);}
         *,*::before,*::after{box-sizing:border-box;}
         body{font-family:'Inter',sans-serif;background:var(--sand);color:var(--indigo);margin:0;}
-        .nav{background:white;border-bottom:1.5px solid var(--line);padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+        .nav{background:white;border-bottom:1.5px solid var(--line);padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:var(--pp-h,0px);z-index:100;}
         .nav-logo{font-size:1.25rem;font-weight:800;letter-spacing:-0.04em;color:var(--indigo);text-decoration:none;}
         .nav-logo span{color:var(--cacao);}
         .main{max-width:820px;margin:0 auto;padding:2.5rem 1.5rem;}

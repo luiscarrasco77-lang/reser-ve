@@ -104,7 +104,7 @@ export default function ConversationPage() {
         *,*::before,*::after{box-sizing:border-box;}
         html,body{height:100%;margin:0;}
         body{font-family:'Inter',sans-serif;background:var(--sand);color:var(--indigo);display:flex;flex-direction:column;}
-        .nav{background:white;border-bottom:1.5px solid var(--line);padding:0 1.5rem;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;flex-shrink:0;}
+        .nav{background:white;border-bottom:1.5px solid var(--line);padding:0 1.5rem;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:var(--pp-h,0px);z-index:100;flex-shrink:0;}
         .nav-logo{font-size:1.2rem;font-weight:800;letter-spacing:-0.04em;color:var(--indigo);text-decoration:none;}
         .nav-logo span{color:var(--cacao);}
         .chat-wrap{max-width:760px;margin:0 auto;width:100%;display:flex;flex-direction:column;flex:1;padding:0 1rem;}

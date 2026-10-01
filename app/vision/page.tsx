@@ -34,7 +34,7 @@ export default function VisionPage() {
 
         /* NAV */
         .vis-nav {
-          position: sticky; top: 0; z-index: 60;
+          position: sticky; top: var(--pp-h, 0px); z-index: 60;
           display: flex; align-items: center; justify-content: space-between;
           padding: 1rem 2rem;
           background: rgba(253,251,247,0.96);

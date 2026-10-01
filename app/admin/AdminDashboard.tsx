@@ -132,7 +132,7 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
 
         /* Sidebar */
         .layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
-        .sidebar{background:var(--indigo);color:white;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
+        .sidebar{background:var(--indigo);color:white;display:flex;flex-direction:column;position:sticky;top:var(--pp-h,0px);height:calc(100vh - var(--pp-h,0px));}
         .sb-logo{padding:1.5rem 1.4rem 1rem;font-size:1.3rem;font-weight:800;letter-spacing:-0.04em;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;}
         .sb-logo span{color:var(--cacao);}
         .sb-badge{display:inline-block;background:rgba(239,68,68,0.9);color:white;font-size:0.65rem;font-weight:700;padding:0.15rem 0.45rem;border-radius:99px;margin-left:0.4rem;vertical-align:middle;}
@@ -235,6 +235,9 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
             ))}
             <Link href="/mensajes" className="sb-item" style={{display:'block',marginTop:'0.25rem'}}>
               Mensajes
+            </Link>
+            <Link href="/admin/correo" className="sb-item" style={{display:'block'}}>
+              Correo hola@
             </Link>
           </nav>
           <div className="sb-footer">

@@ -115,7 +115,7 @@ export default function PosaderosPage() {
 
         /* Nav */
         .nav {
-          position:sticky; top:0; z-index:60;
+          position:sticky; top:var(--pp-h,0px); z-index:60;
           display:flex; align-items:center; justify-content:space-between;
           padding:1rem 2rem;
           background:rgba(253,251,247,0.95); backdrop-filter:blur(20px);

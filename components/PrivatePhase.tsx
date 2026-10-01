@@ -26,16 +26,27 @@ export function PrivatePhaseNotice({ compact = false }: { compact?: boolean }) {
   )
 }
 
-// Franja superior del sitio.
+// Franja superior del sitio: fija, de altura --pp-h. Los headers usan top: var(--pp-h)
+// (ver globals.css) para quedar justo debajo y no chocar.
 export function PrivatePhaseBar() {
   if (BOOKINGS_OPEN) return null
   return (
-    <div style={{
-      background: '#1A2B4C', color: 'rgba(255,255,255,0.88)', textAlign: 'center',
-      fontFamily: "'Inter', system-ui, sans-serif", fontSize: '0.78rem', padding: '0.5rem 1rem', lineHeight: 1.4,
-    }}>
-      <strong style={{ color: '#FFC88A' }}>Fase privada</strong> · Estamos sumando posadas; las reservas abren muy pronto.{' '}
-      <a href="/posaderos" style={{ color: '#FFC88A', fontWeight: 700, textDecoration: 'none' }}>¿Tienes una posada? Únete →</a>
-    </div>
+    <>
+      <style>{`
+        :root{--pp-h:34px}
+        body{padding-top:var(--pp-h)}
+        .pp-bar{position:fixed;top:0;left:0;right:0;height:var(--pp-h);z-index:250;display:flex;align-items:center;justify-content:center;gap:.4rem;
+          background:#1A2B4C;color:rgba(255,255,255,.88);font-family:'Inter',system-ui,sans-serif;font-size:.78rem;padding:0 1rem;white-space:nowrap;overflow:hidden}
+        .pp-bar strong{color:#FFC88A}
+        .pp-bar a{color:#FFC88A;font-weight:700;text-decoration:none}
+        .pp-long{overflow:hidden;text-overflow:ellipsis}
+        @media(max-width:640px){.pp-long{display:none}}
+      `}</style>
+      <div className="pp-bar" role="note">
+        <strong>Fase privada</strong>
+        <span className="pp-long">· Estamos sumando posadas; las reservas abren muy pronto.</span>
+        <a href="/posaderos">¿Tienes una posada? Únete →</a>
+      </div>
+    </>
   )
 }
