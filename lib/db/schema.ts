@@ -39,6 +39,8 @@ export const posadas = pgTable('posadas', {
   metodoPago: json('metodo_pago').$type<string[]>().notNull().default([]),
   status: posadaStatusEnum('status').notNull().default('draft'),
   reviewNotes: text('review_notes'),
+  // Posada de demostración (catálogo de ejemplo). Se retiran a medida que entran posadas reales.
+  isDemo: boolean('is_demo').notNull().default(false),
   hostNombre: text('host_nombre'),
   hostDesde: text('host_desde'),
   hostIdiomas: json('host_idiomas').$type<string[]>().notNull().default([]),

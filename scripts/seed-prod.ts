@@ -39,7 +39,7 @@ async function main() {
       tipo: p.tipo, precio: p.precio, habitaciones: p.habitaciones, capacidad: p.capacidad ?? p.habitaciones * 2,
       rating: p.rating, reviews: p.reviews, descripcion: p.descripcion, tags: p.tags, servicios: p.servicios,
       politicas: p.politicas, imgs: p.imgs, lat: p.lat, lng: p.lng, metodoPago: p.metodoPago,
-      hostNombre: p.host.nombre, hostDesde: p.host.desde, hostIdiomas: p.host.idiomas, status: 'active',
+      hostNombre: p.host.nombre, hostDesde: p.host.desde, hostIdiomas: p.host.idiomas, status: 'active', isDemo: true,
     }).onConflictDoUpdate({
       target: schema.posadas.slug,
       set: {

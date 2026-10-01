@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse, after } from 'next/server'
 import { parseId } from '@/lib/http'
+import { retireDemoFor } from '@/lib/demo'
 import { getDb } from '@/lib/db'
 import { posadas, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -44,6 +45,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   // Send email to host (fire-and-forget)
+  // Una posada real aprobada reemplaza a una demo del mismo destino.
+  if (action === 'approve' && !updated.isDemo) {
+    after(() => retireDemoFor(updated.destinoSlug, updated.nombre).then(() => {}))
+  }
+
   if (updated.hostId && action !== 'suspend') {
     const hostId = updated.hostId
     after(async () => {

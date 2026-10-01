@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Stats = { totalUsers: number; totalPosadas: number; totalBookings: number; pendingReview: number; pendingBookings: number; revenue: number; commission?: number }
-type Posada = { id: number; slug: string; nombre: string; destino: string; tipo: string; precio: number; status: string; hostName: string; hostEmail: string; createdAt: string; reviewNotes: string | null; imgs: string[] }
+type Posada = { id: number; slug: string; nombre: string; destino: string; tipo: string; precio: number; status: string; hostName: string; hostEmail: string; createdAt: string; reviewNotes: string | null; imgs: string[]; isDemo?: boolean }
 type Booking = { id: number; bookingCode: string; posadaNombre: string; posadaSlug: string; guestName: string; guestEmail: string; checkIn: string; checkOut: string; nights: number; totalPrice: number; status: string; paymentMethod: string | null; createdAt: string }
 type User = { id: number; name: string; email: string; role: string; country: string | null; createdAt: string }
 
@@ -56,6 +56,22 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
   const [bookingFilter, setBookingFilter] = useState('all')
   const [userFilter, setUserFilter] = useState('all')
   const [search, setSearch] = useState('')
+
+  const [demo, setDemo] = useState<{ demoActive: number; demoRetired: number; realActive: number } | null>(null)
+  const fetchDemo = useCallback(() => fetch('/api/admin/demo').then(r => r.json()).then(setDemo).catch(() => {}), [])
+  useEffect(() => { if (tab === 'posadas') fetchDemo() }, [tab, fetchDemo])
+
+  async function demoAction(action: 'hide' | 'show') {
+    const msg = action === 'hide'
+      ? '¿Retirar TODAS las posadas de demostración? Dejarán de verse en la web (puedes restaurarlas cuando quieras).'
+      : '¿Volver a mostrar todas las posadas de demostración retiradas?'
+    if (!confirm(msg)) return
+    const res = await fetch('/api/admin/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) { alert(data.error ?? 'No se pudo completar'); return }
+    alert(`Listo: ${data.changed} posada(s) ${action === 'hide' ? 'retiradas' : 'restauradas'}.`)
+    fetchDemo(); fetchData('posadas'); fetchStats()
+  }
 
   const fetchStats = useCallback(() =>
     fetch('/api/admin/stats').then(r => r.json()).then(setStats).catch(() => {}), [])
@@ -358,6 +374,16 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
             <>
               <div className="page-title">Todas las posadas</div>
               <div className="page-sub">Gestiona el estado de cada posada. Puedes suspender o reactivar cualquiera.</div>
+              {demo && (
+                <div style={{background:'#FFF8EE',border:'1.5px solid rgba(230,126,34,0.25)',borderRadius:12,padding:'0.9rem 1.1rem',margin:'0 0 1rem',fontSize:'0.86rem',lineHeight:1.55,display:'flex',gap:'1rem',alignItems:'center',flexWrap:'wrap'}}>
+                  <div style={{flex:1,minWidth:260}}>
+                    <strong>Posadas de demostración:</strong> {demo.demoActive} visibles · {demo.demoRetired} retiradas · <strong>{demo.realActive} reales publicadas</strong>.<br/>
+                    <span style={{color:'var(--muted)'}}>Cada vez que apruebas una posada real se retira automáticamente una demo del mismo destino. Antes de abrir al público, retira las que queden.</span>
+                  </div>
+                  {demo.demoActive > 0 && <button className="action-btn btn-sus" onClick={() => demoAction('hide')}>Retirar todas las demo</button>}
+                  {demo.demoRetired > 0 && <button className="action-btn btn-act" onClick={() => demoAction('show')}>Restaurar demos</button>}
+                </div>
+              )}
               <div className="table-wrap">
                 <div className="table-toolbar">
                   <span className="table-title">Posadas ({filteredPosadas.length})</span>
@@ -375,7 +401,7 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
                     : filteredPosadas.map(p => (
                       <tr key={p.id}>
                         <td>
-                          <div className="tbl-name">{p.nombre}</div>
+                          <div className="tbl-name">{p.nombre}{p.isDemo && <span style={{marginLeft:6,fontSize:'0.65rem',fontWeight:800,background:'rgba(26,43,76,0.08)',color:'var(--muted)',padding:'2px 6px',borderRadius:6}}>DEMO</span>}</div>
                           <Link href={`/posadas/${p.slug}`} target="_blank" className="tbl-link">Ver →</Link>
                         </td>
                         <td>{p.destino}</td>

@@ -67,6 +67,7 @@ async function main() {
       hostDesde: p.host.desde,
       hostIdiomas: p.host.idiomas,
       status: 'active',
+      isDemo: true,
     }).onConflictDoUpdate({
       target: schema.posadas.slug,
       // Keep demo data fresh on re-seed (imgs, precio, etc.) without touching real listings’ ownership

@@ -364,7 +364,7 @@ export default function Home() {
 
         /* SCROLL PROGRESS */
         .scroll-bar {
-          position:fixed; top:0; left:0; height:3px; z-index:300;
+          position:fixed; top:var(--pp-h,0px); left:0; height:3px; z-index:650;
           background:linear-gradient(90deg, var(--cacao), var(--cacao-dark));
           border-radius:0 3px 3px 0;
           transition:width 0.08s linear;
@@ -425,7 +425,7 @@ export default function Home() {
 
         /* ─── NAV ─── */
         .nav {
-          position:fixed; top:var(--pp-h,0px); left:0; right:0; z-index:60;
+          position:fixed; top:var(--pp-h,0px); left:0; right:0; z-index:600;
           display:flex; align-items:center; justify-content:space-between;
           padding:1rem 2rem; transition:all 0.38s ease;
         }
@@ -462,7 +462,7 @@ export default function Home() {
         .nav-cta:hover { background:var(--cacao-dark); transform:translateY(-1px); animation:none; box-shadow:0 14px 35px rgba(230,126,34,0.38); }
         .mob-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:0.3rem;color:inherit;}
         .mob-menu-btn svg{display:block;}
-        .mob-drawer{position:fixed;inset:0;z-index:300;pointer-events:none;}
+        .mob-drawer{position:fixed;inset:0;z-index:700;pointer-events:none;}
         .mob-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.45);opacity:0;transition:opacity 0.25s;}
         .mob-panel{position:absolute;top:0;right:0;bottom:0;width:min(300px,85vw);background:#FDFBF7;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.16,1,0.3,1);display:flex;flex-direction:column;padding:1.5rem;}
         .mob-drawer.open{pointer-events:all;}
