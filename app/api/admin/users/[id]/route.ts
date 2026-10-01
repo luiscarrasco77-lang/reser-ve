@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { parseId } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -10,8 +11,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
   const { id } = await params
-  const targetId = Number(id)
-  if (!Number.isInteger(targetId)) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+  const targetId = parseId(id)
+  if (!targetId) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
   const { role } = await req.json().catch(() => ({}))
   if (!['traveler', 'host', 'admin'].includes(role)) {
     return NextResponse.json({ error: 'Rol inválido' }, { status: 400 })

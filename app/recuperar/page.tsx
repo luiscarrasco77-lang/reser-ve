@@ -31,7 +31,7 @@ export default function RecuperarPage() {
         :root{--indigo:#1A2B4C;--cacao:#E67E22;--cacao-dark:#C96510;--sand:#FDFBF7;--muted:#7A8699;--line:rgba(26,43,76,0.1);}
         *,*::before,*::after{box-sizing:border-box;}
         body{margin:0;font-family:'Inter',system-ui,sans-serif;background:var(--sand);color:var(--indigo);}
-        .wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.25rem;}
+        .wrap{min-height:calc(100vh - var(--pp-h,0px));display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.25rem;}
         .card{background:white;border:1px solid var(--line);border-radius:22px;box-shadow:0 12px 40px rgba(26,43,76,0.1);padding:2.2rem;max-width:420px;width:100%;}
         .logo{font-size:1.5rem;font-weight:800;letter-spacing:-0.04em;text-align:center;text-decoration:none;color:var(--indigo);display:block;}
         .logo span{color:var(--cacao);}

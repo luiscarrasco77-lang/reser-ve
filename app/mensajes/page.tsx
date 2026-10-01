@@ -72,7 +72,7 @@ function MensajesInner() {
       <div className="page-sub">
         {role === 'admin'
           ? 'Todos los mensajes de la plataforma'
-          : 'Tus conversaciones con posaderos y el equipo RESER-VE'}
+          : 'Tus conversaciones con viajeros, posaderos y el equipo RESER-VE'}
       </div>
 
       <button className="new-btn" onClick={() => setShowNew(v => !v)}>

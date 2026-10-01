@@ -1,20 +1,10 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { DESTINOS, OTRO, slugify } from '@/lib/destinos-form'
+import { uploadPosadaImage } from '@/lib/upload-image'
 import { useRouter } from 'next/navigation'
 
-const destinosOpciones = [
-  { label: 'Los Roques', slug: 'los-roques', lat: 11.85, lng: -66.75 },
-  { label: 'Mérida', slug: 'merida', lat: 8.6, lng: -71.15 },
-  { label: 'Mochima', slug: 'mochima', lat: 10.35, lng: -64.35 },
-  { label: 'Morrocoy', slug: 'morrocoy', lat: 10.87, lng: -68.22 },
-  { label: 'Canaima', slug: 'canaima', lat: 6.23, lng: -62.85 },
-  { label: 'Isla Margarita', slug: 'isla-margarita', lat: 10.97, lng: -63.91 },
-  { label: 'Roraima', slug: 'roraima', lat: 5.14, lng: -60.76 },
-  { label: 'Choroní', slug: 'choroni', lat: 10.49, lng: -67.62 },
-  { label: 'Puerto Colombia', slug: 'puerto-colombia', lat: 10.53, lng: -67.65 },
-  { label: 'Otro destino', slug: 'otro', lat: 8.0, lng: -66.0 },
-]
 
 const tiposOpciones = [
   'Posada de playa', 'Posada de montaña', 'Posada rural', 'Posada urbana', 'Posada de aventura', 'Eco-posada',
@@ -44,8 +34,10 @@ export default function NuevaPosadaPage() {
 
   // Form state
   const [nombre, setNombre] = useState('')
-  const [destinoIdx, setDestinoIdx] = useState(0)
+  const [destinoSlug, setDestinoSlug] = useState(DESTINOS[0].slug)
+  const [localidad, setLocalidad] = useState('')
   const [tipo, setTipo] = useState(tiposOpciones[0])
+  const [politicasTxt, setPoliticasTxt] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [precio, setPrecio] = useState('')
   const [habitaciones, setHabitaciones] = useState('4')
@@ -54,13 +46,21 @@ export default function NuevaPosadaPage() {
   const [servicios, setServicios] = useState<string[]>([])
   const [metodosPago, setMetodosPago] = useState<string[]>([])
   const [imgs, setImgs] = useState<string[]>([])
-  const [latOverride, setLatOverride] = useState('')
-  const [lngOverride, setLngOverride] = useState('')
+  const [latStr, setLatStr] = useState(String(DESTINOS[0].lat))
+  const [lngStr, setLngStr] = useState(String(DESTINOS[0].lng))
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const destino = destinosOpciones[destinoIdx]
-  const lat = latOverride ? parseFloat(latOverride) : destino.lat
-  const lng = lngOverride ? parseFloat(lngOverride) : destino.lng
+  const destino = DESTINOS.find(d => d.slug === destinoSlug)
+  const destinoLabel = destino ? destino.label : localidad.trim()
+  const destinoSlugFinal = destino ? destino.slug : slugify(localidad)
+  const lat = parseFloat(latStr.replace(',', '.'))
+  const lng = parseFloat(lngStr.replace(',', '.'))
+  // Al cambiar de destino, las coordenadas pasan a las del nuevo destino.
+  function changeDestino(slug: string) {
+    setDestinoSlug(slug)
+    const d = DESTINOS.find(x => x.slug === slug)
+    if (d) { setLatStr(String(d.lat)); setLngStr(String(d.lng)) } else { setLatStr(''); setLngStr('') }
+  }
 
   function toggleItem(list: string[], setList: (v: string[]) => void, item: string) {
     setList(list.includes(item) ? list.filter(x => x !== item) : [...list, item])
@@ -72,18 +72,10 @@ export default function NuevaPosadaPage() {
     setError('')
     const uploaded: string[] = []
     for (const file of Array.from(files)) {
-      const fd = new FormData()
-      fd.append('file', file)
       try {
-        const res = await fetch('/api/upload', { method: 'POST', body: fd })
-        const data = await res.json()
-        if (res.ok && data.url) {
-          uploaded.push(data.url)
-        } else {
-          setError(`Error al subir ${file.name}: ${data.error ?? 'Error desconocido'}`)
-        }
-      } catch (e) {
-        setError(`Error de conexión al subir ${file.name}`)
+        uploaded.push(await uploadPosadaImage(file))
+      } catch (e: any) {
+        setError(`${file.name}: ${e?.message ?? 'no se pudo subir'}`)
       }
     }
     setImgs(prev => [...prev, ...uploaded])
@@ -92,6 +84,7 @@ export default function NuevaPosadaPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!destinoLabel) { setError('Escribe el nombre de la localidad de tu posada'); return }
     if (!nombre || !descripcion || !precio) {
       setError('Completa todos los campos obligatorios')
       return
@@ -101,8 +94,8 @@ export default function NuevaPosadaPage() {
 
     const body = {
       nombre,
-      destino: destino.label,
-      destinoSlug: destino.slug,
+      destino: destinoLabel,
+      destinoSlug: destinoSlugFinal,
       tipo,
       descripcion,
       precio: parseInt(precio),
@@ -110,7 +103,7 @@ export default function NuevaPosadaPage() {
       capacidad: parseInt(capacidad),
       tags,
       servicios,
-      politicas: [],
+      politicas: politicasTxt.split('\n').map(x => x.trim()).filter(Boolean),
       imgs,
       lat,
       lng,
@@ -121,12 +114,12 @@ export default function NuevaPosadaPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    })
+    }).catch(() => null)
 
     setLoading(false)
-    if (!res.ok) {
-      const data = await res.json()
-      setError(data.error || 'Error al crear la posada')
+    if (!res || !res.ok) {
+      const data = res ? await res.json().catch(() => ({})) : {}
+      setError(data.error || 'No se pudo enviar la posada. Revisa tu conexión e inténtalo de nuevo.')
       return
     }
 
@@ -190,11 +183,13 @@ export default function NuevaPosadaPage() {
             <div className="field-row">
               <div className="field">
                 <label>Destino *</label>
-                <select value={destinoIdx} onChange={e => setDestinoIdx(parseInt(e.target.value))}>
-                  {destinosOpciones.map((d, i) => (
-                    <option key={d.slug} value={i}>{d.label}</option>
-                  ))}
+                <select value={destinoSlug} onChange={e => changeDestino(e.target.value)}>
+                  {DESTINOS.map(d => <option key={d.slug} value={d.slug}>{d.label}</option>)}
+                  <option value={OTRO}>Otro (escríbelo)</option>
                 </select>
+                {destinoSlug === OTRO && (
+                  <input type="text" style={{ marginTop: '0.5rem' }} value={localidad} onChange={e => setLocalidad(e.target.value)} placeholder="Ej: Colonia Tovar, Aragua" required />
+                )}
               </div>
               <div className="field">
                 <label>Tipo de posada *</label>
@@ -206,6 +201,11 @@ export default function NuevaPosadaPage() {
             <div className="field">
               <label>Descripción *</label>
               <textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} required placeholder="Describe tu posada: qué la hace especial, qué pueden esperar los huéspedes…" rows={4} />
+              <div className="hint" style={{ marginTop: '0.4rem' }}>No incluyas teléfonos, correos ni enlaces: toda la comunicación con huéspedes va por el chat de RESER-VE.</div>
+            </div>
+            <div className="field">
+              <label>Políticas de la posada <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(una por línea)</span></label>
+              <textarea value={politicasTxt} onChange={e => setPoliticasTxt(e.target.value)} rows={3} placeholder={'Check-in desde las 2:00 pm\nCancelación gratis hasta 72 h antes\nNo se admiten mascotas'} />
             </div>
           </div>
 
@@ -268,17 +268,21 @@ export default function NuevaPosadaPage() {
           <div className="form-section">
             <div className="section-head">Fotos de la posada</div>
             <div className="img-drop" onClick={() => fileRef.current?.click()}>
-              <input ref={fileRef} type="file" accept="image/*" multiple onChange={e => handleImageUpload(e.target.files)} />
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={e => handleImageUpload(e.target.files)} />
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:'var(--muted)',marginBottom:'0.5rem'}}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               <div style={{fontSize:'0.88rem',color:'var(--muted)'}}>
                 {uploadingImg ? 'Subiendo fotos…' : 'Haz clic o arrastra fotos aquí'}
               </div>
-              <div className="hint">JPG, PNG, WebP — máx. 10 fotos recomendado</div>
+              <div className="hint">Sube al menos 5 fotos reales (horizontales y con luz natural). Las optimizamos automáticamente.</div>
             </div>
             {imgs.length > 0 && (
               <div className="img-previews">
                 {imgs.map((url, i) => (
-                  <img key={i} src={url} alt={`Foto ${i + 1}`} className="img-preview" />
+                  <div key={i} style={{ position: 'relative' }}>
+                    <img src={url} alt={`Foto ${i + 1}`} className="img-preview" />
+                    <button type="button" onClick={() => setImgs(imgs.filter((_, idx) => idx !== i))} title="Quitar foto"
+                      style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 700 }}>✕</button>
+                  </div>
                 ))}
               </div>
             )}
@@ -291,18 +295,18 @@ export default function NuevaPosadaPage() {
             <div className="field-row">
               <div className="field">
                 <label>Latitud</label>
-                <input type="number" step="0.0001" value={latOverride || destino.lat} onChange={e => setLatOverride(e.target.value)} />
+                <input type="text" inputMode="decimal" value={latStr} onChange={e => setLatStr(e.target.value)} placeholder="Ej: 10.4923" />
               </div>
               <div className="field">
                 <label>Longitud</label>
-                <input type="number" step="0.0001" value={lngOverride || destino.lng} onChange={e => setLngOverride(e.target.value)} />
+                <input type="text" inputMode="decimal" value={lngStr} onChange={e => setLngStr(e.target.value)} placeholder="Ej: -67.6123" />
               </div>
             </div>
           </div>
 
           <div style={{display:'flex',gap:'1rem',alignItems:'center'}}>
             <button type="submit" className="btn-submit" disabled={loading || uploadingImg}>
-              {loading ? 'Publicando…' : 'Publicar posada'}
+              {loading ? 'Enviando…' : 'Enviar a revisión'}
             </button>
             <a href="/dashboard" style={{fontSize:'0.86rem',color:'var(--muted)',textDecoration:'none'}}>Cancelar</a>
           </div>

@@ -1,4 +1,5 @@
 import { auth } from '@/auth'
+import DashboardNav from '@/components/DashboardNav'
 import { redirect } from 'next/navigation'
 import { getDb } from '@/lib/db'
 import { posadas } from '@/lib/db/schema'
@@ -64,15 +65,7 @@ export default async function MisPosadasPage() {
         .new-btn:hover{background:var(--cacao-dark);}
       `}</style>
 
-      <nav className="nav">
-        <a href="/" className="nav-logo">RESER<span>-VE</span></a>
-        <div className="nav-links">
-          <a href="/dashboard" className="nav-link">Dashboard</a>
-          <a href="/dashboard/posadas" className="nav-link active">Mis posadas</a>
-          <a href="/dashboard/reservas" className="nav-link">Reservas</a>
-          <a href="/dashboard/posada/nueva" className="nav-link">+ Nueva</a>
-        </div>
-      </nav>
+      <DashboardNav />
 
       <main className="main">
         <div className="page-title">Mis posadas</div>
@@ -140,6 +133,14 @@ export default async function MisPosadasPage() {
                 )}
 
                 {/* Pending review panel */}
+                {p.status === 'suspended' && (
+                  <div className="pending-panel">
+                    {p.reviewNotes === 'Pausada por el posadero.'
+                      ? <>⏸ <strong>Pausada</strong> — No se muestra a los viajeros. Pulsa "Reactivar" cuando quieras volver a publicarla (pasará por una revisión rápida).</>
+                      : <>⚠ <strong>Suspendida por el equipo de RESER-VE</strong>{p.reviewNotes ? ` — ${p.reviewNotes}` : ''} Escríbenos a hola@reser-ve.com si tienes dudas.</>}
+                  </div>
+                )}
+
                 {p.status === 'pending_review' && (
                   <div className="pending-panel">
                     ⏳ <strong>En revisión</strong> — El equipo de RESER-VE está revisando tu posada. Recibirás una notificación en cuanto haya una respuesta (normalmente en 24–72 h).

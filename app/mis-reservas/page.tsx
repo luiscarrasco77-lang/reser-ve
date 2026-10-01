@@ -1,5 +1,6 @@
 'use client'
 
+import { signOut } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
@@ -106,7 +107,7 @@ export default function MisReservasPage() {
         <a href="/" className="nav-logo">RESER<span>-VE</span></a>
         <div style={{display:'flex',gap:'1.25rem',alignItems:'center'}}>
           <a href="/buscar" style={{fontSize:'0.84rem',fontWeight:600,color:'var(--muted)',textDecoration:'none'}}>Explorar</a>
-          <a href="/api/auth/signout" style={{fontSize:'0.84rem',fontWeight:600,color:'var(--muted)',textDecoration:'none'}}>Salir</a>
+          <button onClick={() => signOut({ callbackUrl: '/' })} style={{fontSize:'0.84rem',fontWeight:600,color:'var(--muted)',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit'}}>Salir</button>
         </div>
       </nav>
 
@@ -128,8 +129,9 @@ export default function MisReservasPage() {
           <div className="empty">
             <div className="empty-icon">🏖️</div>
             <div className="empty-title">Aún no tienes reservas</div>
-            <div className="empty-sub">Explora posadas y planifica tu próxima aventura venezolana</div>
+            <div className="empty-sub">Las reservas abren muy pronto. Mientras tanto, explora posadas y guarda tus favoritas ❤️</div>
             <a href="/buscar" className="btn-explore">Explorar posadas</a>
+            <a href="/favoritos" style={{ display: 'block', marginTop: '0.8rem', color: 'var(--cacao)', fontWeight: 700, fontSize: '0.86rem', textDecoration: 'none' }}>Ver mis favoritas →</a>
           </div>
         )}
 

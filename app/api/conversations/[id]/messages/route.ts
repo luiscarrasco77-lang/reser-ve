@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
+import { parseId } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { conversations, messages, users } from '@/lib/db/schema'
 import { auth } from '@/auth'
@@ -18,8 +19,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   if (typeof body !== 'string' || !body.trim()) return NextResponse.json({ error: 'Mensaje vacío' }, { status: 400 })
   if (body.length > MAX_MESSAGE) return NextResponse.json({ error: `El mensaje no puede superar ${MAX_MESSAGE} caracteres` }, { status: 400 })
-  const convId = Number(id)
-  if (!Number.isInteger(convId)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const convId = parseId(id)
+  if (!convId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const db = getDb()
 

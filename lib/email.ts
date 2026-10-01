@@ -116,7 +116,7 @@ export async function emailHostNewBooking(opts: {
   const html = baseHtml(`
     <div class="card">
       <div class="title">Nueva solicitud de reserva</div>
-      <div class="sub">Tienes 24 horas para confirmar o rechazar. Si no respondes, la reserva se cancela automáticamente.</div>
+      <div class="sub">Responde en menos de 24 horas: las solicitudes sin respuesta se cancelan automáticamente.</div>
       <div class="code-box"><div class="code">${esc(opts.bookingCode)}</div></div>
       <div class="row"><span>Posada</span><strong>${esc(opts.posadaNombre)}</strong></div>
       <div class="row"><span>Viajero</span><strong>${esc(opts.guestName)}</strong></div>
@@ -154,7 +154,7 @@ export async function emailGuestBookingReceived(opts: {
   const html = baseHtml(`
     <div class="card">
       <div class="title">¡Solicitud enviada!</div>
-      <div class="sub">Hola ${esc(opts.guestName)}, recibimos tu solicitud. El posadero tiene 24h para confirmar. Te avisamos en cuanto haya respuesta.</div>
+      <div class="sub">Hola ${esc(opts.guestName)}, recibimos tu solicitud. El posadero tiene 24 h para responder. Te avisamos por correo en cuanto haya respuesta.</div>
       <div class="code-box">
         <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#7A8699;margin-bottom:0.4rem;">Código de reserva</div>
         <div class="code">${esc(opts.bookingCode)}</div>
@@ -234,7 +234,7 @@ export async function emailGuestBookingCancelled(opts: {
       <div class="sub">Hola ${esc(opts.guestName)}, ${opts.wasConfirmed ? 'el posadero canceló tu reserva en' : 'lamentablemente el posadero no pudo confirmar tu solicitud para'} <strong>${esc(opts.posadaNombre)}</strong>. Si ya habías pagado, escríbele por el chat de RESER-VE o contáctanos para gestionar el reembolso.</div>
       <div class="code-box"><div class="code">${esc(opts.bookingCode)}</div></div>
       ${opts.reason ? `<div class="info-box"><strong>Motivo:</strong> ${esc(opts.reason)}</div>` : ''}
-      <div style="margin-top:1rem;font-size:0.85rem;color:#7A8699;">Sin cargos — no se realizó ningún cobro. Te invitamos a explorar otras posadas disponibles.</div>
+      ${opts.wasConfirmed ? '' : '<div style="margin-top:1rem;font-size:0.85rem;color:#7A8699;">Sin cargos — no se realizó ningún cobro. Te invitamos a explorar otras posadas disponibles.</div>'}
       <a href="${SITE_URL}/buscar" class="btn">Explorar otras posadas →</a>
     </div>
   `)
@@ -394,6 +394,31 @@ export async function emailAdminPosadaPending(opts: {
     from: FROM, to: opts.to, replyTo: opts.hostEmail,
     subject: `Revisar posada: ${opts.nombre} (${opts.destino})`, html,
   })
+}
+
+// ─── Email: posada publicada editada (a los admins) ──────────────────────────
+const FIELD_LABELS: Record<string, string> = {
+  nombre: 'Nombre', descripcion: 'Descripción', precio: 'Precio', imgs: 'Fotos', destino: 'Destino', destinoSlug: 'Destino',
+  lat: 'Ubicación', lng: 'Ubicación', habitaciones: 'Habitaciones', capacidad: 'Capacidad', tipo: 'Tipo',
+  tags: 'Etiquetas', servicios: 'Servicios', politicas: 'Políticas', metodoPago: 'Métodos de pago',
+}
+export async function emailAdminPosadaEdited(opts: {
+  to: string[]; nombre: string; destino: string; precio: number; slug: string; changed: string[];
+  hostName: string; hostEmail: string;
+}) {
+  const resend = getResend()
+  if ((!resend && !process.env.BREVO_API_KEY) || opts.to.length === 0) return false
+  const campos = [...new Set(opts.changed.map(k => FIELD_LABELS[k] ?? k))].join(', ')
+  const html = baseHtml(`
+    <div class="card">
+      <div class="title">Posada publicada editada</div>
+      <div class="sub">${esc(opts.hostName)} modificó <strong>${esc(opts.nombre)}</strong> (${esc(opts.destino)}). Los cambios ya están visibles: revísalos.</div>
+      <div class="row"><span>Cambios</span><strong>${esc(campos)}</strong></div>
+      <div class="row"><span>Precio actual</span><strong>$${opts.precio} USD/noche</strong></div>
+      <a href="${SITE_URL}/posadas/${opts.slug}" class="btn">Ver la posada →</a>
+    </div>
+  `)
+  return deliver(resend, { from: FROM, to: opts.to, replyTo: opts.hostEmail || undefined, subject: `Posada editada: ${opts.nombre}`, html })
 }
 
 // ─── Email: restablecer contraseña ─────────────────────────────────────────────

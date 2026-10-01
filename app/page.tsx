@@ -89,7 +89,6 @@ export default function Home() {
   const destCount = (slug: string | null) => slug && destCounts[slug] ? `${destCounts[slug]} posada${destCounts[slug] > 1 ? 's' : ''}` : null
 
   const c1 = useCounter(stats?.posadas ?? 11, statsVisible)
-  const c2 = useCounter(stats?.reviews ?? 44, statsVisible)
   const c3 = useCounter(stats?.destinos ?? 8, statsVisible)
 
   const handleCardTilt = useCallback((e: React.MouseEvent<HTMLElement>) => {
@@ -1153,7 +1152,7 @@ export default function Home() {
               ) : 'Descubre posadas auténticas'}
             </h1>
             <p className={`hero-sub ${loaded ? 'anim-2' : ''}`}>
-              La primera plataforma de alojamientos locales venezolanos. Reserva con confianza, paga en USD o bolívares.
+              La primera plataforma de alojamientos locales venezolanos. Descubre posadas auténticas. Las reservas abren muy pronto.
             </p>
             <div className={`hero-btns ${loaded ? 'anim-3' : ''}`}>
               <a href="/buscar" className="btn-primary">Explorar posadas →</a>
@@ -1454,8 +1453,8 @@ export default function Home() {
             <div className="stat-l">posadas registradas</div>
           </div>
           <div className="stat-item reveal d2">
-            <div className="stat-n"><span className="accent">+{c2}</span></div>
-            <div className="stat-l">reseñas de viajeros</div>
+            <div className="stat-n"><span className="accent">100%</span></div>
+            <div className="stat-l">posadas revisadas por el equipo</div>
           </div>
           <div className="stat-item reveal d3">
             <div className="stat-n">{c3}</div>
@@ -1547,7 +1546,7 @@ export default function Home() {
           <div className="steps-grid">
             {[
               ['Busca tu destino', 'Filtra por destino, fechas y método de pago en los rincones más especiales de Venezuela.'],
-              ['Elige con confianza', 'Fotos profesionales, perfiles verificados y toda la información antes de reservar.'],
+              ['Elige con confianza', 'Fotos reales, posadas revisadas por nuestro equipo y toda la información antes de reservar.'],
               ['Reserva y paga fácil', 'Paga en USD o bolívares con Zelle, Pago Móvil, transferencia o Binance.'],
               ['Vive la experiencia', 'Llega con todo listo y disfruta una estancia boutique sin fricción.'],
             ].map(([t, d], i) => (
@@ -1618,35 +1617,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ─────────────────────────────────── */}
-      <section className="testimonials-section">
-        <div className="testimonials-inner">
-          <div className="reveal" style={{textAlign:'center',marginBottom:'3.5rem'}}>
-            <div className="section-label">Lo que dicen los viajeros</div>
-            <h2 className="section-h2">Experiencias que <em>inspiran</em></h2>
-          </div>
-          <div className="testimonials-grid">
-            {[
-              { stars:'★★★★★', text:'Reservar en Los Roques fue lo más fácil del mundo. La posada era exactamente como en las fotos y el posadero nos recibió como familia.', name:'Carlos M.', from:'Barcelona, España', initial:'C' },
-              { stars:'★★★★★', text:'Me sorprendió poder pagar con Zelle desde Miami. La plataforma es clara y el equipo de RESER-VE te ayuda en todo momento.', name:'Valentina R.', from:'Miami, EE.UU.', initial:'V' },
-              { stars:'★★★★★', text:'Mérida desde otro ángulo. La posada en Los Andes superó todas mis expectativas. Una experiencia completamente diferente a cualquier hotel.', name:'Pedro A.', from:'Caracas, Venezuela', initial:'P' },
-            ].map((t, i) => (
-              <div className={`testimonial-card reveal d${i+1}`} key={i}>
-                <div className="testimonial-bar" />
-                <div className="testimonial-stars">{t.stars}</div>
-                <p className="testimonial-quote">"{t.text}"</p>
-                <div className="testimonial-author">
-                  <div className="testimonial-avatar">{t.initial}</div>
-                  <div>
-                    <div className="testimonial-name">{t.name}</div>
-                    <div className="testimonial-from">{t.from}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* ── POSADEROS ────────────────────────────────────── */}
       <section id="posaderos" className="section">

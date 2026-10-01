@@ -7,10 +7,13 @@ import Link from 'next/link'
 export default async function CorreoPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
   const session = await auth()
   if (!session?.user || (session.user as any).role !== 'admin') redirect('/login?callbackUrl=/admin/correo')
-  const { id } = await searchParams
+  const { id: rawId } = await searchParams
+  const id = rawId && /^[0-9a-f-]{36}$/i.test(rawId) ? rawId : undefined
   const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-  const list = resend ? (await resend.emails.receiving.list({ limit: 50 })).data?.data ?? [] : []
-  const open = resend && id ? (await resend.emails.receiving.get(id)).data : null
+  const list = resend ? await resend.emails.receiving.list({ limit: 50 }).then(r => r.data?.data ?? []).catch(() => []) : []
+  const open = resend && id ? await resend.emails.receiving.get(id).then(r => r.data).catch(() => null) : null
+  // CSP dentro del iframe: sin scripts ni imágenes remotas (evita píxeles de rastreo).
+  const CSP = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: cid:; style-src 'unsafe-inline'">`
   const fmt = (d: string) => new Date(d).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Caracas' })
 
   return (
@@ -40,7 +43,7 @@ export default async function CorreoPage({ searchParams }: { searchParams: Promi
                 <div style={{ fontSize: '.82rem', color: '#7A8699', margin: '.3rem 0 1rem' }}>De <b>{open.from}</b> · para {open.to.join(', ')} · {fmt(open.created_at)}</div>
                 <a href={`mailto:${open.reply_to?.[0] ?? open.from}?subject=${encodeURIComponent('Re: ' + (open.subject ?? ''))}`} style={{ display: 'inline-block', marginBottom: '1rem', padding: '.5rem 1rem', borderRadius: 999, background: '#E67E22', color: 'white', fontWeight: 700, fontSize: '.82rem', textDecoration: 'none' }}>Responder</a>
                 {open.html
-                  ? <iframe sandbox="" srcDoc={open.html} style={{ width: '100%', minHeight: 500, border: '1px solid rgba(26,43,76,.08)', borderRadius: 10 }} />
+                  ? <iframe sandbox="" srcDoc={CSP + open.html} style={{ width: '100%', minHeight: 500, border: '1px solid rgba(26,43,76,.08)', borderRadius: 10 }} />
                   : <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '.9rem' }}>{open.text}</pre>}
                 {open.attachments?.length > 0 && <div style={{ fontSize: '.8rem', color: '#7A8699', marginTop: '.8rem' }}>📎 {open.attachments.length} adjunto(s): {open.attachments.map(a => a.filename).join(', ')} (descárgalos desde Resend → Emails → Receiving)</div>}
               </>

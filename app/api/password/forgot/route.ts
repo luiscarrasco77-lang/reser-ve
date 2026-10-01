@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { users, passwordResets } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -8,6 +9,8 @@ import { SITE_URL } from '@/lib/constants'
 
 // Solicita un enlace para restablecer la contraseña.
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, 'forgot', 6, 15 * 60_000)
+  if (limited) return limited
   const { email } = await req.json().catch(() => ({}))
   const clean = String(email ?? '').trim().toLowerCase()
   if (!clean) return NextResponse.json({ error: 'Escribe tu correo' }, { status: 400 })

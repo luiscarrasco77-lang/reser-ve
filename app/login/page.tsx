@@ -4,12 +4,21 @@ import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
+// Solo rutas del propio sitio: descarta //, \\, caracteres de control y otros orígenes.
+function safeCallback(raw: string): string {
+  if (!raw.startsWith('/') || /[\\\u0000-\u001f]/.test(raw)) return ''
+  try {
+    const u = new URL(raw, 'https://reser-ve.com')
+    return u.origin === 'https://reser-ve.com' ? u.pathname + u.search + u.hash : ''
+  } catch { return '' }
+}
+
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   // Solo rutas internas (evita redirecciones abiertas a otros dominios).
   const rawCb = searchParams.get('callbackUrl') || ''
-  const callbackUrl = rawCb.startsWith('/') && !rawCb.startsWith('//') ? rawCb : ''
+  const callbackUrl = safeCallback(rawCb)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)

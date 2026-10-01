@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       precio: p.precio,
       habitaciones: p.habitaciones,
       capacidad: p.capacidad,
-      rating: p.rating ?? 5,
+      rating: p.rating ?? 0,
       reviews: p.reviews ?? 0,
       descripcion: p.descripcion,
       tags: p.tags as string[] ?? [],
@@ -57,15 +57,6 @@ export async function GET(req: NextRequest) {
       host: { nombre: p.hostNombre ?? '', desde: p.hostDesde ?? '', idiomas: p.hostIdiomas as string[] ?? [] },
       reseñas: [],
     })
-  }
-
-  // Include curated catalog (lib/data) for any slug not already in the DB, so the
-  // full set shows in search without needing a re-seed.
-  const { posadas: curated } = await import('@/lib/data')
-  for (const p of curated) {
-    if (!bySlug.has(p.slug)) {
-      bySlug.set(p.slug, { ...p, reseñas: [] })
-    }
   }
 
   const mapped = [...bySlug.values()]

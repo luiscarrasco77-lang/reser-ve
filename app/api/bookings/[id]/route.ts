@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
+import { parseId } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { bookings, posadas, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -9,8 +10,8 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { id } = await params
-  const bookingId = Number(id)
-  if (!Number.isInteger(bookingId)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const bookingId = parseId(id)
+  if (!bookingId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   const db = getDb()
   const [booking] = await db.select().from(bookings).where(eq(bookings.id, bookingId))
   if (!booking) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -39,15 +40,16 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 // Transiciones permitidas por rol. El posadero confirma/rechaza solicitudes y puede cancelar
 // una confirmada; el viajero solo cancela su solicitud pendiente; "completed" lo pone el cron.
 const HOST_TRANSITIONS: Record<string, string[]> = { pending: ['confirmed', 'cancelled'], confirmed: ['cancelled'] }
-const ADMIN_STATUSES = ['pending', 'confirmed', 'cancelled', 'completed']
+// El admin además puede marcar como completada una confirmada. Nunca se reactiva una cancelada.
+const ADMIN_TRANSITIONS: Record<string, string[]> = { pending: ['confirmed', 'cancelled'], confirmed: ['cancelled', 'completed'] }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const bookingId = Number(id)
-  if (!Number.isInteger(bookingId)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const bookingId = parseId(id)
+  if (!bookingId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   const body = await req.json().catch(() => null)
   if (!body) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
   const status = String(body.status ?? '')
@@ -65,7 +67,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   let allowed = false
   let actor: 'host' | 'guest' | 'admin' = 'admin'
   if (role === 'admin') {
-    allowed = ADMIN_STATUSES.includes(status) && status !== booking.status
+    allowed = (ADMIN_TRANSITIONS[booking.status] ?? []).includes(status)
   } else if (isHost) {
     actor = 'host'
     allowed = (HOST_TRANSITIONS[booking.status] ?? []).includes(status)

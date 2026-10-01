@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
+import { useRouter } from 'next/navigation'
+import DashboardNav from '@/components/DashboardNav'
 
 type Booking = {
   id: number
@@ -37,7 +39,7 @@ const statusLabel: Record<string, string> = {
   completed: 'Completada',
 }
 
-type FilterTab = 'all' | 'pending' | 'confirmed' | 'completed'
+type FilterTab = 'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled'
 
 export default function ReservasPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -47,12 +49,26 @@ export default function ReservasPage() {
   const [expanded, setExpanded] = useState<number | null>(null)
   const [hostNoteInput, setHostNoteInput] = useState<Record<number, string>>({})
 
+  const router = useRouter()
+  const [loadError, setLoadError] = useState(false)
+  const [openingChat, setOpeningChat] = useState<number | null>(null)
+
   useEffect(() => {
     fetch('/api/bookings')
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(data => { setBookings(Array.isArray(data) ? data : []); setLoading(false) })
-      .catch(() => setLoading(false))
+      .catch(() => { setLoadError(true); setLoading(false) })
   }, [])
+
+  // Abre (o crea) el chat con el huésped de esta reserva.
+  async function openChat(id: number) {
+    setOpeningChat(id)
+    const res = await fetch(`/api/bookings/${id}/chat`, { method: 'POST' })
+    const data = await res.json().catch(() => ({}))
+    setOpeningChat(null)
+    if (res.ok && data.id) router.push(`/mensajes/${data.id}`)
+    else alert(data.error ?? 'No se pudo abrir el chat')
+  }
 
   async function updateStatus(id: number, status: string, hostNotes?: string) {
     if (status === 'cancelled') {
@@ -132,24 +148,16 @@ export default function ReservasPage() {
         }
       `}</style>
 
-      <nav className="nav">
-        <a href="/" className="nav-logo">RESER<span>-VE</span></a>
-        <div className="nav-links">
-          <a href="/dashboard" className="nav-link">Dashboard</a>
-          <a href="/dashboard/reservas" className="nav-link" style={{color:'var(--cacao)'}}>Reservas</a>
-          <a href="/dashboard/posada/nueva" className="nav-link">Nueva posada</a>
-          <a href="/api/auth/signout" className="nav-link">Cerrar sesión</a>
-        </div>
-      </nav>
+      <DashboardNav />
 
       <main className="main">
         <div className="page-title">Gestión de reservas</div>
         <div className="page-sub">Confirma, cancela o revisa todas las reservas de tus posadas</div>
 
         <div className="tabs">
-          {(['all', 'pending', 'confirmed', 'completed'] as FilterTab[]).map(t => (
+          {(['all', 'pending', 'confirmed', 'completed', 'cancelled'] as FilterTab[]).map(t => (
             <button key={t} className={`tab${filter === t ? ' active' : ''}`} onClick={() => setFilter(t)}>
-              {t === 'all' ? 'Todas' : t === 'pending' ? 'Pendientes' : t === 'confirmed' ? 'Confirmadas' : 'Completadas'}
+              {t === 'all' ? 'Todas' : t === 'pending' ? 'Pendientes' : t === 'confirmed' ? 'Confirmadas' : t === 'completed' ? 'Completadas' : 'Canceladas'}
               <span style={{marginLeft:'0.4rem',fontSize:'0.7rem',fontWeight:600,color:'inherit',opacity:0.7}}>
                 ({t === 'all' ? bookings.length : bookings.filter(b => b.status === t).length})
               </span>
@@ -160,6 +168,8 @@ export default function ReservasPage() {
         <div className="table-wrap">
           {loading ? (
             <div className="loading">Cargando reservas…</div>
+          ) : loadError ? (
+            <div className="empty">No pudimos cargar tus reservas. Recarga la página.</div>
           ) : filtered.length === 0 ? (
             <div className="empty">No hay reservas en esta categoría.</div>
           ) : (
@@ -172,11 +182,10 @@ export default function ReservasPage() {
                 <span>Acciones</span>
               </div>
               {filtered.map(b => (
-                <>
-                  <div key={b.id} className="t-row" onClick={() => setExpanded(expanded === b.id ? null : b.id)}>
+                <Fragment key={b.id}>
+                  <div className="t-row" onClick={() => setExpanded(expanded === b.id ? null : b.id)}>
                     <div>
                       <div style={{fontWeight:600}}>{b.guestName || `Huésped #${b.guestId}`}</div>
-                      <div style={{fontSize:'0.76rem',color:'var(--muted)'}}>{b.guestEmail}</div>
                       {b.bookingCode && <span className="code-chip" style={{marginTop:3,display:'inline-block'}}>{b.bookingCode}</span>}
                     </div>
                     <div>
@@ -204,6 +213,11 @@ export default function ReservasPage() {
                           </button>
                         </>
                       )}
+                      {(b.status === 'pending' || b.status === 'confirmed' || b.status === 'completed') && (
+                        <button className="act-btn act-expand" disabled={openingChat === b.id} onClick={() => openChat(b.id)}>
+                          💬 Chat
+                        </button>
+                      )}
                       {b.status === 'confirmed' && (
                         <button className="act-btn act-cancel" disabled={updating === b.id} onClick={() => updateStatus(b.id, 'cancelled')}>
                           Cancelar
@@ -218,10 +232,6 @@ export default function ReservasPage() {
                         <div className="expand-field">
                           <label>Huésped</label>
                           <span>{b.guestName}</span>
-                        </div>
-                        <div className="expand-field">
-                          <label>Correo</label>
-                          <span>{b.guestEmail}</span>
                         </div>
                         <div className="expand-field">
                           <label>Código</label>
@@ -299,7 +309,7 @@ export default function ReservasPage() {
                       )}
                     </div>
                   )}
-                </>
+                </Fragment>
               ))}
             </>
           )}

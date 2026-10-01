@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { parseId } from '@/lib/http'
 import { getDb } from '@/lib/db'
-import { conversations, messages, users } from '@/lib/db/schema'
+import { conversations, messages, users, bookings, posadas } from '@/lib/db/schema'
 import { auth } from '@/auth'
 import { eq, asc } from 'drizzle-orm'
 
@@ -13,8 +14,8 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   const role = (session.user as any).role
   const db = getDb()
 
-  const convId = Number(id)
-  if (!Number.isInteger(convId)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const convId = parseId(id)
+  if (!convId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   const [conv] = await db.select().from(conversations).where(eq(conversations.id, convId))
   if (!conv) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -36,5 +37,12 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
     ))
   }
 
-  return NextResponse.json({ ...conv, messages: msgs })
+  // Nombre de la posada de la reserva asociada (para "Relacionado con").
+  let posadaNombre: string | null = null
+  if (conv.bookingId) {
+    const [row] = await db.select({ nombre: posadas.nombre }).from(bookings)
+      .innerJoin(posadas, eq(posadas.id, bookings.posadaId)).where(eq(bookings.id, conv.bookingId))
+    posadaNombre = row?.nombre ?? null
+  }
+  return NextResponse.json({ ...conv, posadaNombre, messages: msgs })
 }

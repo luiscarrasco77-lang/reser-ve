@@ -28,5 +28,5 @@ export async function GET() {
       .where(inArray(bookings.status, ['confirmed', 'completed'])),
   ])
 
-  return NextResponse.json({ totalUsers, totalPosadas, totalBookings, pendingReview, pendingBookings, revenue: revenue ?? 0 })
+  return NextResponse.json({ totalUsers, totalPosadas, totalBookings, pendingReview, pendingBookings, revenue: Number(revenue ?? 0), commission: Math.round(Number(revenue ?? 0) * 0.1) })
 }

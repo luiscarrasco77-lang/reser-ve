@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { parseId } from '@/lib/http'
+import { recomputeRatings } from '@/lib/reviews'
 import { getDb } from '@/lib/db'
 import { reviews, bookings, posadas, users } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
@@ -11,7 +13,10 @@ export async function POST(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: 'Inicia sesión para reseñar' }, { status: 401 })
 
   const userId = parseInt((session.user as any).id)
-  const { posadaId, rating, texto } = await req.json()
+  const body = await req.json().catch(() => ({}))
+  const posadaId = parseId(body.posadaId)
+  const { rating } = body
+  const texto = typeof body.texto === 'string' ? body.texto.slice(0, 2000) : ''
 
   const r = Math.round(Number(rating))
   if (!posadaId || !(r >= 1 && r <= 5) || !texto?.trim()) {
@@ -46,12 +51,8 @@ export async function POST(req: NextRequest) {
     texto: texto.trim(),
   }).returning()
 
-  // Recalcular rating y conteo de la posada.
-  const all = await db.select({ rating: reviews.rating }).from(reviews).where(eq(reviews.posadaId, posadaId))
-  const avg = all.reduce((s, x) => s + x.rating, 0) / all.length
-  await db.update(posadas)
-    .set({ rating: Math.round(avg * 10) / 10, reviews: all.length, updatedAt: new Date() })
-    .where(eq(posadas.id, posadaId))
+  // Recalcular rating y conteo (solo reseñas verificadas).
+  await recomputeRatings([posadaId])
 
   return NextResponse.json(review, { status: 201 })
 }

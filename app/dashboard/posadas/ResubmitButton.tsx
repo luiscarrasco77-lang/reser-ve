@@ -19,6 +19,8 @@ export default function ResubmitButton({ slug, status, action = 'resubmit' }: { 
     if (res.ok) {
       setDone(true)
       router.refresh()
+    } else {
+      alert((await res.json().catch(() => ({}))).error ?? 'No se pudo completar la acción')
     }
     setLoading(false)
   }

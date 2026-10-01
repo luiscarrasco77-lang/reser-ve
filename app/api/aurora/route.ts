@@ -1,3 +1,5 @@
+import { NextRequest } from 'next/server'
+import { rateLimit } from '@/lib/http'
 import { convertToModelMessages, streamText, stepCountIs, tool, type UIMessage } from 'ai'
 import { z } from 'zod'
 import { queryPosadas, isAvailable } from '@/lib/posadas-query'
@@ -10,7 +12,7 @@ const MODEL = AI_MODEL
 const SYSTEM = `Eres **Aurora**, la concierge de viajes IA de RESER-VE, la plataforma de posadas auténticas de Venezuela. Tu misión: convertir el sueño de viaje de una persona en un itinerario concreto y reservable, usando posadas reales de la plataforma.
 
 # Cómo trabajas
-1. Entiende lo que pide: destino(s) o vibra (playa, aventura, montaña, relax), fechas o mes, número de personas, presupuesto por noche o total, y método de pago si lo menciona.
+1. Entiende lo que pide (si falta algún dato como el nº de personas, busca igualmente y da precios por noche; no hagas preguntas antes de mostrar opciones): destino(s) o vibra (playa, aventura, montaña, relax), fechas o mes, número de personas, presupuesto por noche o total, y método de pago si lo menciona.
 2. USA la herramienta \`buscarPosadas\` para encontrar opciones reales antes de recomendar NADA. Nunca inventes posadas, precios ni datos: solo usa lo que devuelven las herramientas.
 3. Si el usuario da fechas concretas, usa \`verDisponibilidad\` para las posadas que vas a recomendar.
 4. Arma un itinerario claro, día por día o por tramos, combinando destinos si tiene sentido (ej: 3 noches Los Roques + 2 noches Canaima).
@@ -27,7 +29,11 @@ const SYSTEM = `Eres **Aurora**, la concierge de viajes IA de RESER-VE, la plata
 Si la petición no tiene que ver con viajar por Venezuela, redirige con amabilidad.`
 
 export async function POST(req: Request) {
-  const { messages }: { messages: UIMessage[] } = await req.json()
+  const limited = rateLimit(req as NextRequest, 'aurora', 20, 10 * 60_000)
+  if (limited) return limited
+  const body = await req.json().catch(() => null)
+  const messages: UIMessage[] = Array.isArray(body?.messages) ? body.messages.slice(-30) : []
+  if (messages.length === 0) return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 })
 
   try {
     const result = streamText({

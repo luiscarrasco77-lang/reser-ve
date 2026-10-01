@@ -90,7 +90,7 @@ export default function FavoritosPage() {
                     <div className="card-tipo">{p.tipo} · {p.destino}</div>
                     <div className="card-nombre">{p.nombre}</div>
                     <div className="card-meta">
-                      <span>★ {p.rating} · {p.reviews} reseñas</span>
+                      <span>{p.reviews ? `★ ${p.rating} · ${p.reviews} reseñas` : 'Nueva en RESER-VE'}</span>
                       <span className="card-precio">${p.precio}<span style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '0.72rem' }}>/noche</span></span>
                     </div>
                   </div>

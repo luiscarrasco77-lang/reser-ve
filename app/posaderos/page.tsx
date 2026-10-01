@@ -350,7 +350,7 @@ export default function PosaderosPage() {
         <div className="sec-eyebrow">Condiciones claras</div>
         <h2 className="sec-title">Reglas simples, sin letra pequeña</h2>
         <div className="terms-grid">
-          <div className="term"><div className="term-big">0 $</div><div className="term-t">Publicar y mantener tu posada</div><p>Sin mensualidad, sin costo de alta, sin permanencia. Puedes pausar tu publicación cuando quieras.</p></div>
+          <div className="term"><div className="term-big">0 $</div><div className="term-t">Publicar y mantener tu posada</div><p>Sin mensualidad, sin costo de alta, sin permanencia. Puedes pausar tu publicación cuando quieras (al reactivarla pasa por una revisión rápida).</p></div>
           <div className="term"><div className="term-big">10%</div><div className="term-t">Solo por reserva confirmada</div><p>Se calcula sobre el total de la estadía y lo asume la posada. El viajero ve y paga exactamente tu precio publicado.</p></div>
           <div className="term"><div className="term-big">=</div><div className="term-t">Paridad de precio</div><p>El precio que publiques en RESER-VE debe ser el mismo que ofreces por otros canales (teléfono, redes, otras plataformas).</p></div>
           <div className="term"><div className="term-big">💬</div><div className="term-t">Todo por la app</div><p>La comunicación con huéspedes se hace por el chat de RESER-VE. Así evitamos fraudes y protegemos a ambas partes.</p></div>

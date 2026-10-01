@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
+import { parseId } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { posadas, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -12,8 +13,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const { id } = await params
-  const posadaId = Number(id)
-  if (!Number.isInteger(posadaId)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const posadaId = parseId(id)
+  if (!posadaId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   const { action, notes: rawNotes } = await req.json().catch(() => ({}))
   const notes = typeof rawNotes === 'string' ? rawNotes.trim().slice(0, 2000) || null : null
 
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     reject: ['pending_review'],
     suspend: ['active', 'pending_review'],
   }
-  if (!FROM[action]) return NextResponse.json({ error: 'Acción inválida' }, { status: 400 })
+  if (typeof action !== 'string' || !Object.hasOwn(FROM, action)) return NextResponse.json({ error: 'Acción inválida' }, { status: 400 })
   if (action === 'reject' && !notes) return NextResponse.json({ error: 'Indica qué debe corregir el posadero' }, { status: 400 })
 
   const db = getDb()

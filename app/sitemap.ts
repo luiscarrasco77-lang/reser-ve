@@ -1,20 +1,23 @@
 import type { MetadataRoute } from 'next'
-import { posadas, destinos } from '@/lib/data'
 import { SITE_URL } from '@/lib/constants'
+import { queryPosadas } from '@/lib/posadas-query'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Se regenera cada hora con las posadas activas de la BD.
+export const revalidate = 3600
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = ['', '/buscar', '/aurora', '/posaderos', '/vision', '/faq', '/terminos', '/privacidad'].map(p => ({
     url: `${SITE_URL}${p}`,
     changeFrequency: 'weekly' as const,
     priority: p === '' ? 1 : 0.7,
   }))
 
-  const destinoRoutes = destinos.map(d => ({
-    url: `${SITE_URL}/destinos/${d.slug}`,
+  const posadas = await queryPosadas()
+  const destinoRoutes = [...new Set(posadas.map(p => p.destinoSlug))].map(slug => ({
+    url: `${SITE_URL}/destinos/${slug}`,
     changeFrequency: 'weekly' as const,
     priority: 0.6,
   }))
-
   const posadaRoutes = posadas.map(p => ({
     url: `${SITE_URL}/posadas/${p.slug}`,
     changeFrequency: 'weekly' as const,

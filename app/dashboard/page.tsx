@@ -1,4 +1,5 @@
 import { auth } from '@/auth'
+import DashboardNav from '@/components/DashboardNav'
 import { redirect } from 'next/navigation'
 import { getDb } from '@/lib/db'
 import { bookings, posadas, users } from '@/lib/db/schema'
@@ -100,16 +101,7 @@ export default async function DashboardPage() {
         .empty-state p{font-size:0.9rem;margin-bottom:1rem;}
       `}</style>
 
-      <nav className="dash-nav">
-        <a href="/" className="dash-nav-logo">RESER<span>-VE</span></a>
-        <div className="dash-nav-links">
-          <a href="/dashboard" className="dash-nav-link active">Dashboard</a>
-          <a href="/dashboard/posadas" className="dash-nav-link">Mis posadas</a>
-          <a href="/dashboard/reservas" className="dash-nav-link">Reservas</a>
-          <a href="/dashboard/posada/nueva" className="dash-nav-link">+ Nueva</a>
-          <a href="/api/auth/signout" className="dash-nav-link">Cerrar sesión</a>
-        </div>
-      </nav>
+      <DashboardNav />
 
       <main className="dash-main">
         <div className="dash-header">
@@ -131,8 +123,9 @@ export default async function DashboardPage() {
             <div className="stat-value">{hostPosadas.filter(p => p.status === 'active').length}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">Total ganado</div>
+            <div className="stat-label">Reservas confirmadas (bruto)</div>
             <div className="stat-value cacao">${totalEarned.toLocaleString()}</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: 4 }}>Comisión RESER-VE 10%: ${Math.round(totalEarned * 0.1).toLocaleString()}</div>
           </div>
         </div>
 
@@ -201,7 +194,6 @@ export default async function DashboardPage() {
                     <span style={{fontWeight:600}}>{posada?.nombre ?? '—'}</span>
                     <div>
                       <div style={{fontSize:'0.85rem',fontWeight:600}}>{guest?.name ?? `#${b.guestId}`}</div>
-                      {guest?.email && <div style={{fontSize:'0.75rem',color:'var(--muted)'}}>{guest.email}</div>}
                     </div>
                     <span style={{color:'var(--muted)'}}>{b.checkIn} → {b.checkOut}</span>
                     <span style={{fontWeight:700}}>${b.totalPrice}</span>

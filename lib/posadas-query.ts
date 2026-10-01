@@ -26,19 +26,22 @@ function toLite(p: any): PosadaLite {
 export async function queryPosadas(opts: {
   destino?: string; precioMax?: number; huespedes?: number; texto?: string
 } = {}): Promise<PosadaLite[]> {
-  const { posadas } = await import('./data')
+  // Con base de datos, solo las posadas activas de la BD (lo que el admin aprueba o suspende).
+  // Sin BD (desarrollo), el catálogo curado de lib/data.
   const bySlug = new Map<string, PosadaLite>()
-  for (const p of posadas) bySlug.set(p.slug, toLite(p))
-
-  // Añade/actualiza con posadas reales activas de la DB (sin romper si falla).
+  let fromDb = false
   if (process.env.DATABASE_URL) {
     try {
-      const db = getDb()
-      const rows = await db.select().from(posadasTable).where(eq(posadasTable.status, 'active'))
+      const rows = await getDb().select().from(posadasTable).where(eq(posadasTable.status, 'active'))
       for (const r of rows) bySlug.set(r.slug, toLite(r))
+      fromDb = true
     } catch {
-      // DB no disponible o esquema desactualizado: seguimos con el catálogo curado.
+      // BD no disponible: catálogo curado.
     }
+  }
+  if (!fromDb) {
+    const { posadas } = await import('./data')
+    for (const p of posadas) bySlug.set(p.slug, toLite(p))
   }
 
   const base = [...bySlug.values()]

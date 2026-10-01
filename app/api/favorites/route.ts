@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { parseId } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { favorites, posadas } from '@/lib/db/schema'
 import { eq, and, inArray } from 'drizzle-orm'
@@ -36,11 +37,13 @@ export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const userId = parseInt((session.user as any).id)
-  const { posadaId } = await req.json()
+  const posadaId = parseId((await req.json().catch(() => ({}))).posadaId)
   if (!posadaId) return NextResponse.json({ error: 'posadaId requerido' }, { status: 400 })
 
   try {
     const db = getDb()
+    const [p] = await db.select({ status: posadas.status }).from(posadas).where(eq(posadas.id, posadaId))
+    if (!p || p.status !== 'active') return NextResponse.json({ error: 'Posada no encontrada' }, { status: 404 })
     const existing = await db.select().from(favorites)
       .where(and(eq(favorites.userId, userId), eq(favorites.posadaId, posadaId)))
     if (existing.length === 0) {
@@ -56,7 +59,7 @@ export async function DELETE(req: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const userId = parseInt((session.user as any).id)
-  const { posadaId } = await req.json()
+  const posadaId = parseId((await req.json().catch(() => ({}))).posadaId)
   if (!posadaId) return NextResponse.json({ error: 'posadaId requerido' }, { status: 400 })
 
   try {

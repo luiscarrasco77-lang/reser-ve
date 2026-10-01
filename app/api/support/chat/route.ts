@@ -1,3 +1,5 @@
+import { NextRequest } from 'next/server'
+import { rateLimit } from '@/lib/http'
 import { convertToModelMessages, streamText, stepCountIs, tool, type UIMessage } from 'ai'
 import { z } from 'zod'
 import { auth } from '@/auth'
@@ -6,6 +8,7 @@ import { conversations, messages as messagesTable, users } from '@/lib/db/schema
 import { eq } from 'drizzle-orm'
 import { SUPPORT_SYSTEM_PROMPT } from '@/lib/support-kb'
 import { AI_MODEL } from '@/lib/constants'
+import { emailNewMessage } from '@/lib/email'
 
 // El asistente puede dar varios pasos (responder + usar herramienta)
 export const maxDuration = 30
@@ -14,7 +17,11 @@ export const maxDuration = 30
 const MODEL = AI_MODEL
 
 export async function POST(req: Request) {
-  const { messages }: { messages: UIMessage[] } = await req.json()
+  const limited = rateLimit(req as NextRequest, 'vera', 30, 10 * 60_000)
+  if (limited) return limited
+  const body = await req.json().catch(() => null)
+  const messages: UIMessage[] = Array.isArray(body?.messages) ? body.messages.slice(-30) : []
+  if (messages.length === 0) return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 })
 
   const session = await auth()
   const userId = session?.user ? parseInt((session.user as any).id) : null
@@ -64,6 +71,12 @@ export async function POST(req: Request) {
                 senderRole: userRole,
                 body: `[Ticket abierto vía asistente IA]\n\n${resumen}`,
               })
+              // Avisa a los admins del nuevo ticket.
+              const admins = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.role, 'admin'))
+              await Promise.all(admins.map(a => emailNewMessage({
+                recipientEmail: a.email, recipientName: a.name, senderName: userName ?? 'Usuario',
+                subject: `[Soporte] ${asunto}`, body: resumen, conversationId: conv.id,
+              })))
 
               return {
                 creado: true,

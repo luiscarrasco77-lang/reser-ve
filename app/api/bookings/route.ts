@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
+import { parseId } from '@/lib/http'
 import { BOOKINGS_OPEN, PRIVATE_PHASE_MSG } from '@/lib/constants'
 import { getDb } from '@/lib/db'
 import { bookings, posadas, users } from '@/lib/db/schema'
@@ -69,11 +70,16 @@ export async function POST(req: NextRequest) {
   if (!BOOKINGS_OPEN && (session.user as any).role !== 'admin') {
     return NextResponse.json({ error: PRIVATE_PHASE_MSG }, { status: 403 })
   }
-  const { posadaId, checkIn, checkOut, paymentMethod, guestCount, notes } = await req.json()
+  const body = await req.json().catch(() => null)
+  if (!body) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
+  const { checkIn, checkOut, guestCount } = body
+  const posadaId = parseId(body.posadaId)
+  const paymentMethod = typeof body.paymentMethod === 'string' ? body.paymentMethod.slice(0, 40) : null
+  const notes = typeof body.notes === 'string' ? body.notes.trim().slice(0, 1000) || null : null
 
   // ── Validate dates server-side (never trust the client) ──
   const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
-  if (!posadaId || !DATE_RE.test(checkIn ?? '') || !DATE_RE.test(checkOut ?? '')) {
+  if (!posadaId || !DATE_RE.test(String(checkIn ?? '')) || !DATE_RE.test(String(checkOut ?? ''))) {
     return NextResponse.json({ error: 'Fechas inválidas' }, { status: 400 })
   }
   const inD = new Date(checkIn + 'T00:00:00')
@@ -115,8 +121,8 @@ export async function POST(req: NextRequest) {
   const totalPrice = nights * posada.precio
 
   const year = new Date().getFullYear()
-  const rand = Math.floor(1000 + Math.random() * 9000)
-  const bookingCode = `RV-${year}-${rand}`
+  // Código legible y con margen amplio para evitar colisiones (6 caracteres alfanuméricos).
+  const bookingCode = `RV-${year}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
 
   const [booking] = await db.insert(bookings).values({
     bookingCode, posadaId, checkIn, checkOut, nights, totalPrice,

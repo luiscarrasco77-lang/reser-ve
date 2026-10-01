@@ -9,6 +9,7 @@ import { venezuelaLocations } from '@/lib/locations-ve'
 import { searchPosadas, resolveLocation, type SearchOptions } from '@/lib/search'
 import { regions, findRegionsByQuery, type Region } from '@/lib/regions'
 import NavUser from '@/components/NavUser'
+import { ratingText } from '@/lib/rating'
 import { useBookingsOpen, PrivatePhaseNotice } from '@/components/PrivatePhase'
 
 const MapView = dynamic(() => import('@/components/MapView'), {
@@ -249,9 +250,7 @@ function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }
           <div style={{flex:1,minWidth:0}}>
             <h2 className="drw-name">{posada.nombre}</h2>
             <div className="drw-meta">
-              <span className="drw-stars">{'★'.repeat(Math.round(posada.rating))}</span>
-              <span className="drw-rnum">{posada.rating}</span>
-              <span className="drw-rrev">({posada.reviews} reseñas)</span>
+              <span className="drw-rnum">{ratingText(posada.rating, posada.reviews)}</span>
               <span style={{color:'var(--muted)'}}>·</span>
               <span className="drw-rooms">{posada.habitaciones} hab.</span>
             </div>
@@ -656,7 +655,7 @@ function BuscarContent() {
           .map-col{
             display:none;
             position:fixed;
-            inset:0;
+            inset:var(--pp-h,0px) 0 0 0;
             padding:0;
             z-index:10;
             background:white;
@@ -985,9 +984,7 @@ function BuscarContent() {
                       <div className="c-price">${p.precio}<span style={{fontWeight:400,fontSize:'0.66rem'}}>/noche</span></div>
                     </div>
                     <div style={{display:'flex',alignItems:'center',gap:'0.38rem'}}>
-                      <span className="c-stars">{'★'.repeat(Math.round(p.rating))}</span>
-                      <span className="c-rnum">{p.rating}</span>
-                      <span className="c-rrev">({p.reviews})</span>
+                      <span className="c-rnum">{ratingText(p.rating, p.reviews, true)}</span>
                     </div>
                     <div className="c-tags">{p.tags.map(t=><span key={t} className="ctag">{t}</span>)}</div>
                     <div className="c-pay">{p.metodoPago.map(m=><span key={m} className="ptag">{m}</span>)}</div>

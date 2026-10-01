@@ -6,12 +6,12 @@ import bcrypt from 'bcryptjs'
 
 // Fija una nueva contraseña usando el token del correo.
 export async function POST(req: NextRequest) {
-  const { token, password } = await req.json()
+  const { token, password } = await req.json().catch(() => ({}))
   if (!token || typeof token !== 'string') {
     return NextResponse.json({ error: 'Enlace inválido' }, { status: 400 })
   }
-  if (String(password ?? '').length < 8) {
-    return NextResponse.json({ error: 'La contraseña debe tener al menos 8 caracteres' }, { status: 400 })
+  if (typeof password !== 'string' || password.length < 8 || password.length > 128) {
+    return NextResponse.json({ error: 'La contraseña debe tener entre 8 y 128 caracteres' }, { status: 400 })
   }
 
   const db = getDb()

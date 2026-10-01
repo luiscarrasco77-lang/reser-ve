@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
+import { parseId } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { conversations, messages, posadas, bookings } from '@/lib/db/schema'
 import { BOOKINGS_OPEN, PRIVATE_PHASE_MSG, MAX_MESSAGE } from '@/lib/constants'
@@ -17,9 +18,9 @@ export async function POST(req: NextRequest) {
   const userName = session.user.name ?? 'Viajero'
   const userRole = (session.user as any).role
   const payload = await req.json().catch(() => ({}))
-  const posadaId = Number(payload.posadaId)
+  const posadaId = parseId(payload.posadaId)
   const message = typeof payload.message === 'string' ? payload.message : ''
-  if (!Number.isInteger(posadaId)) return NextResponse.json({ error: 'posadaId requerido' }, { status: 400 })
+  if (!posadaId) return NextResponse.json({ error: 'posadaId requerido' }, { status: 400 })
   if (message.length > MAX_MESSAGE) return NextResponse.json({ error: `El mensaje no puede superar ${MAX_MESSAGE} caracteres` }, { status: 400 })
 
   const db = getDb()

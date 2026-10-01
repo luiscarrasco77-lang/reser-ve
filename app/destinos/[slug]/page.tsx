@@ -1,5 +1,35 @@
 import { notFound } from 'next/navigation'
-import { getDestino, getPosadasByDestino } from '@/lib/data'
+import type { Metadata } from 'next'
+import { and, eq } from 'drizzle-orm'
+import { getDestino, getPosadasByDestino, type Destino } from '@/lib/data'
+import { getDb } from '@/lib/db'
+import { posadas as posadasTable } from '@/lib/db/schema'
+
+// Posadas activas del destino (BD) y su ficha: curada si existe, o generada a partir
+// de las posadas (para destinos nuevos que publiquen los posaderos).
+async function loadDestino(slug: string) {
+  let list: { slug: string; nombre: string; destino: string; tipo: string; precio: number; rating: number; reviews: number; descripcion: string; imgs: string[] }[]
+  if (process.env.DATABASE_URL) {
+    const rows = await getDb().select().from(posadasTable)
+      .where(and(eq(posadasTable.destinoSlug, slug), eq(posadasTable.status, 'active')))
+    list = rows.map(r => ({ ...r, imgs: (r.imgs as string[]) ?? [] }))
+  } else {
+    list = getPosadasByDestino(slug)
+  }
+  const curated = getDestino(slug)
+  const destino: Destino | undefined = curated ?? (list.length > 0 ? {
+    slug, nombre: list[0].destino, tagline: 'Posadas auténticas de Venezuela',
+    descripcion: `Descubre las posadas de ${list[0].destino} en RESER-VE.`,
+    hero: list.find(p => p.imgs[0])?.imgs[0] ?? '/images/los-roques-hero.webp', posadaSlugs: [],
+  } : undefined)
+  return { destino, posadas: list }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { destino } = await loadDestino((await params).slug)
+  if (!destino) return { title: 'Destino no encontrado' }
+  return { title: `Posadas en ${destino.nombre}`, description: destino.tagline }
+}
 
 export default async function DestinoPage({
   params,
@@ -7,15 +37,14 @@ export default async function DestinoPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const destino = getDestino(slug)
-  const posadas = getPosadasByDestino(slug)
+  const { destino, posadas } = await loadDestino(slug)
 
   if (!destino) notFound()
 
-  const avgRating =
-    posadas.length > 0
-      ? (posadas.reduce((sum, p) => sum + p.rating, 0) / posadas.length).toFixed(1)
-      : '—'
+  const rated = posadas.filter(p => p.reviews > 0)
+  const avgRating = rated.length > 0
+    ? (rated.reduce((sum, p) => sum + p.rating, 0) / rated.length).toFixed(1)
+    : null
 
   function renderStars(rating: number) {
     const full = Math.floor(rating)
@@ -301,8 +330,8 @@ export default async function DestinoPage({
             <div className="stat-l">posadas disponibles</div>
           </div>
           <div className="stat-card">
-            <div className={`stat-n${Number(avgRating) >= 4.5 ? ' cacao' : ''}`}>★ {avgRating}</div>
-            <div className="stat-l">valoración promedio</div>
+            <div className={`stat-n${Number(avgRating) >= 4.5 ? ' cacao' : ''}`}>{avgRating ? `★ ${avgRating}` : 'Nuevo'}</div>
+            <div className="stat-l">{avgRating ? 'valoración promedio' : 'destino en RESER-VE'}</div>
           </div>
           <div className="stat-card">
             <div className="stat-n">Flexible</div>
@@ -326,14 +355,14 @@ export default async function DestinoPage({
             {posadas.map((posada) => (
               <a href={`/posadas/${posada.slug}`} className="card" key={posada.slug}>
                 <div className="card-img">
-                  <img src={posada.imgs[0]} alt={posada.nombre} />
+                  {posada.imgs[0] && <img src={posada.imgs[0]} alt={posada.nombre} />}
                   <div className="card-tipo">{posada.tipo}</div>
                   <div className="card-price-badge">${posada.precio} / noche</div>
                 </div>
                 <div className="card-body">
                   <h3 className="card-title">{posada.nombre}</h3>
                   <p className="card-location">{posada.destino}</p>
-                  <p className="card-rating">{renderStars(posada.rating)} {posada.rating} · {posada.reviews} reseñas</p>
+                  <p className="card-rating">{posada.reviews ? <>{renderStars(posada.rating)} {posada.rating} · {posada.reviews} reseñas</> : 'Nueva en RESER-VE'}</p>
                   <p className="card-desc">{posada.descripcion.slice(0, 100)}…</p>
                   <div className="card-bottom">
                     <div className="price">${posada.precio} / noche</div>

@@ -20,7 +20,7 @@ export function PrivatePhaseNotice({ compact = false }: { compact?: boolean }) {
     }}>
       <div style={{ fontWeight: 800, fontSize: compact ? '0.86rem' : '0.95rem' }}>🔒 Reservas muy pronto</div>
       <div style={{ fontSize: compact ? '0.74rem' : '0.8rem', color: '#7A8699', marginTop: 4, lineHeight: 1.5 }}>
-        RESER-VE está en fase privada mientras incorporamos posadas y perfeccionamos el pago. Guarda tus favoritas y te avisaremos cuando abran las reservas.
+        RESER-VE está en fase privada mientras incorporamos posadas y perfeccionamos el pago. Crea tu cuenta gratis y guarda tus favoritas: te avisaremos por correo cuando abran las reservas.
       </div>
     </div>
   )
@@ -29,6 +29,7 @@ export function PrivatePhaseNotice({ compact = false }: { compact?: boolean }) {
 // Franja superior del sitio: fija, de altura --pp-h. Los headers usan top: var(--pp-h)
 // (ver globals.css) para quedar justo debajo y no chocar.
 export function PrivatePhaseBar() {
+  const { data } = useSession()
   if (BOOKINGS_OPEN) return null
   return (
     <>
@@ -45,7 +46,9 @@ export function PrivatePhaseBar() {
       <div className="pp-bar" role="note">
         <strong>Fase privada</strong>
         <span className="pp-long">· Estamos sumando posadas; las reservas abren muy pronto.</span>
-        <a href="/posaderos">¿Tienes una posada? Únete →</a>
+        {(data?.user as any)?.role === 'host' || (data?.user as any)?.role === 'admin'
+          ? <span>Ya puedes publicar y editar tus posadas.</span>
+          : <a href="/posaderos">¿Tienes una posada? Únete →</a>}
       </div>
     </>
   )

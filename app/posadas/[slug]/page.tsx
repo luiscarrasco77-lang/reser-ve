@@ -8,6 +8,7 @@ import NavUser from '@/components/NavUser'
 import { useBookingsOpen, PrivatePhaseNotice } from '@/components/PrivatePhase'
 import FavoriteButton from '@/components/FavoriteButton'
 import { SITE_URL } from '@/lib/constants'
+import { ratingText } from '@/lib/rating'
 
 export default function FichaPosada() {
   const rawParams = useParams<{ slug: string }>()
@@ -100,7 +101,7 @@ export default function FichaPosada() {
     } catch { /* noop */ } finally { setContactando(false) }
   }
 
-  const isSuperhost = posada.rating >= 4.7
+  const isSuperhost = posada.reviews >= 5 && posada.rating >= 4.8
 
   const renderStars = (rating: number) => {
     return Array.from({length: 5}, (_, i) => (
@@ -213,7 +214,7 @@ export default function FichaPosada() {
         .reseña-texto{font-size:0.85rem;color:var(--muted);line-height:1.7;font-style:italic;}
 
         /* BOOKING CARD */
-        .booking-card{position:sticky;top:5.5rem;background:linear-gradient(180deg,white 0%,rgba(253,251,247,0.5) 100%);border:1px solid var(--line);border-radius:24px;padding:1.75rem;box-shadow:0 8px 32px rgba(26,43,76,0.10);}
+        .booking-card{position:sticky;top:calc(var(--pp-h,0px) + 5.5rem);background:linear-gradient(180deg,white 0%,rgba(253,251,247,0.5) 100%);border:1px solid var(--line);border-radius:24px;padding:1.75rem;box-shadow:0 8px 32px rgba(26,43,76,0.10);}
         .booking-precio{font-family:'Playfair Display',serif;font-size:2.4rem;font-weight:700;letter-spacing:-0.03em;color:var(--indigo);margin-bottom:0.2rem;line-height:1;}
         .booking-precio span{font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:400;color:var(--muted);}
         .booking-rating{font-size:0.8rem;color:var(--muted);margin-bottom:1.25rem;}
@@ -300,13 +301,12 @@ export default function FichaPosada() {
             <div className="ficha-tipo">{posada.tipo}</div>
             <h1 className="ficha-nombre">{posada.nombre}</h1>
             <div className="ficha-meta">
-              <span className="ficha-rating">★ {posada.rating}</span>
-              <span className="ficha-reviews">{posada.reviews} reseñas</span>
+              <span className="ficha-rating">{ratingText(posada.rating, posada.reviews)}</span>
               <span className="ficha-hab">{posada.habitaciones} habitaciones</span>
             </div>
             <hr />
             <div className="section-label">Sobre esta posada</div>
-            <p className="descripcion">{posada.descripcion}</p>
+            <p className="descripcion" style={{ whiteSpace: 'pre-line' }}>{posada.descripcion}</p>
             <div className="section-label">Servicios incluidos</div>
             <div className="servicios-grid">
               {posada.servicios.map(s => (
@@ -319,18 +319,20 @@ export default function FichaPosada() {
             <hr />
             <div className="section-label">Tu anfitrión</div>
             <div className="host-card">
-              <div className="host-avatar">{posada.host.nombre[0]}</div>
+              <div className="host-avatar">{(posada.host.nombre || 'P')[0]}</div>
               <div>
                 <div className="host-nombre-wrap">
-                  <div className="host-nombre">{posada.host.nombre}</div>
+                  <div className="host-nombre">{posada.host.nombre || 'Posadero'}</div>
                   {isSuperhost && <span className="host-badge">Superposadero</span>}
                 </div>
-                <div className="host-meta">
-                  Posadero desde {posada.host.desde} · Idiomas: {posada.host.idiomas.join(', ')}
-                </div>
+                {(posada.host.desde || posada.host.idiomas.length > 0) && (
+                  <div className="host-meta">
+                    {[posada.host.desde && `Posadero desde ${posada.host.desde}`, posada.host.idiomas.length > 0 && `Idiomas: ${posada.host.idiomas.join(', ')}`].filter(Boolean).join(' · ')}
+                  </div>
+                )}
               </div>
             </div>
-            <div className="section-label">Políticas de la posada</div>
+            {posada.politicas.length > 0 && <div className="section-label">Políticas de la posada</div>}
             <div className="politicas">
               {posada.politicas.map(p => <div className="politica" key={p}>{p}</div>)}
             </div>
@@ -362,7 +364,7 @@ export default function FichaPosada() {
           <div>
             <div className="booking-card">
               <div className="booking-precio">${posada.precio} <span>USD / noche</span></div>
-              <div className="booking-rating"><strong>★ {posada.rating}</strong> · {posada.reviews} reseñas</div>
+              <div className="booking-rating"><strong>{ratingText(posada.rating, posada.reviews)}</strong></div>
               <div className="booking-fields">
                 <div className="booking-row">
                   <div className="booking-field">
@@ -419,7 +421,7 @@ export default function FichaPosada() {
               )}
               {bookingsOpen && <p className="booking-nota">Sin cargos hasta confirmar. El posadero acepta en 24h.</p>}
               <div className="booking-badges">
-                {(posada.metodoPago.length ? posada.metodoPago : ['Zelle', 'Pago Móvil', 'Transferencia']).map(m => (
+                {posada.metodoPago.map(m => (
                   <span className="booking-badge" key={m}>{m}</span>
                 ))}
               </div>

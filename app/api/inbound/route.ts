@@ -35,7 +35,8 @@ export async function POST(req: NextRequest) {
     const { data: mail } = await resend.emails.receiving.get(emailId)
     if (!mail) return
     const admins = await getDb().select({ email: users.email }).from(users).where(eq(users.role, 'admin'))
-    const to = admins.map(a => a.email).filter(e => !e.endsWith('@system.reser-ve.com'))
+    // Nunca reenviar a direcciones del propio dominio (evita bucles).
+    const to = admins.map(a => a.email).filter(e => !/@([\w-]+\.)*reser-ve\.com$/i.test(e))
     if (to.length === 0) return
     const esc = (s: string) => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
     const header = `<div style="font-family:Arial,sans-serif;font-size:13px;color:#555;border-bottom:1px solid #ddd;padding-bottom:8px;margin-bottom:12px">
@@ -46,7 +47,8 @@ export async function POST(req: NextRequest) {
       to,
       replyTo: mail.reply_to?.[0] ?? mail.from,
       subject: `[hola@] ${mail.subject || '(sin asunto)'}`,
-      html: header + (mail.html ?? `<pre style="white-space:pre-wrap;font-family:inherit">${esc(mail.text ?? '')}</pre>`),
+      // Solo texto: el HTML del remitente podría simular contenido de RESER-VE (phishing).
+      html: header + `<pre style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px">${esc((mail.text ?? (mail.html ?? '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ')).slice(0, 20000))}</pre>`,
     })
     if (error) console.error('[inbound] reenvío falló', error)
   })

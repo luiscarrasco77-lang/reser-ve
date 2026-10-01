@@ -29,7 +29,7 @@ const faqs = [
     items: [
       {
         q: '¿Cómo funciona el proceso de reserva?',
-        a: 'Encuentra tu posada en el buscador, elige fechas, huéspedes y método de pago, y envía tu solicitud. El posadero la confirma desde su panel y te llega un correo. Toda la coordinación (llegada, pago, detalles) se hace por el chat de RESER-VE, que deja registro y te protege ante fraudes.',
+        a: 'Durante la fase privada las reservas aún no están abiertas: puedes crear tu cuenta y guardar tus favoritas. Cuando abran: encuentra tu posada en el buscador, elige fechas, huéspedes y método de pago, y envía tu solicitud. El posadero la confirma desde su panel y te llega un correo. Toda la coordinación (llegada, pago, detalles) se hace por el chat de RESER-VE, que deja registro y te protege ante fraudes.',
       },
       {
         q: '¿Qué métodos de pago se aceptan?',
@@ -54,11 +54,11 @@ const faqs = [
       },
       {
         q: '¿Las posadas están verificadas?',
-        a: 'Sí. Antes de publicar cualquier posada en RESER-VE, nuestro equipo verifica la información del alojamiento, las fotos y los datos del anfitrión. Adicionalmente, las reseñas de huéspedes reales ayudan a mantener la calidad del listado.',
+        a: 'Sí. Antes de publicar cualquier posada en RESER-VE, nuestro equipo verifica la información del alojamiento, las fotos y los datos del anfitrión. Además, solo publicamos reseñas de huéspedes con una reserva confirmada en la plataforma.',
       },
       {
         q: '¿Cuáles son los destinos disponibles?',
-        a: 'Actualmente cubrimos las principales regiones turísticas de Venezuela: Los Roques, Isla Margarita, Mochima, Morrocoy, Canaima, Mérida, Choroní, Caracas, La Guaira y más. Estamos agregando nuevas posadas constantemente.',
+        a: 'Actualmente cubrimos las principales regiones turísticas de Venezuela: Los Roques, Isla Margarita, Mochima, Morrocoy, Canaima, Gran Sabana, Mérida, Choroní y más. Estamos agregando nuevas posadas constantemente.',
       },
       {
         q: '¿Puedo buscar por región?',

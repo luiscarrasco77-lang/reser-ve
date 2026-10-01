@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Stats = { totalUsers: number; totalPosadas: number; totalBookings: number; pendingReview: number; pendingBookings: number; revenue: number }
+type Stats = { totalUsers: number; totalPosadas: number; totalBookings: number; pendingReview: number; pendingBookings: number; revenue: number; commission?: number }
 type Posada = { id: number; slug: string; nombre: string; destino: string; tipo: string; precio: number; status: string; hostName: string; hostEmail: string; createdAt: string; reviewNotes: string | null; imgs: string[] }
 type Booking = { id: number; bookingCode: string; posadaNombre: string; posadaSlug: string; guestName: string; guestEmail: string; checkIn: string; checkOut: string; nights: number; totalPrice: number; status: string; paymentMethod: string | null; createdAt: string }
 type User = { id: number; name: string; email: string; role: string; country: string | null; createdAt: string }
@@ -78,11 +78,13 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
   async function reviewPosada(id: number, action: 'approve' | 'reject') {
     const notes = reviewNotes[id] ?? ''
     if (action === 'reject' && !notes.trim()) { alert('Escribe una nota para rechazar.'); return }
+    if (!confirm(action === 'approve' ? '¿Aprobar y publicar esta posada? El posadero recibirá un correo.' : '¿Rechazar esta posada? El posadero recibirá tus notas por correo.')) return
     setReviewLoading(id)
-    await fetch(`/api/admin/posadas/${id}/review`, {
+    const res = await fetch(`/api/admin/posadas/${id}/review`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, notes }),
     })
+    if (!res.ok) { alert((await res.json().catch(() => ({}))).error ?? 'No se pudo actualizar'); setReviewLoading(null); return }
     setPosadas(prev => prev.map(p => p.id === id ? { ...p, status: action === 'approve' ? 'active' : 'rejected' } : p))
     setExpanded(null)
     fetchStats()
@@ -90,7 +92,7 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
   }
 
   async function suspendPosada(id: number, suspend: boolean) {
-    if (suspend && !confirm('¿Suspender esta posada? Dejará de verse en el buscador.')) return
+    if (!confirm(suspend ? '¿Suspender esta posada? Dejará de verse en el buscador.' : '¿Volver a publicar esta posada? El posadero recibirá un correo.')) return
     const res = await fetch(`/api/admin/posadas/${id}/review`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: suspend ? 'suspend' : 'approve', notes: suspend ? 'Suspendida por el administrador.' : '' }),
@@ -263,7 +265,7 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
                   <div className="stat"><div className="stat-label">Reservas</div><div className="stat-val">{stats.totalBookings}</div></div>
                   <div className="stat"><div className="stat-label">En revisión</div><div className={`stat-val ${stats.pendingReview > 0 ? 'red' : 'green'}`}>{stats.pendingReview}</div></div>
                   <div className="stat"><div className="stat-label">Reservas pendientes</div><div className="stat-val cacao">{stats.pendingBookings}</div></div>
-                  <div className="stat"><div className="stat-label">Ingresos plataforma</div><div className="stat-val green">${Number(stats.revenue).toLocaleString()}</div></div>
+                  <div className="stat"><div className="stat-label">Comisión RESER-VE (10%)</div><div className="stat-val green">${Number(stats.commission ?? 0).toLocaleString()}</div><div style={{fontSize:'0.72rem',color:'var(--muted)'}}>sobre ${Number(stats.revenue).toLocaleString()} en reservas confirmadas</div></div>
                 </div>
               ) : (
                 <div style={{color:'var(--muted)',fontSize:'0.9rem'}}>Cargando estadísticas…</div>
@@ -386,7 +388,8 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
                         <td style={{color:'var(--muted)',fontSize:'0.78rem'}}>{fmtDate(p.createdAt)}</td>
                         <td>
                           {p.status === 'active' && <button className="action-btn btn-sus" onClick={() => suspendPosada(p.id, true)}>Suspender</button>}
-                          {(p.status === 'suspended' || p.status === 'rejected') && <button className="action-btn btn-act" onClick={() => suspendPosada(p.id, false)}>Reactivar</button>}
+                          {p.status === 'suspended' && p.reviewNotes !== 'Pausada por el posadero.' && <button className="action-btn btn-act" onClick={() => suspendPosada(p.id, false)}>Reactivar</button>}
+                          {p.status === 'suspended' && p.reviewNotes === 'Pausada por el posadero.' && <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Pausada por el posadero</span>}
                           {p.status === 'pending_review' && <button className="action-btn btn-act" onClick={() => { setTab('review'); setExpanded(p.id) }}>Revisar</button>}
                         </td>
                       </tr>

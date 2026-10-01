@@ -1,20 +1,10 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { DESTINOS, OTRO, slugify } from '@/lib/destinos-form'
+import { uploadPosadaImage } from '@/lib/upload-image'
 import { useRouter } from 'next/navigation'
 
-const destinosOpciones = [
-  { label: 'Los Roques', slug: 'los-roques', lat: 11.85, lng: -66.75 },
-  { label: 'Mérida', slug: 'merida', lat: 8.6, lng: -71.15 },
-  { label: 'Mochima', slug: 'mochima', lat: 10.35, lng: -64.35 },
-  { label: 'Morrocoy', slug: 'morrocoy', lat: 10.87, lng: -68.22 },
-  { label: 'Canaima', slug: 'canaima', lat: 6.23, lng: -62.85 },
-  { label: 'Isla Margarita', slug: 'isla-margarita', lat: 10.97, lng: -63.91 },
-  { label: 'Roraima', slug: 'roraima', lat: 5.14, lng: -60.76 },
-  { label: 'Choroní', slug: 'choroni', lat: 10.49, lng: -67.62 },
-  { label: 'Puerto Colombia', slug: 'puerto-colombia', lat: 10.53, lng: -67.65 },
-  { label: 'Otro destino', slug: 'otro', lat: 8.0, lng: -66.0 },
-]
 
 const tiposOpciones = [
   'Posada de playa', 'Posada de montaña', 'Posada rural', 'Posada urbana', 'Posada de aventura', 'Eco-posada',
@@ -41,6 +31,8 @@ type Posada = {
   slug: string
   nombre: string
   destino: string
+  destinoSlug: string
+  politicas: unknown
   tipo: string
   descripcion: string
   precio: number
@@ -63,11 +55,13 @@ function toggle(list: string[], item: string) {
 export default function EditarPosadaForm({ posada }: { posada: Posada }) {
   const router = useRouter()
 
-  const initDestinoIdx = destinosOpciones.findIndex(d => d.label === posada.destino)
+  const initDestino = DESTINOS.find(d => d.slug === posada.destinoSlug || d.label === posada.destino)
 
   const [nombre, setNombre] = useState(posada.nombre)
-  const [destinoIdx, setDestinoIdx] = useState(initDestinoIdx >= 0 ? initDestinoIdx : 0)
+  const [destinoSlug, setDestinoSlug] = useState(initDestino?.slug ?? OTRO)
+  const [localidad, setLocalidad] = useState(initDestino ? '' : posada.destino)
   const [tipo, setTipo] = useState(posada.tipo ?? tiposOpciones[0])
+  const [politicasTxt, setPoliticasTxt] = useState(((posada.politicas as string[]) ?? []).join('\n'))
   const [descripcion, setDescripcion] = useState(posada.descripcion ?? '')
   const [precio, setPrecio] = useState(String(posada.precio ?? ''))
   const [habitaciones, setHabitaciones] = useState(String(posada.habitaciones ?? 4))
@@ -76,8 +70,8 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
   const [servicios, setServicios] = useState<string[]>((posada.servicios as string[]) ?? [])
   const [metodosPago, setMetodosPago] = useState<string[]>((posada.metodoPago as string[]) ?? [])
   const [imgs, setImgs] = useState<string[]>((posada.imgs as string[]) ?? [])
-  const [latOverride, setLatOverride] = useState(posada.lat ? String(posada.lat) : '')
-  const [lngOverride, setLngOverride] = useState(posada.lng ? String(posada.lng) : '')
+  const [latStr, setLatStr] = useState(String(posada.lat ?? ''))
+  const [lngStr, setLngStr] = useState(String(posada.lng ?? ''))
 
   const [saving, setSaving] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -85,9 +79,17 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const destino = destinosOpciones[destinoIdx]
-  const lat = latOverride ? parseFloat(latOverride) : destino.lat
-  const lng = lngOverride ? parseFloat(lngOverride) : destino.lng
+  const destino = DESTINOS.find(d => d.slug === destinoSlug)
+  const destinoLabel = destino ? destino.label : localidad.trim()
+  const destinoSlugFinal = destino ? destino.slug : slugify(localidad)
+  const lat = parseFloat(latStr.replace(',', '.'))
+  const lng = parseFloat(lngStr.replace(',', '.'))
+  // Al cambiar de destino, las coordenadas pasan a las del nuevo destino.
+  function changeDestino(slug: string) {
+    setDestinoSlug(slug)
+    const d = DESTINOS.find(x => x.slug === slug)
+    if (d) { setLatStr(String(d.lat)); setLngStr(String(d.lng)) } else { setLatStr(''); setLngStr('') }
+  }
 
   async function handleImageUpload(files: FileList | null) {
     if (!files || files.length === 0) return
@@ -95,18 +97,10 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
     setError('')
     const uploaded: string[] = []
     for (const file of Array.from(files)) {
-      const fd = new FormData()
-      fd.append('file', file)
       try {
-        const res = await fetch('/api/upload', { method: 'POST', body: fd })
-        const data = await res.json()
-        if (res.ok && data.url) {
-          uploaded.push(data.url)
-        } else {
-          setError(`Error al subir ${file.name}: ${data.error ?? 'Error desconocido'}`)
-        }
-      } catch {
-        setError(`Error de conexión al subir ${file.name}`)
+        uploaded.push(await uploadPosadaImage(file))
+      } catch (e: any) {
+        setError(`${file.name}: ${e?.message ?? 'no se pudo subir'}`)
       }
     }
     setImgs(prev => [...prev, ...uploaded])
@@ -116,8 +110,8 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
   function buildBody() {
     return {
       nombre,
-      destino: destino.label,
-      destinoSlug: destino.slug,
+      destino: destinoLabel,
+      destinoSlug: destinoSlugFinal,
       tipo,
       descripcion,
       precio: parseInt(precio),
@@ -126,6 +120,7 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
       tags,
       servicios,
       metodoPago: metodosPago,
+      politicas: politicasTxt.split('\n').map(x => x.trim()).filter(Boolean),
       imgs,
       lat,
       lng,
@@ -134,6 +129,8 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
+    if (!destinoLabel) { setError('Escribe el nombre de la localidad de tu posada'); return }
+    if (!destinoLabel) { setError('Escribe el nombre de la localidad de tu posada'); return }
     if (!nombre || !descripcion || !precio) { setError('Completa todos los campos obligatorios'); return }
     setSaving(true)
     setError('')
@@ -149,6 +146,8 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
 
   async function handleSaveAndSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!destinoLabel) { setError('Escribe el nombre de la localidad de tu posada'); return }
+    if (!destinoLabel) { setError('Escribe el nombre de la localidad de tu posada'); return }
     if (!nombre || !descripcion || !precio) { setError('Completa todos los campos obligatorios'); return }
     setSubmitting(true)
     setError('')
@@ -221,7 +220,7 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
 
       <div className="form-wrap">
         <div className="form-title">Editar posada</div>
-        <div className="form-sub" style={{ marginBottom: '1.2rem' }}>Modifica los datos y envíala a revisión cuando esté lista</div>
+        <div className="form-sub" style={{ marginBottom: '1.2rem' }}>{posada.status === 'active' ? 'Los cambios se publican al guardar. El equipo de RESER-VE recibe un aviso de cada edición.' : posada.status === 'pending_review' ? 'Tu posada está en revisión: puedes ajustar los datos mientras tanto.' : 'Modifica los datos y envíala a revisión cuando esté lista.'}</div>
 
         {posada.status === 'rejected' && posada.reviewNotes && (
           <div className="rejection-banner">
@@ -243,11 +242,13 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
             <div className="field-row">
               <div className="field">
                 <label>Destino *</label>
-                <select value={destinoIdx} onChange={e => setDestinoIdx(parseInt(e.target.value))}>
-                  {destinosOpciones.map((d, i) => (
-                    <option key={d.slug} value={i}>{d.label}</option>
-                  ))}
+                <select value={destinoSlug} onChange={e => changeDestino(e.target.value)}>
+                  {DESTINOS.map(d => <option key={d.slug} value={d.slug}>{d.label}</option>)}
+                  <option value={OTRO}>Otro (escríbelo)</option>
                 </select>
+                {destinoSlug === OTRO && (
+                  <input type="text" style={{ marginTop: '0.5rem' }} value={localidad} onChange={e => setLocalidad(e.target.value)} placeholder="Ej: Colonia Tovar, Aragua" required />
+                )}
               </div>
               <div className="field">
                 <label>Tipo de posada *</label>
@@ -259,6 +260,11 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
             <div className="field">
               <label>Descripción *</label>
               <textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} required placeholder="Describe tu posada…" rows={4} />
+              <div className="hint" style={{ marginTop: '0.4rem' }}>No incluyas teléfonos, correos ni enlaces: toda la comunicación con huéspedes va por el chat de RESER-VE.</div>
+            </div>
+            <div className="field">
+              <label>Políticas de la posada <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(una por línea)</span></label>
+              <textarea value={politicasTxt} onChange={e => setPoliticasTxt(e.target.value)} rows={3} placeholder={'Check-in desde las 2:00 pm\nCancelación gratis hasta 72 h antes\nNo se admiten mascotas'} />
             </div>
           </div>
 
@@ -321,14 +327,14 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
           <div className="form-section">
             <div className="section-head">Fotos de la posada</div>
             <div className="img-drop" onClick={() => fileRef.current?.click()}>
-              <input ref={fileRef} type="file" accept="image/*" multiple onChange={e => handleImageUpload(e.target.files)} />
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={e => handleImageUpload(e.target.files)} />
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--muted)', marginBottom: '0.5rem' }}>
                 <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
               </svg>
               <div style={{ fontSize: '0.88rem', color: 'var(--muted)' }}>
                 {uploadingImg ? 'Subiendo fotos…' : 'Haz clic o arrastra fotos aquí'}
               </div>
-              <div className="hint">JPG, PNG, WebP — máx. 10 MB por foto</div>
+              <div className="hint">Sube al menos 5 fotos reales (horizontales y con luz natural). Las optimizamos automáticamente.</div>
             </div>
             {imgs.length > 0 && (
               <div className="img-previews">
@@ -354,11 +360,11 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
             <div className="field-row">
               <div className="field">
                 <label>Latitud</label>
-                <input type="number" step="0.0001" value={latOverride || destino.lat} onChange={e => setLatOverride(e.target.value)} />
+                <input type="text" inputMode="decimal" value={latStr} onChange={e => setLatStr(e.target.value)} placeholder="Ej: 10.4923" />
               </div>
               <div className="field">
                 <label>Longitud</label>
-                <input type="number" step="0.0001" value={lngOverride || destino.lng} onChange={e => setLngOverride(e.target.value)} />
+                <input type="text" inputMode="decimal" value={lngStr} onChange={e => setLngStr(e.target.value)} placeholder="Ej: -67.6123" />
               </div>
             </div>
           </div>
@@ -369,7 +375,7 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
                 {submitting ? 'Enviando a revisión…' : '↩ Guardar y enviar a revisión'}
               </button>
               <button type="button" className="btn-save" disabled={saving || submitting || uploadingImg} onClick={handleSave}>
-                {saving ? 'Guardando…' : 'Guardar borrador'}
+                {saving ? 'Guardando…' : 'Guardar sin enviar'}
               </button>
             </>) : (
               <button type="button" className="btn-submit" disabled={saving || uploadingImg} onClick={handleSave}>
