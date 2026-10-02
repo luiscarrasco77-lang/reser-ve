@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Por qué posadas? · RESER-VE',
+  title: '¿Por qué posadas?',
   description: 'Las posadas venezolanas son más que un hospedaje — son el alma de Venezuela. Descubre nuestra misión de conectar viajeros con anfitriones auténticos.',
 }
 

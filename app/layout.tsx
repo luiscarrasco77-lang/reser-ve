@@ -35,11 +35,11 @@ export const metadata: Metadata = {
     default: "RESER-VE | Posadas auténticas de Venezuela",
     template: "%s | RESER-VE",
   },
-  description: "Descubre y reserva las mejores posadas de Venezuela. Los Roques, Mérida, Mochima, Canaima, Gran Sabana y más.",
+  description: "La plataforma de posadas auténticas de Venezuela. Descubre posadas en Los Roques, Mérida, Mochima, Canaima, Gran Sabana y más, sin comisiones para el viajero.",
   keywords: ["posadas Venezuela", "Los Roques", "Canaima", "Mérida", "Mochima", "Morrocoy", "reservar posada", "turismo Venezuela"],
   openGraph: {
     title: "RESER-VE | Posadas auténticas de Venezuela",
-    description: "Descubre y reserva las mejores posadas de Venezuela, con pago en Zelle, Pago Móvil o transferencia.",
+    description: "La plataforma de posadas auténticas de Venezuela: Los Roques, Mérida, Mochima, Canaima y más.",
     url: "/",
     siteName: "RESER-VE",
     locale: "es_VE",
@@ -65,6 +65,22 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+          {/* Datos estructurados para Google: nombre del sitio, logo y buscador interno. */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify([
+              {
+                '@context': 'https://schema.org', '@type': 'Organization',
+                name: 'RESER-VE', url: 'https://reser-ve.com', logo: 'https://reser-ve.com/logo-512.png',
+                email: 'hola@reser-ve.com', sameAs: ['https://www.instagram.com/doslocosdeviaje/'],
+              },
+              {
+                '@context': 'https://schema.org', '@type': 'WebSite',
+                name: 'RESER-VE', alternateName: 'RESER-VE Posadas de Venezuela', url: 'https://reser-ve.com',
+                potentialAction: { '@type': 'SearchAction', target: 'https://reser-ve.com/buscar?q={search_term_string}', 'query-input': 'required name=search_term_string' },
+              },
+            ]) }}
+          />
           <SessionProviderWrapper>
             <PrivatePhaseBar />
             {children}
