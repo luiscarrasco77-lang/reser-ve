@@ -351,12 +351,12 @@ export default function PosaderosPage() {
         <h2 className="sec-title">Reglas simples, sin letra pequeña</h2>
         <div className="terms-grid">
           <div className="term"><div className="term-big">0 $</div><div className="term-t">Publicar y mantener tu posada</div><p>Sin mensualidad, sin costo de alta, sin permanencia. Puedes pausar tu publicación cuando quieras (al reactivarla pasa por una revisión rápida).</p></div>
-          <div className="term"><div className="term-big">10%</div><div className="term-t">Solo por reserva confirmada</div><p>Se calcula sobre el total de la estadía y lo asume la posada. El viajero ve y paga exactamente tu precio publicado.</p></div>
+          <div className="term"><div className="term-big">10%</div><div className="term-t">Solo por reserva confirmada</div><p>Lo asume la posada; el viajero paga exactamente tu precio. <strong>Tarifa fundadora:</strong> si te unes en la fase privada, 10% garantizado 12 meses desde la apertura.</p></div>
           <div className="term"><div className="term-big">=</div><div className="term-t">Paridad de precio</div><p>El precio que publiques en RESER-VE debe ser el mismo que ofreces por otros canales (teléfono, redes, otras plataformas).</p></div>
           <div className="term"><div className="term-big">💬</div><div className="term-t">Todo por la app</div><p>La comunicación con huéspedes se hace por el chat de RESER-VE. Así evitamos fraudes y protegemos a ambas partes.</p></div>
         </div>
         <div className="mvp-note">
-          <strong>Estamos en fase privada (MVP).</strong> Ya puedes crear tu cuenta y publicar tu posada; las reservas del público se abrirán en unas semanas, cuando terminemos de perfeccionar el proceso de pago y reserva. Las posadas fundadoras salen primero en el lanzamiento y nos ayudan a darle forma a la plataforma: tu opinión cuenta.
+          <strong>Estamos en fase privada (MVP).</strong> Ya puedes crear tu cuenta y publicar tu posada; las reservas del público se abrirán en unas semanas, cuando terminemos de perfeccionar el proceso de pago y reserva. Las posadas fundadoras mantienen el 10% de comisión durante 12 meses tras la apertura y salen primero en el lanzamiento. Más adelante ofreceremos servicios opcionales de fotografía profesional y digitalización.
           {' '}<a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener">Lee la guía completa para posaderos →</a>
         </div>
       </section>

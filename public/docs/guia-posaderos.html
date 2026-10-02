@@ -1,127 +1,103 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8" />
-<title>RESER-VE · Guía para posaderos</title>
-<style>
-  :root{ --indigo:#1A2B4C; --cacao:#E67E22; --cacao-dark:#C96510; --sand:#FDFBF7; --muted:#5d6b80; --line:rgba(26,43,76,0.12); }
-  *{box-sizing:border-box;}
-  @page{ size:A4; margin:16mm 15mm; }
-  html,body{margin:0;padding:0;}
-  body{font-family:'Helvetica Neue',Arial,sans-serif;color:var(--indigo);line-height:1.6;font-size:11pt;background:#fff;}
-  h1,h2,h3{font-family:Georgia,'Times New Roman',serif;line-height:1.2;color:var(--indigo);}
-  h2{font-size:19pt;margin:0 0 .2rem;border-bottom:2px solid var(--cacao);padding-bottom:.35rem;}
-  h3{font-size:13pt;margin:1.1rem 0 .3rem;color:var(--cacao-dark);}
-  p{margin:.45rem 0;} ul,ol{margin:.4rem 0 .7rem;padding-left:1.25rem;} li{margin:.25rem 0;}
-  code{background:rgba(26,43,76,.06);border:1px solid var(--line);border-radius:5px;padding:.06rem .35rem;font-family:Menlo,Consolas,monospace;font-size:9.5pt;color:var(--cacao-dark);}
-  .section{page-break-before:always;padding-top:.3rem;}
-  .lead{color:var(--muted);font-size:11.5pt;}
-  .pill{display:inline-block;background:var(--cacao);color:#fff;font-size:9pt;font-weight:700;padding:.3rem .8rem;border-radius:999px;letter-spacing:.05em;}
-  .box{background:var(--sand);border:1px solid var(--line);border-left:4px solid var(--cacao);border-radius:0 10px 10px 0;padding:.8rem 1.1rem;margin:.8rem 0;}
-  .box-ok{border-left-color:#10b981;background:rgba(16,185,129,.05);}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:.8rem 0;}
-  .cardv{background:var(--sand);border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem;}
-  .cardv b{color:var(--cacao-dark);}
-  .step{display:flex;gap:.7rem;margin:.55rem 0;align-items:flex-start;}
-  .step-n{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--cacao);color:#fff;font-weight:700;font-size:11pt;display:flex;align-items:center;justify-content:center;}
-  .price-box{background:linear-gradient(135deg,rgba(230,126,34,.1),rgba(230,126,34,.03));border:2px dashed rgba(230,126,34,.35);border-radius:16px;padding:1.2rem 1.4rem;margin:1rem 0;}
-  .price-big{font-size:2.2rem;font-weight:800;color:var(--cacao);font-family:'Helvetica Neue',Arial,sans-serif;letter-spacing:-.02em;}
-  .muted{color:var(--muted);}
-  .cover{height:250mm;display:flex;flex-direction:column;justify-content:center;page-break-after:always;}
-  .cover .logo{font-size:44pt;font-weight:800;letter-spacing:-.04em;font-family:'Helvetica Neue',Arial,sans-serif;}
-  .cover .logo span{color:var(--cacao);}
-  .cover .sub{font-size:17pt;color:var(--muted);margin-top:.6rem;}
-</style>
-</head>
+<html lang="es"><head><meta charset="UTF-8"/><title>RESER-VE · Guía para posaderos</title><style>:root{ --indigo:#1A2B4C; --cacao:#E67E22; --cacao-dark:#C96510; --sand:#FDFBF7; --muted:#5d6b80; --line:rgba(26,43,76,0.12); }
+*{box-sizing:border-box;}
+@page{ size:A4; margin:16mm 15mm; }
+html,body{margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;color:var(--indigo);line-height:1.55;font-size:11pt;background:#fff;}
+h1,h2,h3{font-family:Georgia,'Times New Roman',serif;line-height:1.2;color:var(--indigo);}
+h2{font-size:18pt;margin:1.4rem 0 .5rem;border-bottom:2px solid var(--cacao);padding-bottom:.3rem;page-break-after:avoid;}
+h2:first-child{margin-top:0}
+h3{font-size:12.5pt;margin:1rem 0 .3rem;color:var(--cacao-dark);page-break-after:avoid;}
+p{margin:.4rem 0;} ul,ol{margin:.35rem 0 .6rem;padding-left:1.25rem;} li{margin:.22rem 0;}
+code{background:rgba(26,43,76,.06);border:1px solid var(--line);border-radius:5px;padding:.05rem .3rem;font-family:Menlo,Consolas,monospace;font-size:9.5pt;color:var(--cacao-dark);}
+.lead{color:var(--muted);font-size:11.5pt;}
+.pill{display:inline-block;background:var(--cacao);color:#fff;font-size:9pt;font-weight:700;padding:.3rem .8rem;border-radius:999px;letter-spacing:.05em;}
+.pill-i{background:var(--indigo);}
+.box{background:var(--sand);border:1px solid var(--line);border-left:4px solid var(--cacao);border-radius:0 10px 10px 0;padding:.7rem 1rem;margin:.7rem 0;page-break-inside:avoid;}
+.box-ok{border-left-color:#10b981;background:rgba(16,185,129,.05);}
+.box-warn{border-left-color:#dc2626;background:rgba(220,38,38,.04);}
+.step{display:flex;gap:.7rem;margin:.6rem 0;align-items:flex-start;page-break-inside:avoid;}
+.step-n{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--cacao);color:#fff;font-weight:700;font-size:10.5pt;display:flex;align-items:center;justify-content:center;}
+.step b{color:var(--indigo)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:.6rem 0;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin:.6rem 0;}
+.cardv{background:var(--sand);border:1px solid var(--line);border-radius:12px;padding:.7rem .85rem;font-size:9.8pt;page-break-inside:avoid;}
+.cardv .big{font-family:Georgia,serif;font-size:19pt;font-weight:800;color:var(--cacao);line-height:1;margin-bottom:.3rem}
+.cardv b{color:var(--indigo);}
+table{width:100%;border-collapse:collapse;margin:.6rem 0;font-size:9.8pt;page-break-inside:avoid;}
+th,td{border:1px solid var(--line);padding:.4rem .55rem;text-align:left;vertical-align:top;}
+th{background:var(--indigo);color:#fff;font-weight:700;}
+tr:nth-child(even) td{background:var(--sand);}
+.muted{color:var(--muted);}
+.cover{height:252mm;display:flex;flex-direction:column;justify-content:center;page-break-after:always;}
+.cover .logo{font-size:44pt;font-weight:800;letter-spacing:-.04em;font-family:'Helvetica Neue',Arial,sans-serif;}
+.cover .logo span{color:var(--cacao);}
+.cover .sub{font-size:17pt;color:var(--muted);margin-top:.6rem;}
+.pb{page-break-before:always;}
+.chk{list-style:none;padding-left:0}
+</style></head>
 <body>
 
 <div class="cover">
   <div class="pill">GUÍA PARA POSADEROS</div>
   <div class="logo" style="margin-top:1.2rem;">RESER<span>-VE</span></div>
-  <div class="sub">Únete y recibe más viajeros<br/>en tu posada</div>
-  <div style="margin-top:1.4rem"><span class="pill" style="background:var(--indigo)">FASE PRIVADA · POSADAS FUNDADORAS</span></div>
-  <div class="muted" style="margin-top:2rem;font-size:10pt">reser-ve.com · hola@reser-ve.com</div>
+  <div class="sub">Publica tu posada y recibe más viajeros</div>
+  <div style="margin-top:1.4rem"><span class="pill pill-i">FASE PRIVADA · POSADAS FUNDADORAS</span></div>
+  <div class="muted" style="margin-top:2rem;font-size:10pt">reser-ve.com/posaderos · hola@reser-ve.com</div>
 </div>
 
-<div>
-  <h2>Únete a RESER-VE</h2>
-  <p class="lead">Convierte tu posada en un negocio con más reservas. Te damos visibilidad nacional e internacional, herramientas para gestionar tus reservas y viajeros listos para hospedarse — sin complicaciones técnicas.</p>
+<h2>¿Qué es RESER-VE?</h2>
+<p class="lead">La plataforma para descubrir y reservar <b>posadas auténticas de Venezuela</b>. Mostramos tu posada a viajeros de todo el país y de la diáspora, con una página profesional, buscador y mapa.</p>
 
-  <h3>¿Qué es RESER-VE?</h3>
-  <p>Somos la primera plataforma dedicada a las <b>posadas auténticas de Venezuela</b>. Conectamos viajeros de todo el mundo con anfitriones locales como tú. No somos una agencia: tú mantienes el control de tu posada, tus precios y tu relación con el huésped.</p>
-
-  <h3>Ventajas de unirte</h3>
-  <div class="grid2">
-    <div class="cardv"><b>Más viajeros</b><br/>Tu posada visible dentro y fuera del país, con buscador y mapa.</div>
-    <div class="cardv"><b>Sin costo para empezar</b><br/>Publicar es gratis. Sin mensualidad ni cuota de inscripción.</div>
-    <div class="cardv"><b>Tú cobras directo</b><br/>Recibes el pago del viajero por tu método preferido (Zelle, Pago Móvil, transferencia, efectivo).</div>
-    <div class="cardv"><b>Concierge con IA</b><br/>"Aurora" recomienda tu posada a viajeros según lo que buscan.</div>
-    <div class="cardv"><b>Todo en la app</b><br/>Chateas con el viajero dentro de RESER-VE — comunicación segura y ordenada.</div>
-    <div class="cardv"><b>Marketplace curado</b><br/>Revisamos cada posada para mantener calidad y confianza; eso atrae mejores huéspedes.</div>
-  </div>
-
-  <h3>Precio: simple y justo</h3>
-  <div class="price-box">
-    <div class="price-big">10% de comisión</div>
-    <div class="muted" style="margin-top:.3rem">solo por <b>reserva confirmada</b>. Sin costo de publicación · Sin mensualidad · Sin permanencia.</div>
-  </div>
-  <ul>
-    <li><b>El viajero paga el precio final</b> que publicas — sin recargos para él.</li>
-    <li>La comisión del 10% <b>la asume la posada</b> sobre las reservas confirmadas. Si no tienes reservas, no pagas nada.</li>
-    <li>Tú defines tus precios, políticas y métodos de pago.</li>
-  </ul>
-  <div class="box">💡 Ejemplo: publicas a <b>$50/noche</b>. Un viajero reserva 3 noches ($150) y te paga directo. Comisión RESER-VE: $15 (10%). Tu ingreso neto: $135.</div>
-
-  <h3>Paridad de precios (importante)</h3>
-  <div class="box"><b>El precio que publiques en RESER-VE debe ser el mismo que ofreces en tus otros canales</b> (WhatsApp, Instagram, otras plataformas). No publiques aquí un precio más alto para "cubrir" la comisión: rompe la confianza del viajero y la equidad de la plataforma.</div>
-
-  <h3>Estamos en fase privada (MVP)</h3>
-  <div class="box box-ok">RESER-VE todavía <b>no está abierto al público</b>. En esta etapa invitamos a un grupo de <b>posadas fundadoras</b> a crear su cuenta y publicar su posada, mientras terminamos de <b>perfeccionar el proceso de pago y de reserva</b>.
-  <ul style="margin-bottom:0">
-    <li><b>Ahora:</b> creas tu cuenta, publicas tu posada y nuestro equipo la revisa y la deja lista. Ya se ve en la web, pero los viajeros aún <b>no pueden reservar</b>.</li>
-    <li><b>Lanzamiento público:</b> te avisaremos por correo antes de abrir las reservas. Las posadas fundadoras salen primero y con más visibilidad.</li>
-    <li><b>Tu opinión:</b> cuéntanos qué te falta o qué mejorarías — con tu ayuda definimos cómo funcionarán los pagos. 🙌</li>
-  </ul></div>
+<h2>Condiciones</h2>
+<div class="grid4">
+  <div class="cardv"><div class="big">$0</div><b>Publicar y mantener</b><br/>Sin mensualidad, sin costo de alta, sin permanencia.</div>
+  <div class="cardv"><div class="big">10%</div><b>Solo si recibes una reserva</b><br/>Sobre cada reserva confirmada. Si no hay reservas, no pagas nada.</div>
+  <div class="cardv"><div class="big">=</div><b>Mismo precio</b><br/>El precio en RESER-VE debe ser igual al de tus otros canales.</div>
+  <div class="cardv"><div class="big">💬</div><b>Todo por la app</b><br/>Hablas con los huéspedes por el chat de RESER-VE.</div>
 </div>
+<div class="box box-ok"><b>Tarifa fundadora: 10% garantizado.</b> Las posadas que se unan durante la fase privada mantienen la comisión del <b>10% durante 12 meses</b> desde la apertura de las reservas al público. Las posadas que se sumen después podrán tener una tarifa mayor.</div>
+<ul>
+  <li><b>El viajero no paga comisión:</b> ve y paga exactamente tu precio publicado.</li>
+  <li><b>Ejemplo:</b> 3 noches a $50 = $150. Comisión RESER-VE: $15. Tú recibes $135.</li>
+</ul>
 
-<div class="section">
-  <h2>Cómo unirte y publicar tu posada</h2>
-  <div class="step"><div class="step-n">1</div><div><b>Crea tu cuenta</b> en <code>reser-ve.com/register</code> y elige <b>"Posadero"</b>. Si necesitas ayuda, escríbenos a <b>hola@reser-ve.com</b> y te acompañamos.</div></div>
-  <div class="step"><div class="step-n">2</div><div><b>Entra a tu panel</b> en <code>reser-ve.com/dashboard</code>.</div></div>
-  <div class="step"><div class="step-n">3</div><div>Pulsa <b>"Publicar mi primera posada"</b> y completa: nombre, destino (si no aparece, elige <b>“Otro”</b> y escribe tu localidad), tipo, descripción, políticas, precio por noche, habitaciones, capacidad, servicios y métodos de pago que aceptas. <b>No incluyas teléfonos, correos ni enlaces</b>: la plataforma no los acepta.</div></div>
-  <div class="step"><div class="step-n">4</div><div><b>Sube al menos 5 fotos</b> reales (JPG, PNG o WebP; puedes subirlas directo desde el teléfono, las optimizamos automáticamente). Revisa la <b>latitud y longitud</b>: se rellenan con las del destino y puedes ajustarlas con las de Google Maps (mantén pulsado sobre tu posada → copia los números).</div></div>
-  <div class="step"><div class="step-n">5</div><div>Guarda. Tu posada queda <b>"en revisión"</b>. Nuestro equipo la aprueba (normalmente en 24–72h) y queda <b>publicada</b>.</div></div>
+<h2>Cómo publicar tu posada (paso a paso)</h2>
+<div class="step"><div class="step-n">1</div><div><b>Crea tu cuenta de posadero</b> en <code>reser-ve.com/posaderos</code> → “Registra tu posada”. Te llega un correo de bienvenida.</div></div>
+<div class="step"><div class="step-n">2</div><div><b>Entra a tu panel</b> (<code>reser-ve.com/dashboard</code>) y pulsa <b>“+ Nueva posada”</b>.</div></div>
+<div class="step"><div class="step-n">3</div><div><b>Completa los datos:</b> nombre, destino (si no aparece, elige “Otro” y escríbelo), descripción, políticas, precio por noche, habitaciones, capacidad, servicios y métodos de pago que aceptas.</div></div>
+<div class="step"><div class="step-n">4</div><div><b>Sube al menos 5 fotos</b> reales, horizontales y con buena luz. Puedes subirlas desde el teléfono: las optimizamos solas.</div></div>
+<div class="step"><div class="step-n">5</div><div><b>Revisa la ubicación</b> (latitud y longitud). Se rellena con la del destino; para la exacta, abre Google Maps, mantén pulsado sobre tu posada y copia los números.</div></div>
+<div class="step"><div class="step-n">6</div><div>Pulsa <b>“Enviar a revisión”</b>. Nuestro equipo la revisa en 24–72 h y te avisa por correo cuando esté publicada (o qué debes ajustar).</div></div>
+<div class="box">No escribas teléfonos, correos, enlaces ni redes sociales en la posada: la plataforma no los acepta. Toda la comunicación va por el chat de RESER-VE.</div>
 
-  <h3>Cómo funcionarán las reservas (al abrir al público)</h3>
-  <ul>
-    <li>Cuando alguien reserve, recibirás la solicitud en <code>/dashboard/reservas</code> y por correo.</li>
-    <li><b>Tendrás 24h</b> para <b>confirmar o rechazar</b>. Al confirmar, el viajero recibe un correo de confirmación.</li>
-    <li>Pulsa <b>“💬 Chat”</b> en la reserva para escribirle al viajero: envíale tus datos de pago y coordina la llegada por ahí (<code>/mensajes</code>). Nunca por fuera de la plataforma.</li>
-    <li>Tras la estancia, el viajero puede dejarte una <b>reseña</b> ⭐ que mejora tu reputación.</li>
-    <li>Puedes <b>editar</b> tu posada (precio, fotos, descripción) y <b>pausarla</b> cuando quieras desde <code>/dashboard/posadas</code>.</li>
-  </ul>
+<h2 class="pb">Cómo funcionarán las reservas (paso a paso)</h2>
+<p class="muted">Hoy estamos en fase privada: tu posada ya se ve en la web, pero los viajeros aún no pueden reservar. Te avisaremos por correo antes de abrir.</p>
+<div class="step"><div class="step-n">1</div><div><b>Recibes una solicitud</b> por correo y en <code>Panel → Reservas</code>.</div></div>
+<div class="step"><div class="step-n">2</div><div><b>Confirma o rechaza en menos de 24 h.</b> Las solicitudes sin respuesta se cancelan solas.</div></div>
+<div class="step"><div class="step-n">3</div><div><b>Pulsa “💬 Chat”</b> en la reserva y envíale al viajero tus datos de pago (Zelle, Pago Móvil, etc.) y las indicaciones de llegada.</div></div>
+<div class="step"><div class="step-n">4</div><div><b>El viajero te paga directamente</b> y llega a tu posada.</div></div>
+<div class="step"><div class="step-n">5</div><div>Después de la estancia puede dejarte una <b>reseña</b> ⭐ que aparece en tu página.</div></div>
+<div class="step"><div class="step-n">6</div><div><b>Comisión:</b> te enviaremos un resumen de las reservas confirmadas y el 10% a pagar. La forma de pago de la comisión la comunicaremos antes del lanzamiento.</div></div>
 
-  <h3>Consejos para recibir más reservas</h3>
-  <ul>
-    <li>📸 Fotos luminosas y reales de habitaciones, áreas comunes y vistas.</li>
-    <li>✍️ Descripción honesta y cálida: qué hace especial tu posada y su entorno.</li>
-    <li>💲 Precio competitivo para tu zona y temporada.</li>
-    <li>⚡ Responde rápido: los viajeros reservan con quien contesta primero.</li>
-  </ul>
-  <h3>Próximamente: paquetes de digitalización y fotografía</h3>
-  <div class="box">Más adelante en el desarrollo de RESER-VE ofreceremos <b>paquetes opcionales de digitalización y fotografía profesional</b> (sesión de fotos, optimización de tu perfil y descripción, y visibilidad destacada). Por ahora no están disponibles: puedes publicar <b>gratis con tus propias fotos</b>, y te avisaremos cuando lancemos estos servicios.</div>
+<h2>Tu panel</h2>
+<ul>
+  <li><b>Mis posadas:</b> editar datos, precios y fotos cuando quieras. <b>Pausar</b> la posada si no quieres recibir viajeros; al reactivarla pasa por una revisión rápida.</li>
+  <li><b>Reservas:</b> confirmar, rechazar, cancelar y abrir el chat con el huésped.</li>
+  <li><b>Mensajes:</b> todas tus conversaciones.</li>
+</ul>
 
-  <h3>Checklist para dejar tu posada lista</h3>
-  <ul>
-    <li>☐ Cuenta de posadero creada (te llega un correo de bienvenida).</li>
-    <li>☐ Mínimo 5 fotos buenas (horizontal, con luz natural).</li>
-    <li>☐ Precio por noche igual al de tus otros canales.</li>
-    <li>☐ Métodos de pago que aceptas (Zelle, Pago Móvil, efectivo…) y ubicación (latitud y longitud) correcta.</li>
-    <li>☐ Descripción, servicios y políticas (check-in, cancelación, mascotas…).</li>
-  </ul>
-  <p>¿Dudas? Escríbenos a <b>hola@reser-ve.com</b> o usa el asistente <b>Vera</b> (botón naranja en la web).</p>
-  <div class="box box-ok"><b>Por tu seguridad y la del viajero:</b> mantén toda la comunicación y coordinación dentro de RESER-VE. Así hay respaldo de cada reserva y protección para ambos.</div>
-</div>
+<h2>Próximamente</h2>
+<ul>
+  <li><b>Fotografía profesional y digitalización:</b> más adelante ofreceremos servicios opcionales (sesión de fotos, mejora de tu perfil y descripción, y visibilidad destacada). Por ahora publicas gratis con tus propias fotos.</li>
+  <li><b>Pagos dentro de la plataforma</b> y más herramientas de gestión.</li>
+</ul>
 
-</body>
-</html>
+<h2>Consejos para recibir más reservas</h2>
+<ul>
+  <li>Fotos luminosas de habitaciones, áreas comunes y vistas.</li>
+  <li>Descripción honesta: qué hace especial tu posada y su entorno.</li>
+  <li>Responde rápido: los viajeros reservan con quien contesta primero.</li>
+</ul>
+<div class="box box-ok"><b>¿Dudas?</b> Escríbenos a <b>hola@reser-ve.com</b> o usa el botón naranja de ayuda en la web.</div>
+</body></html>

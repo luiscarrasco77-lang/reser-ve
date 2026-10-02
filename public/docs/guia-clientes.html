@@ -1,82 +1,74 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8" />
-<title>RESER-VE · Guía para viajeros</title>
-<style>
-  :root{ --indigo:#1A2B4C; --cacao:#E67E22; --cacao-dark:#C96510; --sand:#FDFBF7; --muted:#5d6b80; --line:rgba(26,43,76,0.12); }
-  *{box-sizing:border-box;}
-  @page{ size:A4; margin:16mm 15mm; }
-  html,body{margin:0;padding:0;}
-  body{font-family:'Helvetica Neue',Arial,sans-serif;color:var(--indigo);line-height:1.6;font-size:11pt;background:#fff;}
-  h1,h2,h3{font-family:Georgia,'Times New Roman',serif;line-height:1.2;color:var(--indigo);}
-  h2{font-size:19pt;margin:0 0 .2rem;border-bottom:2px solid var(--cacao);padding-bottom:.35rem;}
-  h3{font-size:13pt;margin:1.1rem 0 .3rem;color:var(--cacao-dark);}
-  p{margin:.45rem 0;} ul{margin:.4rem 0 .7rem;padding-left:1.25rem;} li{margin:.25rem 0;}
-  code{background:rgba(26,43,76,.06);border:1px solid var(--line);border-radius:5px;padding:.06rem .35rem;font-family:Menlo,Consolas,monospace;font-size:9.5pt;color:var(--cacao-dark);}
-  .lead{color:var(--muted);font-size:11.5pt;}
-  .pill{display:inline-block;background:var(--cacao);color:#fff;font-size:9pt;font-weight:700;padding:.3rem .8rem;border-radius:999px;letter-spacing:.05em;}
-  .box{background:var(--sand);border:1px solid var(--line);border-left:4px solid var(--cacao);border-radius:0 10px 10px 0;padding:.8rem 1.1rem;margin:.8rem 0;}
-  .box-ok{border-left-color:#10b981;background:rgba(16,185,129,.05);}
-  .step{display:flex;gap:.7rem;margin:.55rem 0;align-items:flex-start;}
-  .step-n{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--cacao);color:#fff;font-weight:700;font-size:11pt;display:flex;align-items:center;justify-content:center;}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:.8rem 0;}
-  .cardv{background:var(--sand);border:1px solid var(--line);border-radius:12px;padding:.75rem 1rem;font-size:10pt;}
-  .cardv b{color:var(--cacao-dark);}
-  .cover{height:250mm;display:flex;flex-direction:column;justify-content:center;page-break-after:always;}
-  .cover .logo{font-size:44pt;font-weight:800;letter-spacing:-.04em;font-family:'Helvetica Neue',Arial,sans-serif;}
-  .cover .logo span{color:var(--cacao);}
-  .cover .sub{font-size:17pt;color:var(--muted);margin-top:.6rem;}
-  .muted{color:var(--muted);}
-</style>
-</head>
+<html lang="es"><head><meta charset="UTF-8"/><title>RESER-VE · Guía para viajeros</title><style>:root{ --indigo:#1A2B4C; --cacao:#E67E22; --cacao-dark:#C96510; --sand:#FDFBF7; --muted:#5d6b80; --line:rgba(26,43,76,0.12); }
+*{box-sizing:border-box;}
+@page{ size:A4; margin:16mm 15mm; }
+html,body{margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;color:var(--indigo);line-height:1.55;font-size:11pt;background:#fff;}
+h1,h2,h3{font-family:Georgia,'Times New Roman',serif;line-height:1.2;color:var(--indigo);}
+h2{font-size:18pt;margin:1.4rem 0 .5rem;border-bottom:2px solid var(--cacao);padding-bottom:.3rem;page-break-after:avoid;}
+h2:first-child{margin-top:0}
+h3{font-size:12.5pt;margin:1rem 0 .3rem;color:var(--cacao-dark);page-break-after:avoid;}
+p{margin:.4rem 0;} ul,ol{margin:.35rem 0 .6rem;padding-left:1.25rem;} li{margin:.22rem 0;}
+code{background:rgba(26,43,76,.06);border:1px solid var(--line);border-radius:5px;padding:.05rem .3rem;font-family:Menlo,Consolas,monospace;font-size:9.5pt;color:var(--cacao-dark);}
+.lead{color:var(--muted);font-size:11.5pt;}
+.pill{display:inline-block;background:var(--cacao);color:#fff;font-size:9pt;font-weight:700;padding:.3rem .8rem;border-radius:999px;letter-spacing:.05em;}
+.pill-i{background:var(--indigo);}
+.box{background:var(--sand);border:1px solid var(--line);border-left:4px solid var(--cacao);border-radius:0 10px 10px 0;padding:.7rem 1rem;margin:.7rem 0;page-break-inside:avoid;}
+.box-ok{border-left-color:#10b981;background:rgba(16,185,129,.05);}
+.box-warn{border-left-color:#dc2626;background:rgba(220,38,38,.04);}
+.step{display:flex;gap:.7rem;margin:.6rem 0;align-items:flex-start;page-break-inside:avoid;}
+.step-n{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--cacao);color:#fff;font-weight:700;font-size:10.5pt;display:flex;align-items:center;justify-content:center;}
+.step b{color:var(--indigo)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:.6rem 0;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin:.6rem 0;}
+.cardv{background:var(--sand);border:1px solid var(--line);border-radius:12px;padding:.7rem .85rem;font-size:9.8pt;page-break-inside:avoid;}
+.cardv .big{font-family:Georgia,serif;font-size:19pt;font-weight:800;color:var(--cacao);line-height:1;margin-bottom:.3rem}
+.cardv b{color:var(--indigo);}
+table{width:100%;border-collapse:collapse;margin:.6rem 0;font-size:9.8pt;page-break-inside:avoid;}
+th,td{border:1px solid var(--line);padding:.4rem .55rem;text-align:left;vertical-align:top;}
+th{background:var(--indigo);color:#fff;font-weight:700;}
+tr:nth-child(even) td{background:var(--sand);}
+.muted{color:var(--muted);}
+.cover{height:252mm;display:flex;flex-direction:column;justify-content:center;page-break-after:always;}
+.cover .logo{font-size:44pt;font-weight:800;letter-spacing:-.04em;font-family:'Helvetica Neue',Arial,sans-serif;}
+.cover .logo span{color:var(--cacao);}
+.cover .sub{font-size:17pt;color:var(--muted);margin-top:.6rem;}
+.pb{page-break-before:always;}
+.chk{list-style:none;padding-left:0}
+</style></head>
 <body>
 
 <div class="cover">
   <div class="pill">GUÍA PARA VIAJEROS</div>
   <div class="logo" style="margin-top:1.2rem;">RESER<span>-VE</span></div>
   <div class="sub">Descubre y reserva posadas<br/>auténticas de Venezuela</div>
-  <div style="margin-top:1.4rem"><span class="pill" style="background:var(--indigo)">FASE PRIVADA · RESERVAS MUY PRONTO</span></div>
+  <div style="margin-top:1.4rem"><span class="pill pill-i">FASE PRIVADA · RESERVAS MUY PRONTO</span></div>
   <div class="muted" style="margin-top:2rem;font-size:10pt">reser-ve.com · hola@reser-ve.com</div>
 </div>
 
-<div>
-  <h2>Bienvenido a RESER-VE</h2>
-  <p class="lead">RESER-VE es la plataforma para descubrir y reservar <b>posadas auténticas de Venezuela</b>: Los Roques, Canaima, Mérida, Mochima, Morrocoy, la Gran Sabana, Isla Margarita y más. Reservas con confianza y sin cargos ocultos: <b>el precio que ves es el que pagas</b>.</p>
+<h2>¿Qué es RESER-VE?</h2>
+<p class="lead">La plataforma para encontrar <b>posadas auténticas de Venezuela</b>: Los Roques, Canaima, Mérida, Mochima, Morrocoy, la Gran Sabana, Margarita y más. <b>El precio que ves es el que pagas</b>: sin comisiones ni cargos ocultos para ti.</p>
+<div class="box box-ok"><b>Estamos en fase privada.</b> Estamos sumando posadas y perfeccionando el pago, por eso las reservas aún no están abiertas. Ya puedes explorar, crear tu cuenta y guardar tus favoritas: te avisaremos por correo cuando abran.</div>
 
-  <div class="box box-ok"><b>Estamos en fase privada.</b> Estamos sumando posadas y perfeccionando el proceso de pago y reserva, por eso <b>las reservas aún no están abiertas</b>. Mientras tanto puedes explorar las posadas, crear tu cuenta, guardar tus favoritas ❤️ y planificar tu viaje con Aurora. Te avisaremos cuando abran las reservas.</div>
+<h2>Hoy puedes</h2>
+<div class="step"><div class="step-n">1</div><div><b>Explorar</b> en <code>reser-ve.com/buscar</code> por destino, precio o método de pago, con mapa.</div></div>
+<div class="step"><div class="step-n">2</div><div><b>Planificar con Aurora</b> (<code>reser-ve.com/aurora</code>): dile qué viaje sueñas y te arma un plan con posadas reales.</div></div>
+<div class="step"><div class="step-n">3</div><div><b>Crear tu cuenta gratis</b> y guardar posadas con el corazón ❤️ en <code>Favoritos</code>.</div></div>
 
-  <h3>Cómo funcionará la reserva (paso a paso)</h3>
-  <div class="step"><div class="step-n">1</div><div><b>Explora</b> en <code>reser-ve.com/buscar</code> por destino, fechas y método de pago — o pídele un plan a <b>Aurora</b>, nuestro concierge con IA, en <code>reser-ve.com/aurora</code>.</div></div>
-  <div class="step"><div class="step-n">2</div><div><b>Elige tu posada</b> y revisa fotos, servicios, políticas y reseñas de otros viajeros.</div></div>
-  <div class="step"><div class="step-n">3</div><div><b>Reserva:</b> selecciona fechas y número de huéspedes, crea tu cuenta gratis y envía la solicitud. <b>No se cobra nada todavía.</b></div></div>
-  <div class="step"><div class="step-n">4</div><div>El posadero <b>confirma en 24h</b> y te llega un correo. Te envía sus <b>datos de pago por el chat de RESER-VE</b>.</div></div>
-  <div class="step"><div class="step-n">5</div><div>Pagas y ¡a disfrutar! Al volver, deja tu <b>reseña</b> ⭐. <b>Nunca pagues a datos recibidos fuera de la plataforma.</b></div></div>
+<h2>Cómo funcionará la reserva (paso a paso)</h2>
+<div class="step"><div class="step-n">1</div><div><b>Elige posada, fechas y huéspedes</b> y envía tu solicitud. No se cobra nada en ese momento.</div></div>
+<div class="step"><div class="step-n">2</div><div><b>El posadero confirma en menos de 24 h</b> y te llega un correo.</div></div>
+<div class="step"><div class="step-n">3</div><div><b>Recibes sus datos de pago por el chat de RESER-VE</b> (<code>Mensajes</code>): Zelle, Pago Móvil, transferencia o efectivo, según la posada.</div></div>
+<div class="step"><div class="step-n">4</div><div><b>Pagas al posadero</b> y coordinas tu llegada por el mismo chat.</div></div>
+<div class="step"><div class="step-n">5</div><div><b>Disfrutas tu estancia</b> y luego dejas tu <b>reseña</b> ⭐ para ayudar a otros viajeros.</div></div>
+<p>En <code>Mis reservas</code> ves el estado de cada reserva y puedes cancelar una solicitud mientras esté pendiente.</p>
 
-  <h3>Pago y precios</h3>
-  <div class="grid2">
-    <div class="cardv"><b>Sin comisión para ti</b><br/>El precio publicado es el precio final. Tú no pagas cargos extra.</div>
-    <div class="cardv"><b>Métodos flexibles</b><br/>Zelle, Pago Móvil, transferencia, efectivo en USD o Bs (según cada posada).</div>
-    <div class="cardv"><b>Sin cobros automáticos</b><br/>Solo pagas cuando el posadero confirma tu reserva.</div>
-    <div class="cardv"><b>Reserva protegida</b><br/>Todo queda registrado en la plataforma.</div>
-  </div>
-
-  <h3>Después de reservar</h3>
-  <ul>
-    <li><b>Mis reservas</b> (<code>/mis-reservas</code>): estado, instrucciones de pago y cancelación de solicitudes pendientes.</li>
-    <li><b>Mensajes</b> (<code>/mensajes</code>): chatea con el posadero dentro de la app.</li>
-    <li><b>Favoritos</b> (<code>/favoritos</code>): guarda posadas con el corazón ❤️ para después.</li>
-    <li><b>Reseñas:</b> tras tu estancia, comparte tu experiencia y ayuda a otros viajeros.</li>
-  </ul>
-
-  <h3>Asistentes que te ayudan</h3>
-  <ul>
-    <li><b>Aurora</b> 🌅 — te arma un itinerario a tu medida con posadas reales según lo que buscas.</li>
-    <li><b>Vera</b> 🌴 — el botón flotante de ayuda: responde tus dudas al instante y te conecta con una persona si hace falta.</li>
-  </ul>
-
-  <div class="box box-ok"><b>Por tu seguridad:</b> mantén la comunicación y el pago dentro de RESER-VE. Así tu reserva queda respaldada. Nunca compartas contraseñas ni datos completos de tarjeta por chat.</div>
-</div>
-
-</body>
-</html>
+<h2>Tu seguridad</h2>
+<ul>
+  <li><b>Paga solo después de que el posadero confirme</b> y solo a datos recibidos por el chat de RESER-VE.</li>
+  <li>Nunca envíes dinero a datos que te lleguen por WhatsApp, redes o correos externos.</li>
+  <li>Cada posada es revisada por nuestro equipo antes de publicarse.</li>
+  <li>Solo publicamos reseñas de huéspedes con una reserva real.</li>
+</ul>
+<div class="box"><b>¿Dudas?</b> Pregúntale a <b>Vera</b> (botón naranja en la web) o escríbenos a <b>hola@reser-ve.com</b>.</div>
+</body></html>
