@@ -9,6 +9,11 @@ export const AI_MODEL = 'google/gemini-2.5-flash'
 // al precio del viajero ni se le muestra.
 export const HOST_COMMISSION_RATE = 0.10
 
+// Lo que recibe la posada de una reserva (ya descontada la comisión). Es lo que se le muestra al posadero.
+export function hostNet(total: number): number {
+  return Math.round(total * (1 - HOST_COMMISSION_RATE))
+}
+
 // URL pública del sitio (para metadata/SEO/sitemap).
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://reser-ve.com'
 

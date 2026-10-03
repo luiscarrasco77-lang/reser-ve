@@ -78,6 +78,7 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
   const [uploadingImg, setUploadingImg] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const [dragOver, setDragOver] = useState(false)
 
   const destino = DESTINOS.find(d => d.slug === destinoSlug)
   const destinoLabel = destino ? destino.label : localidad.trim()
@@ -91,12 +92,12 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
     if (d) { setLatStr(String(d.lat)); setLngStr(String(d.lng)) } else { setLatStr(''); setLngStr('') }
   }
 
-  async function handleImageUpload(files: FileList | null) {
-    if (!files || files.length === 0) return
+  async function handleImageUpload(files: File[]) {
+    if (files.length === 0) return
     setUploadingImg(true)
     setError('')
     const uploaded: string[] = []
-    for (const file of Array.from(files)) {
+    for (const file of files) {
       try {
         uploaded.push(await uploadPosadaImage(file))
       } catch (e: any) {
@@ -197,7 +198,8 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
         .cb-item.checked{border-color:var(--cacao);background:rgba(230,126,34,0.07);color:var(--cacao);}
         .img-drop{border:2px dashed var(--line);border-radius:14px;padding:2rem;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;}
         .img-drop:hover{border-color:rgba(230,126,34,0.4);background:rgba(230,126,34,0.02);}
-        .img-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+        .img-drop input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+        .img-drop.drag{border-color:var(--cacao);background:rgba(230,126,34,0.06);}
         .img-previews{display:flex;flex-wrap:wrap;gap:0.6rem;margin-top:1rem;}
         .img-preview-wrap{position:relative;width:80px;height:80px;}
         .img-preview{width:80px;height:80px;border-radius:10px;object-fit:cover;border:1.5px solid var(--line);}
@@ -326,8 +328,8 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
           {/* Photos */}
           <div className="form-section">
             <div className="section-head">Fotos de la posada</div>
-            <div className="img-drop" onClick={() => fileRef.current?.click()}>
-              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={e => handleImageUpload(e.target.files)} />
+            <div className={`img-drop${dragOver ? ' drag' : ''}`} onDragEnter={() => setDragOver(true)} onDragLeave={() => setDragOver(false)} onDrop={() => setDragOver(false)}>
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={e => { const list = Array.from(e.target.files ?? []); e.target.value = ''; handleImageUpload(list) }} />
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--muted)', marginBottom: '0.5rem' }}>
                 <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
               </svg>

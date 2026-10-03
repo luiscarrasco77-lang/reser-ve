@@ -3,6 +3,7 @@
 import { useState, useEffect, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import DashboardNav from '@/components/DashboardNav'
+import { hostNet } from '@/lib/constants'
 
 type Booking = {
   id: number
@@ -195,7 +196,7 @@ export default function ReservasPage() {
                     <div>
                       <div style={{fontSize:'0.84rem'}}>{b.checkIn}</div>
                       <div style={{fontSize:'0.78rem',color:'var(--muted)'}}>→ {b.checkOut} · {b.nights}n</div>
-                      <div style={{fontWeight:700,marginTop:2}}>${b.totalPrice}</div>
+                      <div style={{fontWeight:700,marginTop:2}}>${hostNet(b.totalPrice)}</div>
                     </div>
                     <span>
                       <span className="badge" style={{background:`${statusColor[b.status]}18`,color:statusColor[b.status]}}>
@@ -254,8 +255,12 @@ export default function ReservasPage() {
                           <span>{b.guestCount} personas</span>
                         </div>
                         <div className="expand-field">
-                          <label>Total</label>
-                          <span style={{fontWeight:700}}>${b.totalPrice}</span>
+                          <label>Tu ingreso</label>
+                          <span style={{fontWeight:700}}>${hostNet(b.totalPrice)}</span>
+                        </div>
+                        <div className="expand-field">
+                          <label>Precio que paga el huésped</label>
+                          <span>${b.totalPrice}</span>
                         </div>
                         {b.paymentMethod && (
                           <div className="expand-field">

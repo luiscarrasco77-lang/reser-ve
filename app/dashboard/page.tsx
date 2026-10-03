@@ -1,5 +1,6 @@
 import { auth } from '@/auth'
 import DashboardNav from '@/components/DashboardNav'
+import { hostNet } from '@/lib/constants'
 import { redirect } from 'next/navigation'
 import { getDb } from '@/lib/db'
 import { bookings, posadas, users } from '@/lib/db/schema'
@@ -123,9 +124,8 @@ export default async function DashboardPage() {
             <div className="stat-value">{hostPosadas.filter(p => p.status === 'active').length}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">Reservas confirmadas (bruto)</div>
-            <div className="stat-value cacao">${totalEarned.toLocaleString()}</div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: 4 }}>Comisión RESER-VE 10%: ${Math.round(totalEarned * 0.1).toLocaleString()}</div>
+            <div className="stat-label">Tus ingresos</div>
+            <div className="stat-value cacao">${hostNet(totalEarned).toLocaleString()}</div>
           </div>
         </div>
 
@@ -196,7 +196,7 @@ export default async function DashboardPage() {
                       <div style={{fontSize:'0.85rem',fontWeight:600}}>{guest?.name ?? `#${b.guestId}`}</div>
                     </div>
                     <span style={{color:'var(--muted)'}}>{b.checkIn} → {b.checkOut}</span>
-                    <span style={{fontWeight:700}}>${b.totalPrice}</span>
+                    <span style={{fontWeight:700}}>${hostNet(b.totalPrice)}</span>
                     <span>
                       <span className="status-badge" style={{background:`${statusColor[b.status]}18`,color:statusColor[b.status]}}>
                         {statusLabel[b.status] ?? b.status}

@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { SITE_URL } from './constants'
+import { SITE_URL, hostNet } from './constants'
 
 // Only initialize if API key is present — avoids build-time crash
 function getResend() {
@@ -126,9 +126,10 @@ export async function emailHostNewBooking(opts: {
       <div class="row"><span>Huéspedes</span><strong>${opts.guestCount}</strong></div>
       <div class="row"><span>Método de pago</span><strong>${esc(opts.paymentMethod ?? '—')}</strong></div>
       <div class="divider"/>
-      <div class="total"><span>Total de la estadía</span><span>$${opts.totalPrice} USD</span></div>
+      <div class="row"><span>Precio que paga el huésped</span><strong>$${opts.totalPrice} USD</strong></div>
+      <div class="total"><span>Tu ingreso</span><span>$${hostNet(opts.totalPrice)} USD</span></div>
       ${opts.notes ? `<div class="info-box"><strong>Nota del viajero:</strong> ${esc(opts.notes)}</div>` : ''}
-      <div class="info-box"><strong>Próximos pasos:</strong> confirma o rechaza desde tu panel. Si confirmas, envíale tus datos de pago al viajero por el <strong>chat de RESER-VE</strong> (nunca por fuera de la plataforma). La comisión de RESER-VE es el 10% de las reservas confirmadas.</div>
+      <div class="info-box"><strong>Próximos pasos:</strong> confirma o rechaza desde tu panel. Si confirmas, envíale tus datos de pago al viajero por el <strong>chat de RESER-VE</strong> (nunca por fuera de la plataforma).</div>
       <a href="${SITE_URL}/dashboard/reservas" class="btn">Gestionar reserva →</a>
     </div>
   `)
