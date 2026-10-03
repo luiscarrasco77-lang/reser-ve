@@ -18,7 +18,7 @@ export function PrivatePhaseNotice({ compact = false }: { compact?: boolean }) {
       padding: compact ? '0.75rem 0.9rem' : '1rem 1.1rem', textAlign: 'center',
       fontFamily: "'Inter', system-ui, sans-serif", color: '#1A2B4C',
     }}>
-      <div style={{ fontWeight: 800, fontSize: compact ? '0.86rem' : '0.95rem' }}>🔒 Reservas muy pronto</div>
+      <div style={{ fontWeight: 800, fontSize: compact ? '0.86rem' : '0.95rem' }}>Reservas muy pronto</div>
       <div style={{ fontSize: compact ? '0.74rem' : '0.8rem', color: '#7A8699', marginTop: 4, lineHeight: 1.5 }}>
         RESER-VE está en fase privada mientras incorporamos posadas y perfeccionamos el pago. Crea tu cuenta gratis y guarda tus favoritas: te avisaremos por correo cuando abran las reservas.
       </div>

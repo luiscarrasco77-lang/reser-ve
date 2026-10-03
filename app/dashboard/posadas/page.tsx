@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm'
 import ResubmitButton from './ResubmitButton'
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-  draft:          { label: 'Borrador',             color: '#7A8699', bg: 'rgba(122,134,153,0.1)',  icon: '📝' },
+  draft:          { label: 'Borrador',             color: '#7A8699', bg: 'rgba(122,134,153,0.1)',  icon: '•' },
   pending_review: { label: 'Pendiente de revisión', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  icon: '⏳' },
   active:         { label: 'Publicada',             color: '#10b981', bg: 'rgba(16,185,129,0.1)',  icon: '✓' },
   suspended:      { label: 'Pausada',               color: '#7A8699', bg: 'rgba(122,134,153,0.12)', icon: '⏸' },
@@ -78,7 +78,7 @@ export default async function MisPosadasPage() {
 
         {hostPosadas.length === 0 ? (
           <div className="empty">
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.8rem' }}>🏡</div>
+            
             <div style={{ fontWeight: 700, marginBottom: '0.4rem' }}>No tienes posadas aún</div>
             <div style={{ fontSize: '0.88rem', marginBottom: '1.5rem' }}>Publica tu primera posada y empieza a recibir viajeros</div>
             <a href="/dashboard/posada/nueva" className="new-btn">Publicar mi primera posada</a>
@@ -92,7 +92,7 @@ export default async function MisPosadasPage() {
                 <div className="posada-top">
                   {img
                     ? <img src={img} alt={p.nombre} className="posada-img" />
-                    : <div className="posada-img-placeholder">🏠</div>
+                    : <div className="posada-img-placeholder" />
                   }
                   <div className="posada-info">
                     <div className="posada-name">{p.nombre}</div>

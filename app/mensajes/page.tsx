@@ -119,7 +119,7 @@ function MensajesInner() {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                     <span className={`conv-badge ${conv.type === 'booking' ? 'badge-booking' : 'badge-support'}`}>
-                      {conv.type === 'booking' ? '🏠 Reserva' : '💬 Soporte'}
+                      {conv.type === 'booking' ? 'Reserva' : 'Soporte'}
                     </span>
                     {conv.posadaNombre && (
                       <span style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>{conv.posadaNombre}</span>

@@ -65,7 +65,7 @@ function Inner() {
           ) : done ? (
             <>
               <h1>¡Contraseña actualizada!</h1>
-              <div className="ok">✅ Ya puedes iniciar sesión con tu nueva contraseña. Redirigiendo…</div>
+              <div className="ok">Listo. Ya puedes iniciar sesión con tu nueva contraseña. Redirigiendo…</div>
               <Link href="/login" className="back">Ir a iniciar sesión →</Link>
             </>
           ) : (

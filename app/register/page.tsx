@@ -66,7 +66,7 @@ function RegisterForm() {
         .role-card{border:2px solid var(--line);border-radius:14px;padding:1rem 0.75rem;cursor:pointer;text-align:center;transition:all 0.18s;background:white;}
         .role-card:hover{border-color:rgba(230,126,34,0.4);background:rgba(253,251,247,0.7);}
         .role-card.active{border-color:var(--cacao);background:rgba(230,126,34,0.05);}
-        .role-card .role-icon{font-size:1.8rem;margin-bottom:0.4rem;}
+        .role-card .role-icon{margin-bottom:0.4rem;color:var(--cacao);display:flex;justify-content:center;}
         .role-card .role-label{font-size:0.82rem;font-weight:700;color:var(--indigo);}
         .role-card .role-desc{font-size:0.73rem;color:var(--muted);margin-top:0.2rem;}
         .role-section-label{font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;}
@@ -105,7 +105,7 @@ function RegisterForm() {
                   tabIndex={0}
                   onKeyDown={e => e.key === 'Enter' && setRole('traveler')}
                 >
-                  <div className="role-icon">🧳</div>
+                  <div className="role-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
                   <div className="role-label">Viajero</div>
                   <div className="role-desc">Quiero explorar y reservar posadas</div>
                 </div>
@@ -116,7 +116,7 @@ function RegisterForm() {
                   tabIndex={0}
                   onKeyDown={e => e.key === 'Enter' && setRole('host')}
                 >
-                  <div className="role-icon">🏡</div>
+                  <div className="role-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></div>
                   <div className="role-label">Posadero</div>
                   <div className="role-desc">Quiero publicar mi posada</div>
                 </div>

@@ -259,7 +259,7 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
             </Link>
           </nav>
           <div className="sb-footer">
-            <a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener noreferrer">📘 Guía de posaderos (PDF)</a>
+            <a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener noreferrer">Guía de posaderos (PDF)</a>
             <Link href="/">← Volver al sitio</Link>
             <Link href="/api/auth/signout">Cerrar sesión</Link>
           </div>
@@ -315,7 +315,7 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
 
               {!loading && pending.length === 0 && (
                 <div style={{background:'white',borderRadius:'14px',padding:'3rem',textAlign:'center',color:'var(--muted)',fontSize:'0.9rem',boxShadow:'0 2px 8px rgba(26,43,76,0.06)'}}>
-                  🎉 No hay posadas pendientes de revisión.
+                  No hay posadas pendientes de revisión.
                 </div>
               )}
 

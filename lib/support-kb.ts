@@ -61,7 +61,7 @@ Cada posada define su política (aparece en la página de la posada, sección "P
 
 // Resumen corto para el mensaje de bienvenida del widget
 export const WELCOME_MESSAGE =
-  '¡Hola! Soy Vera 🌴, tu asistente de RESER-VE. Puedo contarte sobre las posadas, cómo funcionarán las reservas y los pagos, ayudarte a publicar tu posada o conectarte con una persona del equipo. ¿En qué te ayudo?'
+  '¡Hola! Soy Vera, la asistente de RESER-VE. Puedo contarte sobre las posadas, cómo funcionarán las reservas y los pagos, ayudarte a publicar tu posada o conectarte con una persona del equipo. ¿En qué te ayudo?'
 
 export const SUGGESTED_QUESTIONS = [
   '¿Cuándo abren las reservas?',

@@ -54,7 +54,7 @@ export default function RecuperarPage() {
             <>
               <h1>Revisa tu correo</h1>
               <div className="sub">Te enviamos a <strong>{email}</strong> un enlace para crear una nueva contraseña. El enlace vence en 1 hora.</div>
-              <div className="ok">📧 Revisa tu bandeja de entrada (y la carpeta de spam).</div>
+              <div className="ok">Revisa tu bandeja de entrada (y la carpeta de spam).</div>
               <Link href="/login" className="back">← Volver a iniciar sesión</Link>
             </>
           ) : (

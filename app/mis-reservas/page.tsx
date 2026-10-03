@@ -15,8 +15,8 @@ type Booking = {
 
 const STATUS: Record<string, { label: string; color: string; bg: string; icon: string }> = {
   pending:   { label: 'Pendiente de confirmación', color: '#92400e', bg: 'rgba(245,158,11,0.1)',  icon: '⏳' },
-  confirmed: { label: 'Confirmada',                color: '#047857', bg: 'rgba(16,185,129,0.1)', icon: '✅' },
-  cancelled: { label: 'Cancelada',                 color: '#b91c1c', bg: 'rgba(239,68,68,0.08)', icon: '❌' },
+  confirmed: { label: 'Confirmada',                color: '#047857', bg: 'rgba(16,185,129,0.1)', icon: '✓' },
+  cancelled: { label: 'Cancelada',                 color: '#b91c1c', bg: 'rgba(239,68,68,0.08)', icon: '✕' },
   completed: { label: 'Completada',                color: '#4338ca', bg: 'rgba(99,102,241,0.1)', icon: '⭐' },
 }
 
@@ -119,7 +119,7 @@ export default function MisReservasPage() {
 
         {notLoggedIn && (
           <div className="empty">
-            <div className="empty-icon">🔐</div>
+            
             <div className="empty-title">Inicia sesión para ver tus reservas</div>
             <a href="/login?callbackUrl=/mis-reservas" className="btn-explore">Iniciar sesión</a>
           </div>
@@ -127,9 +127,9 @@ export default function MisReservasPage() {
 
         {!loading && !notLoggedIn && bookings.length === 0 && (
           <div className="empty">
-            <div className="empty-icon">🏖️</div>
+            
             <div className="empty-title">Aún no tienes reservas</div>
-            <div className="empty-sub">Las reservas abren muy pronto. Mientras tanto, explora posadas y guarda tus favoritas ❤️</div>
+            <div className="empty-sub">Las reservas abren muy pronto. Mientras tanto, explora posadas y guarda tus favoritas</div>
             <a href="/buscar" className="btn-explore">Explorar posadas</a>
             <a href="/favoritos" style={{ display: 'block', marginTop: '0.8rem', color: 'var(--cacao)', fontWeight: 700, fontSize: '0.86rem', textDecoration: 'none' }}>Ver mis favoritas →</a>
           </div>
@@ -217,7 +217,7 @@ function BookingCard({ b, onCancel, cancelling }: { b: Booking; onCancel: (id: n
     <div className="card">
       {b.posadaImg
         ? <img src={b.posadaImg} alt={b.posadaNombre} className="card-img" />
-        : <div className="card-img-ph">🏡</div>
+        : <div className="card-img-ph" />
       }
       <div className="card-body">
         <div className="card-top">

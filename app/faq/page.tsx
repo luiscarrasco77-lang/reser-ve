@@ -12,7 +12,7 @@ const faqs = [
     items: [
       {
         q: '¿Qué es RESER-VE?',
-        a: 'RESER-VE es la primera plataforma especializada en posadas auténticas venezolanas. Conectamos a viajeros con anfitriones locales en los destinos más hermosos de Venezuela — desde Los Roques hasta los Andes, pasando por Mochima, Canaima y mucho más.',
+        a: 'Una plataforma para encontrar y reservar posadas en Venezuela: Los Roques, Mérida, Mochima, Canaima, Margarita y más destinos. Cada posada tiene su página con fotos, precio, servicios y ubicación, y la coordinación con el posadero se hace por un chat dentro de la plataforma.',
       },
       {
         q: '¿El viajero paga alguna comisión?',
@@ -232,7 +232,7 @@ export default function FaqPage() {
 
         <div className="cta-box">
           <h2>¿Tienes otra pregunta?</h2>
-          <p>Escríbenos directamente — respondemos rápido.</p>
+          <p>Escríbenos y te respondemos en menos de 24 horas.</p>
           <div className="cta-btns">
             <a href="mailto:hola@reser-ve.com" className="btn-primary">Contáctanos</a>
             <a href="/buscar" className="btn-ghost">Explorar posadas</a>

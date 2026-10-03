@@ -271,7 +271,7 @@ export async function emailHostPosadaReceived(opts: { hostEmail: string; hostNam
   if (!resend && !process.env.BREVO_API_KEY) return false
   const html = baseHtml(`
     <div class="card">
-      <div class="title">Recibimos tu posada 🙌</div>
+      <div class="title">Recibimos tu posada</div>
       <div class="sub">Hola ${esc(opts.hostName)}, <strong>${esc(opts.posadaNombre)}</strong> está en revisión. Nuestro equipo la revisará en 24–72 horas y te avisaremos por correo en cuanto esté publicada. Si falta algo, te diremos exactamente qué ajustar.</div>
       <div class="info-box">RESER-VE está en fase privada: tu posada se verá en la web y estará lista desde el primer día cuando abramos las reservas al público.</div>
       <a href="${SITE_URL}/dashboard" class="btn">Ir a mi panel →</a>
@@ -328,7 +328,7 @@ export async function emailWelcome(opts: {
   const isHost = opts.role === 'host'
   const html = baseHtml(`
     <div class="card">
-      <div class="title">Bienvenido/a a RESER-VE 🎉</div>
+      <div class="title">Bienvenido/a a RESER-VE</div>
       <div class="sub">Hola ${esc(opts.name)}, tu cuenta ha sido creada. ${isHost
         ? 'Ya puedes publicar tu posada desde tu panel: fotos, habitaciones, precio y métodos de pago. Nuestro equipo la revisa en 24–72 horas y te avisamos por correo cuando esté publicada.'
         : 'Ya puedes explorar las posadas más auténticas de Venezuela y guardar tus favoritas. Estamos en fase privada: te avisaremos por correo cuando se abran las reservas.'}</div>

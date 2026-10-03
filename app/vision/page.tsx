@@ -1,8 +1,8 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: '¿Por qué posadas?',
-  description: 'Las posadas venezolanas son más que un hospedaje — son el alma de Venezuela. Descubre nuestra misión de conectar viajeros con anfitriones auténticos.',
+  title: 'Sobre nosotros',
+  description: 'Qué es RESER-VE y por qué nos enfocamos en las posadas de Venezuela.',
 }
 
 export default function VisionPage() {
@@ -261,12 +261,12 @@ export default function VisionPage() {
         <div className="vis-hero-img" />
         <div className="vis-hero-overlay" />
         <div className="vis-hero-content">
-          <div className="vis-hero-label">Nuestra visión</div>
+          <div className="vis-hero-label">Sobre nosotros</div>
           <h1 className="vis-hero-h1">
-            ¿Por qué <em>posadas</em>?
+            Por qué <em>posadas</em>
           </h1>
           <p className="vis-hero-sub">
-            Más que un hospedaje — las posadas son el corazón auténtico de Venezuela, donde cada estadía es una historia que vale la pena vivir.
+            En Venezuela, la mejor forma de conocer un destino suele ser quedarse en una posada. Queremos que encontrarlas y reservarlas sea igual de fácil que reservar un hotel.
           </p>
         </div>
       </section>
@@ -276,13 +276,13 @@ export default function VisionPage() {
 
         {/* Section 1 */}
         <section className="vis-section">
-          <div className="vis-section-label">Más que un hospedaje</div>
-          <h2 className="vis-h2">El alma de <em>Venezuela</em> tiene nombre propio</h2>
+          <div className="vis-section-label">Qué es una posada</div>
+          <h2 className="vis-h2">Pequeñas, familiares y bien ubicadas</h2>
           <p className="vis-p">
-            Una posada no es simplemente un lugar donde dormir. Es una familia que te abre su puerta, una historia que se teje con la tuya, una experiencia que ningún hotel de cadena puede replicar. En cada rincón de Venezuela — desde las islas de coral del Caribe hasta las mesas de roca milenaria de la Gran Sabana — las posadas guardan el secreto de lo que significa viajar de verdad.
+            Una posada es un alojamiento pequeño, normalmente de pocas habitaciones, que gestiona una familia. Los dueños suelen vivir en el lugar o muy cerca y conocen bien la zona: saben qué tour vale la pena, quién hace el mejor traslado y dónde comer.
           </p>
           <p className="vis-p">
-            Son espacios íntimos donde el desayuno huele a cocina de abuela, donde el dueño te cuenta los mejores secretos del pueblo, donde el servicio no es una transacción sino un gesto genuino de hospitalidad. Aquí, el viajero no es un número de reserva: es un huésped bienvenido en el hogar de alguien.
+            Hay posadas frente al mar en Los Roques y Mochima, en la montaña en Mérida, en pueblos coloniales como Coro o junto a los tepuyes de la Gran Sabana. En muchos de esos lugares no hay hoteles grandes: las posadas son la forma principal de alojarse.
           </p>
         </section>
 
@@ -293,23 +293,12 @@ export default function VisionPage() {
           <img src="/images/lodge-canaima_01.webp" alt="Posada en Canaima, Venezuela" loading="lazy" />
         </div>
 
-        {/* Pull Quote */}
-        <div className="vis-quote">
-          <blockquote>
-            "Cuando te quedas en una posada venezolana, no estás pagando por una cama. Estás invirtiendo en una conexión humana que dura toda la vida."
-          </blockquote>
-          <cite>— Un viajero que regresó tres veces al mismo lugar</cite>
-        </div>
-
         {/* Section 2 */}
         <section className="vis-section">
-          <div className="vis-section-label">Una tradición venezolana</div>
-          <h2 className="vis-h2">Décadas de <em>hospitalidad</em> que no se improvisan</h2>
+          <div className="vis-section-label">El problema</div>
+          <h2 className="vis-h2">Difíciles de encontrar y de reservar</h2>
           <p className="vis-p">
-            La posada venezolana tiene raíces profundas. Nació de la tradición de recibir al viajero con la misma calidez con que se recibe a un familiar. Los posaderos llevan generaciones perfeccionando el arte de hacer sentir a sus huéspedes como en casa — conocen cada sendero, cada plato típico, cada historia local que ningún guía turístico ha escrito.
-          </p>
-          <p className="vis-p">
-            En un mundo donde el alojamiento se ha vuelto impersonal y predecible, las posadas venezolanas son una resistencia cultural y una apuesta por lo humano. Cada posadero que abre sus puertas al mundo es un embajador silencioso de lo mejor que Venezuela tiene para ofrecer: sus paisajes, su gente, su sabor.
+            La mayoría de las posadas no aparecen en Booking ni en Airbnb. Se reservan por WhatsApp o Instagram, sin precios claros, sin fotos actualizadas y sin ninguna garantía para quien paga por adelantado. Para quien viaja desde el exterior es todavía más difícil.
           </p>
         </section>
 
@@ -317,16 +306,16 @@ export default function VisionPage() {
 
         {/* Section 3 */}
         <section className="vis-section">
-          <div className="vis-section-label">Nuestra misión</div>
-          <h2 className="vis-h2">Conectar lo <em>auténtico</em> con quien lo merece</h2>
+          <div className="vis-section-label">Qué hacemos</div>
+          <h2 className="vis-h2">Un solo lugar para buscar, comparar y reservar</h2>
           <p className="vis-p">
-            RESER-VE nació de una convicción sencilla: Venezuela tiene un tesoro escondido en sus posadas, y el mundo debería poder encontrarlo con facilidad. Somos la primera plataforma especializada en alojamientos auténticos venezolanos — no hoteles de franquicia, no hostales genéricos, sino posadas con historia, con alma y con dueños que ponen el corazón en cada detalle.
+            En RESER-VE cada posada tiene su página con fotos, precio por noche, servicios, políticas y ubicación. Nuestro equipo revisa cada una antes de publicarla. El viajero paga exactamente el precio publicado y coordina todo con el posadero por un chat dentro de la plataforma, que deja registro de lo acordado.
           </p>
           <p className="vis-p">
-            Trabajamos directamente con los posaderos, sin intermediarios que inflen precios o distorsionen la experiencia. Facilitamos los pagos en la forma que más le convenga al viajero — Zelle, Pago Móvil, transferencia, efectivo — porque entendemos la realidad venezolana y nos adaptamos a ella sin excusas.
+            Los pagos se hacen como ya funciona en Venezuela: Zelle, Pago Móvil, transferencia o efectivo, según lo que acepte cada posada.
           </p>
           <p className="vis-p">
-            Cada posada en RESER-VE es un acto de confianza mutua: el posadero confía en que te mandamos un viajero que valora lo que ofrece, y el viajero confía en que la posada que encuentra aquí es exactamente lo que promete ser.
+            RESER-VE es un proyecto de <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>Dos Locos de Viaje</a>, una comunidad de viajeros venezolanos.
           </p>
         </section>
 
@@ -334,10 +323,10 @@ export default function VisionPage() {
         <div className="vis-cta">
           <div className="vis-cta-inner">
             <h2>Explora las <em>posadas</em></h2>
-            <p>Desde las playas cristalinas de Los Roques hasta los picos andinos de Mérida, tu próxima historia te está esperando.</p>
+            <p>Busca por destino, precio o forma de pago.</p>
             <div className="vis-cta-btns">
               <Link href="/buscar" className="vis-cta-btn">
-                Ver todas las posadas →
+                Ver posadas
               </Link>
               <Link href="/register?role=host" className="vis-cta-sec">
                 Tengo una posada

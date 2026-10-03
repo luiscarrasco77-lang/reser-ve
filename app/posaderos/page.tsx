@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Para posaderos',
-  description: 'Publica tu posada venezolana y llega a miles de viajeros que buscan experiencias auténticas. Publicar es gratis y solo pagas un 10% cuando recibes una reserva confirmada.',
+  description: 'Publica tu posada gratis en RESER-VE. Solo pagas una comisión cuando recibes una reserva confirmada.',
 }
 
 const benefits = [
@@ -14,8 +14,8 @@ const benefits = [
         <circle cx="12" cy="9" r="2.5"/>
       </svg>
     ),
-    title: 'Visibilidad nacional e internacional',
-    desc: 'Tu posada aparece en búsquedas de viajeros venezolanos y de la diáspora en todo el mundo que quieren redescubrir Venezuela. Llega a un público que valora la autenticidad.',
+    title: 'Más viajeros',
+    desc: 'Tu posada aparece en el buscador, el mapa y las páginas de destino, para viajeros de Venezuela y venezolanos que viven fuera.',
   },
   {
     icon: (
@@ -26,7 +26,7 @@ const benefits = [
       </svg>
     ),
     title: 'Solo pagas si ganas',
-    desc: 'Publicar es gratis y sin mensualidad. Solo aplica un 10% sobre las reservas confirmadas — muy por debajo del 15–18% de las grandes plataformas. El huésped nunca paga comisión extra.',
+    desc: 'Publicar es gratis y sin mensualidad. Solo aplica un 10% sobre las reservas confirmadas, menos que el 15–18% de las grandes plataformas. El huésped nunca paga comisión extra.',
   },
   {
     icon: (
@@ -38,7 +38,7 @@ const benefits = [
       </svg>
     ),
     title: 'Chat seguro con el huésped',
-    desc: 'Coordina llegada, preferencias y detalles con cada viajero desde la mensajería de RESER-VE. Todo queda registrado, lo que te protege a ti y al huésped ante cualquier malentendido o fraude.',
+    desc: 'Coordina llegada, preferencias y detalles con cada viajero desde la mensajería de RESER-VE. Todo queda registrado, lo que protege a ambas partes si hay un malentendido.',
   },
   {
     icon: (
@@ -46,8 +46,8 @@ const benefits = [
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
       </svg>
     ),
-    title: 'Reseñas auténticas',
-    desc: 'Construye tu reputación con reseñas reales de huéspedes verificados. Una buena reputación es el mejor marketing que existe para una posada.',
+    title: 'Reseñas verificadas',
+    desc: 'Solo pueden opinar huéspedes que se alojaron en tu posada a través de RESER-VE.',
   },
   {
     icon: (
@@ -57,8 +57,8 @@ const benefits = [
         <line x1="12" y1="17" x2="12" y2="21"/>
       </svg>
     ),
-    title: 'Perfil digital profesional',
-    desc: 'Tu posada tendrá una página propia con galería de fotos, descripción, servicios, mapa interactivo y reseñas. Una presencia online digna, sin que tengas que crear un sitio web.',
+    title: 'Tu propia página',
+    desc: 'Fotos, descripción, servicios, políticas, ubicación y reseñas, sin tener que crear ni mantener un sitio web.',
   },
   {
     icon: (
@@ -67,8 +67,8 @@ const benefits = [
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
     ),
-    title: 'Parte del ecosistema venezolano',
-    desc: 'RESER-VE nació para fortalecer el turismo venezolano desde adentro. Al unirte, eres parte de un movimiento que promueve la autenticidad y el turismo responsable en Venezuela.',
+    title: 'Panel sencillo',
+    desc: 'Editas precios y fotos, pausas tu posada cuando quieras y gestionas solicitudes y mensajes desde el teléfono.',
   },
 ]
 
@@ -85,7 +85,7 @@ const steps = [
   },
   {
     n: '03',
-    title: 'Sal en vivo',
+    title: 'Publicada',
     desc: 'Tu posada aparece en el buscador, el mapa y las sugerencias. Durante la fase privada ya se ve en la web; al abrir las reservas, estarás lista desde el día uno.',
   },
   {
@@ -305,14 +305,13 @@ export default function PosaderosPage() {
         <div className="hero-content">
           <div className="hero-panel">
             <div className="hero-eyebrow">Para posaderos · Fase privada</div>
-            <h1>Tu posada merece<br/><em>más viajeros</em></h1>
+            <h1>Publica tu posada<br/><em>en RESER-VE</em></h1>
             <p className="hero-sub">
-              RESER-VE conecta tu posada con viajeros de Venezuela y de la diáspora que buscan experiencias auténticas. Publicar es gratis: solo pagas un 10% cuando recibes una reserva confirmada.
+              Llega a viajeros de Venezuela y del exterior que buscan dónde quedarse. Publicar es gratis: solo pagas un 10% cuando recibes una reserva confirmada.
             </p>
             <div className="hero-btns">
               <a href="/register?role=host" className="btn-primary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-                Publicar mi posada gratis
+                Publicar mi posada
               </a>
               <a href="#como-funciona" className="btn-ghost-white">Cómo funciona</a>
             </div>
@@ -323,8 +322,8 @@ export default function PosaderosPage() {
       {/* Benefits */}
       <div className="section">
         <div className="sec-eyebrow">Por qué RESER-VE</div>
-        <h2 className="sec-title">Todo lo que necesitas,<br/>nada que no necesitas</h2>
-        <p className="sec-sub">Una plataforma pensada para el posadero venezolano: simple, transparente y sin cargos sorpresa.</p>
+        <h2 className="sec-title">Qué te ofrece RESER-VE</h2>
+        <p className="sec-sub">Hecha para cómo funcionan las posadas en Venezuela.</p>
         <div className="benefits-grid">
           {benefits.map(b => (
             <div key={b.title} className="benefit-card">
@@ -338,10 +337,10 @@ export default function PosaderosPage() {
         {/* Vision callout */}
         <div className="vision-callout">
           <div className="vision-text">
-            <h3>¿Por qué las posadas son especiales?</h3>
-            <p>Las posadas venezolanas son más que un hospedaje — son patrimonio cultural, hospitalidad familiar y autenticidad pura. Conoce nuestra visión sobre por qué apostamos por este modelo.</p>
+            <h3>¿Quiénes somos?</h3>
+            <p>RESER-VE es un proyecto de Dos Locos de Viaje, una comunidad de viajeros venezolanos. Te contamos por qué nos enfocamos en las posadas.</p>
           </div>
-          <a href="/vision" className="vision-link">Leer nuestra visión →</a>
+          <a href="/vision" className="vision-link">Sobre nosotros</a>
         </div>
       </div>
 
@@ -353,7 +352,7 @@ export default function PosaderosPage() {
           <div className="term"><div className="term-big">0 $</div><div className="term-t">Publicar y mantener tu posada</div><p>Sin mensualidad, sin costo de alta, sin permanencia. Puedes pausar tu publicación cuando quieras (al reactivarla pasa por una revisión rápida).</p></div>
           <div className="term"><div className="term-big">10%</div><div className="term-t">Solo por reserva confirmada</div><p>Lo asume la posada; el viajero paga exactamente tu precio. <strong>Tarifa fundadora:</strong> si te unes en la fase privada, 10% garantizado 12 meses desde la apertura.</p></div>
           <div className="term"><div className="term-big">=</div><div className="term-t">Paridad de precio</div><p>El precio que publiques en RESER-VE debe ser el mismo que ofreces por otros canales (teléfono, redes, otras plataformas).</p></div>
-          <div className="term"><div className="term-big">💬</div><div className="term-t">Todo por la app</div><p>La comunicación con huéspedes se hace por el chat de RESER-VE. Así evitamos fraudes y protegemos a ambas partes.</p></div>
+          <div className="term"><div className="term-big">Chat</div><div className="term-t">Todo por la app</div><p>La comunicación con huéspedes se hace por el chat de RESER-VE. Así evitamos fraudes y protegemos a ambas partes.</p></div>
         </div>
         <div className="mvp-note">
           <strong>Estamos en fase privada (MVP).</strong> Ya puedes crear tu cuenta y publicar tu posada; las reservas del público se abrirán en unas semanas, cuando terminemos de perfeccionar el proceso de pago y reserva. Las posadas fundadoras mantienen el 10% de comisión durante 12 meses tras la apertura y salen primero en el lanzamiento. Más adelante ofreceremos servicios opcionales de fotografía profesional y digitalización.
@@ -365,8 +364,8 @@ export default function PosaderosPage() {
       <section className="steps-section" id="como-funciona">
         <div className="steps-inner">
           <div className="sec-eyebrow">Proceso</div>
-          <h2 className="sec-title" style={{color:'white'}}>Estar en RESER-VE<br/>es muy sencillo</h2>
-          <p className="sec-sub">Cuatro pasos para que tu posada llegue a viajeros de todo el mundo.</p>
+          <h2 className="sec-title" style={{color:'white'}}>Cómo empezar</h2>
+          <p className="sec-sub">Toma unos 10 minutos.</p>
           <div className="steps-grid">
             {steps.map(s => (
               <div key={s.n} className="step-card">
@@ -382,8 +381,8 @@ export default function PosaderosPage() {
       {/* CTA */}
       <section className="cta-section">
         <div className="cta-box">
-          <h2>¿Listo para recibir más huéspedes?</h2>
-          <p>Únete a las posadas que ya confían en RESER-VE para conectar con viajeros que valoran lo auténtico.</p>
+          <h2>Publica tu posada</h2>
+          <p>Crea tu cuenta de posadero y envía tu posada a revisión. Si tienes dudas, escríbenos a hola@reser-ve.com.</p>
           <div className="cta-btns">
             <a href="/register?role=host" className="btn-primary">Registrar mi posada</a>
             <a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener" className="btn-indigo">Descargar guía (PDF)</a>

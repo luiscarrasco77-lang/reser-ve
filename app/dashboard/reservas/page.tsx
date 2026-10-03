@@ -216,7 +216,7 @@ export default function ReservasPage() {
                       )}
                       {(b.status === 'pending' || b.status === 'confirmed' || b.status === 'completed') && (
                         <button className="act-btn act-expand" disabled={openingChat === b.id} onClick={() => openChat(b.id)}>
-                          💬 Chat
+                          Chat
                         </button>
                       )}
                       {b.status === 'confirmed' && (

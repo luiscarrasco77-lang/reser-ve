@@ -380,7 +380,7 @@ export default async function DestinoPage({
         <div className="consejo-section">
           <div className="consejo-card">
             <div className="consejo-content">
-              <div className="consejo-icon">🧭</div>
+              <div className="consejo-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
               <h3 className="consejo-title">¿Tu primera vez en {destino.nombre}?</h3>
               <p className="consejo-text">
                 Reserva con mínimo 2 semanas de antelación. La mayoría de posadas en este destino

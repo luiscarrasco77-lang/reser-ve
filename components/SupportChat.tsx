@@ -42,7 +42,7 @@ export default function SupportChat() {
         .sc-panel{position:fixed;bottom:1.5rem;right:1.5rem;z-index:901;width:min(390px,calc(100vw - 2rem));height:min(600px,calc(100vh - 3rem));background:#FDFBF7;border-radius:22px;box-shadow:0 24px 70px rgba(26,43,76,0.28);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(26,43,76,0.08);font-family:'Inter',system-ui,sans-serif;animation:scIn .22s cubic-bezier(.16,1,.3,1);}
         @keyframes scIn{from{opacity:0;transform:translateY(16px) scale(.97);}to{opacity:1;transform:none;}}
         .sc-head{background:linear-gradient(135deg,#1A2B4C,#24395f);color:#fff;padding:1rem 1.1rem;display:flex;align-items:center;gap:.7rem;}
-        .sc-ava{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#E67E22,#C96510);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+        .sc-ava{color:white;font-weight:800;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#E67E22,#C96510);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
         .sc-title{font-weight:800;font-size:.95rem;letter-spacing:-.01em;}
         .sc-sub{font-size:.72rem;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:.35rem;margin-top:1px;}
         .sc-online{width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block;}
@@ -54,7 +54,7 @@ export default function SupportChat() {
         .sc-bub{padding:.65rem .85rem;border-radius:15px;font-size:.86rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
         .sc-row.ai .sc-bub{background:#fff;border:1px solid rgba(26,43,76,0.08);color:#1A2B4C;border-bottom-left-radius:4px;}
         .sc-row.me .sc-bub{background:linear-gradient(135deg,#E67E22,#C96510);color:#fff;border-bottom-right-radius:4px;}
-        .sc-mini-ava{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#E67E22,#C96510);display:flex;align-items:center;justify-content:center;font-size:.78rem;flex-shrink:0;align-self:flex-end;}
+        .sc-mini-ava{color:white;font-weight:800;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#E67E22,#C96510);display:flex;align-items:center;justify-content:center;font-size:.78rem;flex-shrink:0;align-self:flex-end;}
         .sc-ticket{align-self:center;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#0f9d6b;font-size:.74rem;font-weight:600;padding:.4rem .8rem;border-radius:99px;display:flex;align-items:center;gap:.4rem;}
         .sc-sugs{display:flex;flex-direction:column;gap:.45rem;margin-top:.3rem;}
         .sc-sug{text-align:left;background:#fff;border:1px solid rgba(26,43,76,0.1);color:#1A2B4C;font-size:.82rem;font-weight:500;padding:.6rem .8rem;border-radius:12px;cursor:pointer;transition:all .15s;font-family:inherit;}
@@ -84,7 +84,7 @@ export default function SupportChat() {
       {open && (
         <div className="sc-panel">
           <div className="sc-head">
-            <div className="sc-ava">🌴</div>
+            <div className="sc-ava">V</div>
             <div>
               <div className="sc-title">Vera · Asistente RESER-VE</div>
               <div className="sc-sub"><span className="sc-online" /> En línea · responde al instante</div>
@@ -95,7 +95,7 @@ export default function SupportChat() {
           <div className="sc-body" ref={scrollRef}>
             {/* Bienvenida + sugerencias cuando no hay mensajes */}
             <div className="sc-row ai">
-              <div className="sc-mini-ava">🌴</div>
+              <div className="sc-mini-ava">V</div>
               <div className="sc-bub">{WELCOME_MESSAGE}</div>
             </div>
             {messages.length === 0 && (
@@ -111,7 +111,7 @@ export default function SupportChat() {
               if (!text) return null
               return (
                 <div key={m.id} className={`sc-row ${m.role === 'user' ? 'me' : 'ai'}`}>
-                  {m.role !== 'user' && <div className="sc-mini-ava">🌴</div>}
+                  {m.role !== 'user' && <div className="sc-mini-ava">V</div>}
                   <div className="sc-bub"><RichText text={text} /></div>
                 </div>
               )
@@ -126,14 +126,14 @@ export default function SupportChat() {
 
             {busy && (
               <div className="sc-row ai">
-                <div className="sc-mini-ava">🌴</div>
+                <div className="sc-mini-ava">V</div>
                 <div className="sc-bub"><div className="sc-dots"><span /><span /><span /></div></div>
               </div>
             )}
 
             {error && (
               <div className="sc-row ai">
-                <div className="sc-mini-ava">🌴</div>
+                <div className="sc-mini-ava">V</div>
                 <div className="sc-bub">Ups, tuve un problema para responder. Intenta de nuevo o escríbenos a hola@reser-ve.com.</div>
               </div>
             )}

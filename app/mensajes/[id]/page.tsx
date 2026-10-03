@@ -149,7 +149,7 @@ export default function ConversationPage() {
           </a>
           <div className="chat-title">
             <span className={`badge ${conv.type === 'booking' ? 'badge-booking' : 'badge-support'}`}>
-              {conv.type === 'booking' ? '🏠 Reserva' : '💬 Soporte'}
+              {conv.type === 'booking' ? 'Reserva' : 'Soporte'}
             </span>
             {conv.subject}
           </div>

@@ -396,7 +396,7 @@ export default function FichaPosada() {
                 Reserva protegida · Sin cobro automático
               </div>
               <button className="btn-whatsapp" style={{ fontWeight: 700, color: 'var(--cacao)', borderColor: 'rgba(230,126,34,0.4)' }} onClick={contactarPosadero} disabled={contactando}>
-                {contactando ? 'Abriendo chat…' : '💬 Contactar al posadero'}
+                {contactando ? 'Abriendo chat…' : 'Escribir al posadero'}
               </button>
               <p style={{ fontSize: '0.68rem', color: 'var(--muted)', textAlign: 'center', marginTop: '0.4rem' }}>
                 Chatea con el posadero dentro de RESER-VE. Por tu seguridad, mantén la comunicación y el pago en la plataforma.

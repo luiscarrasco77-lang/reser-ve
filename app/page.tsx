@@ -325,13 +325,13 @@ export default function Home() {
   const POPULAR_DEST = ['Los Roques', 'Isla Margarita', 'Canaima', 'Mochima', 'Caracas', 'Choroní', 'Mérida']
 
   const destinos: { name: string; slug: string | null; tag: string; count: string; img: string; wide?: boolean }[] = [
-    { name: 'Los Roques', slug: 'los-roques', tag: 'Archipiélago', count: destCount('los-roques') ?? 'Archipiélago', img: '/images/Archipielago.webp' },
-    { name: 'Mérida', slug: 'merida', tag: 'Los Andes', count: destCount('merida') ?? 'Los Andes', img: '/images/Guacamaya.webp' },
-    { name: 'Mochima', slug: 'mochima', tag: 'Costa Oriental', count: destCount('mochima') ?? 'Costa Oriental', img: '/images/Mochima.webp' },
-    { name: 'Morrocoy', slug: 'morrocoy', tag: 'Costa Occidental', count: destCount('morrocoy') ?? 'Costa Occidental', img: '/images/CayoSombero.webp' },
-    { name: 'Canaima', slug: 'canaima', tag: 'Gran Sabana', count: destCount('canaima') ?? 'Salto Ángel', img: '/images/KerepaKupaiWena.webp' },
-    { name: 'Isla Margarita', slug: 'isla-margarita', tag: 'Caribe', count: destCount('isla-margarita') ?? 'Caribe', img: '/images/PlayaElAgua.webp' },
-    { name: 'Otros destinos', slug: null, tag: 'Descúbrelos', count: 'Gran Sabana, Coro y más', img: '/images/PlayaElIndio.webp', wide: true },
+    { name: 'Los Roques', slug: 'los-roques', tag: 'Archipiélago', count: destCount('los-roques') ?? '', img: '/images/Archipielago.webp' },
+    { name: 'Mérida', slug: 'merida', tag: 'Los Andes', count: destCount('merida') ?? '', img: '/images/Guacamaya.webp' },
+    { name: 'Mochima', slug: 'mochima', tag: 'Costa Oriental', count: destCount('mochima') ?? '', img: '/images/Mochima.webp' },
+    { name: 'Morrocoy', slug: 'morrocoy', tag: 'Costa Occidental', count: destCount('morrocoy') ?? '', img: '/images/CayoSombero.webp' },
+    { name: 'Canaima', slug: 'canaima', tag: 'Gran Sabana', count: destCount('canaima') ?? '', img: '/images/KerepaKupaiWena.webp' },
+    { name: 'Isla Margarita', slug: 'isla-margarita', tag: 'Caribe', count: destCount('isla-margarita') ?? '', img: '/images/PlayaElAgua.webp' },
+    { name: 'Todos los destinos', slug: null, tag: 'Venezuela', count: 'Gran Sabana, Coro, Choroní y más', img: '/images/PlayaElIndio.webp', wide: true },
   ]
 
   return (
@@ -1066,8 +1066,6 @@ export default function Home() {
         }
       `}</style>
 
-      <div className="scroll-bar" style={{ width: `${progress}%` }} />
-      <div className="grain" />
 
       {/* ── NAV ─────────────────────────────────────────── */}
       <nav className={`nav ${scrollY > 60 ? 'scrolled' : ''}`}>
@@ -1080,7 +1078,7 @@ export default function Home() {
           />
         </a>
         <div className="nav-links">
-          <a href="/aurora" className="nav-link" style={{fontWeight:700}}>✨ Aurora</a>
+          <a href="/aurora" className="nav-link">Planifica con IA</a>
           <a href="/buscar" className="nav-link">Destinos</a>
           <a href="/posaderos" className="nav-link">Posaderos</a>
           <a href="#como-funciona" className="nav-link">Cómo funciona</a>
@@ -1100,10 +1098,10 @@ export default function Home() {
           <button className="mob-close" onClick={() => setMobOpen(false)} aria-label="Cerrar">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A2B4C" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
-          <a href="/aurora" className="mob-link" onClick={() => setMobOpen(false)}>✨ Aurora · Concierge IA</a>
+          <a href="/aurora" className="mob-link" onClick={() => setMobOpen(false)}>Planifica con IA</a>
           <a href="/buscar" className="mob-link" onClick={() => setMobOpen(false)}>Destinos</a>
           <a href="/posaderos" className="mob-link" onClick={() => setMobOpen(false)}>Posaderos</a>
-          <a href="/vision" className="mob-link" onClick={() => setMobOpen(false)}>Por qué posadas?</a>
+          <a href="/vision" className="mob-link" onClick={() => setMobOpen(false)}>Sobre nosotros</a>
           <a href="#como-funciona" className="mob-link" onClick={() => setMobOpen(false)}>Cómo funciona</a>
           <a href="/faq" className="mob-link" onClick={() => setMobOpen(false)}>Preguntas frecuentes</a>
           <div style={{marginTop:'1.5rem'}}>
@@ -1128,35 +1126,15 @@ export default function Home() {
 
         <div className="hero-content">
           <div className="hero-panel">
-            <div className={`hero-badges ${loaded ? 'anim-0' : ''}`}>
-              <span className="hero-badge">Venezuela</span>
-              <span className="hero-badge">Autenticidad garantizada</span>
-            </div>
             <h1 className={`hero-h1 ${loaded ? 'anim-1' : ''}`}>
-              {loaded ? (
-                <>
-                  {'Descubre'.split('').map((c,i) => (
-                    <span key={i} className="hero-word" style={{animationDelay:`${0.15 + i*0.03}s`}}>{c}</span>
-                  ))}
-                  {' '}
-                  <em style={{display:'inline-block', whiteSpace:'nowrap'}}>
-                    {'posadas'.split('').map((c,i) => (
-                      <span key={i} className="hero-word" style={{animationDelay:`${0.48 + i*0.03}s`}}>{c}</span>
-                    ))}
-                  </em>
-                  <br />
-                  {'auténticas'.split('').map((c,i) => (
-                    <span key={i} className="hero-word" style={{animationDelay:`${0.88 + i*0.025}s`}}>{c}</span>
-                  ))}
-                </>
-              ) : 'Descubre posadas auténticas'}
+              Encuentra tu <em>posada</em><br />en Venezuela
             </h1>
             <p className={`hero-sub ${loaded ? 'anim-2' : ''}`}>
-              La primera plataforma de alojamientos locales venezolanos. Descubre posadas auténticas. Las reservas abren muy pronto.
+              Posadas familiares de Los Roques a la Gran Sabana. Compara fotos, precios y formas de pago, y paga exactamente el precio publicado.
             </p>
             <div className={`hero-btns ${loaded ? 'anim-3' : ''}`}>
-              <a href="/buscar" className="btn-primary">Explorar posadas →</a>
-              <a href="/posaderos" className="btn-secondary">¿Tienes una posada?</a>
+              <a href="/buscar" className="btn-primary">Ver posadas</a>
+              <a href="/posaderos" className="btn-secondary">Publica tu posada</a>
             </div>
             {/* Slide indicators — inline below buttons, no overlap with search bar */}
             <div className="slide-dots">
@@ -1423,12 +1401,12 @@ export default function Home() {
           <a href="/buscar" className="mosaic-item" style={{textDecoration:'none'}}>
             <img
               src="/images/Waku-lodge-facilities-.webp"
-              alt="Posadas auténticas"
+              alt="Habitación de una posada en Canaima"
               loading="lazy"
             />
             <div className="mosaic-label">
-              <div className="mosaic-tag">Experiencia</div>
-              <div>Posadas auténticas</div>
+              <div className="mosaic-tag">Alojamiento</div>
+              <div>Posadas familiares</div>
             </div>
           </a>
           <a href="/destinos/canaima" className="mosaic-item" style={{textDecoration:'none'}}>
@@ -1445,70 +1423,39 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── STATS STRIP ─────────────────────────────────── */}
-      <div className="stats-strip" ref={statsRef}>
-        <div className="stats-inner">
-          <div className="stat-item reveal d1">
-            <div className="stat-n"><span className="accent">+{c1}</span></div>
-            <div className="stat-l">posadas registradas</div>
-          </div>
-          <div className="stat-item reveal d2">
-            <div className="stat-n"><span className="accent">100%</span></div>
-            <div className="stat-l">posadas revisadas por el equipo</div>
-          </div>
-          <div className="stat-item reveal d3">
-            <div className="stat-n">{c3}</div>
-            <div className="stat-l">destinos exclusivos</div>
-          </div>
-          <div className="stat-item reveal d4">
-            <div className="stat-n" style={{fontSize:'1.8rem',letterSpacing:'-0.02em'}}>Flexible</div>
-            <div className="stat-l">USD, Bs, Zelle, Binance</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="divider" style={{marginTop:'2.5rem'}} />
-
       {/* ── QUÉ ES UNA POSADA ────────────────────────────── */}
       <section className="section">
         <div className="split-section">
           <div className="split-photo reveal-left">
             <img
               src="/images/lodge-canaima_01.webp"
-              alt="Posada boutique en Venezuela"
+              alt="Posada en Canaima"
               loading="lazy"
             />
-            <div className="split-photo-badge">
-              <div className="split-photo-badge-title">Waku Lodge · Canaima</div>
-              <div className="split-photo-badge-sub">★ 4.9 · 48 reseñas · desde $120/noche</div>
-            </div>
           </div>
           <div className="split-text reveal-right">
             <div className="section-label">Sobre las posadas</div>
-            <h2 className="section-h2">¿Qué es una <em>posada</em>?</h2>
-            <p className="blockquote">
-              "Calidez, autenticidad y una experiencia que ningún hotel de cadena puede ofrecer."
-            </p>
+            <h2 className="section-h2">¿Qué es una posada?</h2>
             <p className="section-sub" style={{marginBottom:'0'}}>
-              Una posada es un alojamiento íntimo, cálido y genuino — gestionado por familias locales en los destinos más extraordinarios de Venezuela.
+              Un alojamiento pequeño, casi siempre familiar. Los dueños viven en el lugar o cerca, conocen bien la zona y atienden en persona. Suelen tener pocas habitaciones, desayuno casero y precios más accesibles que un hotel.
             </p>
             <div className="feature-grid">
               {([
                 {
                   icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cacao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-                  title:'Ubicaciones únicas', desc:'Frente al mar, en montaña o en la selva'
+                  title:'Bien ubicadas', desc:'Frente al mar, en la montaña o junto a los parques nacionales'
                 },
                 {
                   icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cacao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-                  title:'Trato familiar', desc:'Anfitriones que conocen cada rincón'
+                  title:'Atención de los dueños', desc:'Te recomiendan tours, traslados y dónde comer'
                 },
                 {
                   icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cacao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
-                  title:'Pagos flexibles', desc:'USD, Bs, Zelle, Pago Móvil, Binance'
+                  title:'Pago en USD o Bs', desc:'Zelle, Pago Móvil, transferencia o efectivo, según la posada'
                 },
                 {
                   icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cacao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>,
-                  title:'Verificadas', desc:'Fotos reales, descripciones honestas'
+                  title:'Revisadas', desc:'Cada posada pasa por nuestro equipo antes de publicarse'
                 },
               ] as {icon:React.ReactNode, title:string, desc:string}[]).map((f,i) => (
                 <div className={`feature-card reveal d${i+1}`} key={i}>
@@ -1528,8 +1475,8 @@ export default function Home() {
       <section id="como-funciona" className="section">
         <div className="reveal">
           <div className="section-label">Cómo funciona</div>
-          <h2 className="section-h2">Simple para <em>todos</em></h2>
-          <p className="section-sub">Desde la búsqueda hasta el check-in. Una experiencia clara y confiable.</p>
+          <h2 className="section-h2">Así funciona RESER-VE</h2>
+          <p className="section-sub">Estamos en fase privada: las posadas ya se están publicando y las reservas abren pronto.</p>
         </div>
         <div className="reveal d1">
           <div className="tabs">
@@ -1545,10 +1492,10 @@ export default function Home() {
         {activeTab === 'viajero' ? (
           <div className="steps-grid">
             {[
-              ['Busca tu destino', 'Filtra por destino, fechas y método de pago en los rincones más especiales de Venezuela.'],
-              ['Elige con confianza', 'Fotos reales, posadas revisadas por nuestro equipo y toda la información antes de reservar.'],
-              ['Reserva y paga fácil', 'Paga en USD o bolívares con Zelle, Pago Móvil, transferencia o Binance.'],
-              ['Vive la experiencia', 'Llega con todo listo y disfruta una estancia boutique sin fricción.'],
+              ['Busca', 'Filtra por destino, precio y forma de pago, o mira las posadas en el mapa.'],
+              ['Compara', 'Revisa fotos, servicios, políticas y ubicación de cada posada.'],
+              ['Solicita', 'El posadero confirma en menos de 24 horas y te envía sus datos de pago por el chat.'],
+              ['Viaja', 'Pagas a la posada, te hospedas y al volver puedes dejar tu reseña.'],
             ].map(([t, d], i) => (
               <div className={`step-card anim-${i+1}`} key={i}>
                 <div className="step-num">0{i + 1}</div>
@@ -1559,28 +1506,18 @@ export default function Home() {
           </div>
         ) : (
           <div className="steps-grid">
-            <div className="step-card anim-1">
-              <div className="step-num">01</div>
-              <div className="step-title">Registra tu posada</div>
-              <div className="step-desc">Alta sencilla y visual para mostrar tu espacio con el nivel que merece.</div>
-            </div>
-            <div className="step-card-recommended anim-2">
-              <div className="step-badge">Recomendado</div>
-              <div className="step-num">02</div>
-              <div className="step-title">Te ayudamos con el contenido</div>
-              <div className="step-desc">Fotografía profesional y acompañamiento para presentar tu posada de forma premium.</div>
-              <span className="step-optional">Próximamente · servicio opcional</span>
-            </div>
-            <div className="step-card anim-3">
-              <div className="step-num">03</div>
-              <div className="step-title">Prepárate para recibir reservas</div>
-              <div className="step-desc">Tu perfil queda listo para viajeros locales, internacionales y la diáspora venezolana. Las reservas abren muy pronto.</div>
-            </div>
-            <div className="step-card anim-4">
-              <div className="step-num">04</div>
-              <div className="step-title">Cobra con flexibilidad</div>
-              <div className="step-desc">Recibe pagos en USD o bolívares con Zelle, Pago Móvil, transferencia o Binance.</div>
-            </div>
+            {[
+              ['Crea tu cuenta', 'Regístrate como posadero. Publicar es gratis y no hay mensualidad.'],
+              ['Publica tu posada', 'Sube fotos, precios, habitaciones y las formas de pago que aceptas.'],
+              ['La revisamos', 'Nuestro equipo la revisa en 24 a 72 horas y te avisa por correo.'],
+              ['Recibe solicitudes', 'Confirmas cada reserva desde tu panel y hablas con el huésped por el chat.'],
+            ].map(([t, d], i) => (
+              <div className={`step-card anim-${i+1}`} key={i}>
+                <div className="step-num">0{i + 1}</div>
+                <div className="step-title">{t}</div>
+                <div className="step-desc">{d}</div>
+              </div>
+            ))}
           </div>
         )}
       </section>
@@ -1591,8 +1528,7 @@ export default function Home() {
       <section id="destinos" className="section">
         <div className="reveal">
           <div className="section-label">Destinos</div>
-          <h2 className="section-h2">Los rincones más <em>extraordinarios</em></h2>
-          <p className="section-sub">Posadas verificadas en los destinos que hacen de Venezuela un país único en el mundo.</p>
+          <h2 className="section-h2">Explora por destino</h2>
         </div>
         <div className="dest-grid">
           {destinos.map((d, i) => (
@@ -1625,16 +1561,16 @@ export default function Home() {
           <div className="posadero-left reveal-left">
             <div className="section-label">Para posaderos</div>
             <h2 className="section-h2" style={{marginBottom:'0.6rem'}}>
-              Tu posada merece <br /><em>visibilidad real</em>
+              ¿Tienes una posada?
             </h2>
             <p className="section-sub" style={{marginBottom:'0'}}>
-              Deja de depender solo de WhatsApp. Muestra tu posada con imagen premium y prepárate para recibir reservas con más confianza. Publicar es gratis.
+              Publícala gratis y llega a viajeros de Venezuela y del exterior que buscan dónde quedarse. Solo pagas una comisión cuando recibes una reserva confirmada.
             </p>
             <div className="feature-list">
               {[
-                'Publicación gratuita, sin mensualidad: solo una comisión cuando recibes una reserva confirmada',
-                'Perfil activo visible para viajeros locales, internacionales y la diáspora venezolana',
-                'Cobros flexibles vía Zelle, Pago Móvil, transferencia, Zinli o Binance',
+                'Sin mensualidad ni costo de alta',
+                'Tu propia página con fotos, servicios, políticas y ubicación',
+                'Cobras como siempre: Zelle, Pago Móvil, transferencia o efectivo',
               ].map((f,i) => (
                 <div className="feature-item" key={i}>
                   <div className="feature-dot" />
@@ -1643,39 +1579,21 @@ export default function Home() {
               ))}
               <div className="feature-item">
                 <div className="feature-dot" />
-                <div className="feature-text">Respaldado por la comunidad <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>dos locos de viaje</a></div>
+                <div className="feature-text">Un proyecto de <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>dos locos de viaje</a></div>
               </div>
             </div>
           </div>
           <div className="posadero-right reveal-right">
             <div className="plan-card">
-              <div className="plan-label">Paquete digitalización · Próximamente</div>
-              <div className="plan-desc" style={{marginTop:'0.2rem', marginBottom:'0.6rem', fontSize:'0.9rem', color:'var(--indigo)', fontWeight:'600'}}>Lo ofreceremos más adelante en el desarrollo de RESER-VE. Hoy ya puedes publicar tu posada gratis con tus propias fotos.</div>
-              <div className="plan-desc">Todo lo que necesitas para empezar a recibir reservas desde cualquier parte del mundo.</div>
+              <div className="plan-label">Empezar toma unos 10 minutos</div>
               <ul className="plan-items">
-                <li>Sesión fotográfica profesional</li>
-                <li>Perfil completo en la plataforma</li>
-                <li>Optimización visual y descripción</li>
-                <li>1 mes de visibilidad premium</li>
+                <li>Crea tu cuenta de posadero</li>
+                <li>Completa los datos y sube tus fotos</li>
+                <li>Envíala a revisión</li>
               </ul>
-              <a href="/posaderos" className="btn-primary full-btn">Publicar mi posada gratis →</a>
+              <a href="/register?role=host" className="btn-primary full-btn">Publicar mi posada</a>
+              <a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener" style={{display:'block',textAlign:'center',marginTop:'0.8rem',fontSize:'0.84rem',color:'var(--muted)'}}>Descargar la guía para posaderos (PDF)</a>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── DARK CTA BAND ────────────────────────────────── */}
-      <section className="dark-cta">
-        <div className="dark-cta-bg-img" />
-        <div className="dark-cta-glow" />
-        <div className="dark-cta-inner">
-          <div className="reveal">
-            <h2>Venezuela te está <em>esperando.</em></h2>
-            <p>{stats ? `${stats.posadas} posadas` : 'Decenas de posadas'} auténticas en {stats ? stats.destinos : 'los'} destinos increíbles. Tu próxima aventura empieza con un solo clic.</p>
-          </div>
-          <div className="dark-cta-btns reveal d2">
-            <a href="/buscar" className="btn-light">Explorar posadas →</a>
-            <a href="/posaderos" className="btn-outline-light">Registra tu posada</a>
           </div>
         </div>
       </section>
@@ -1685,7 +1603,7 @@ export default function Home() {
         <div className="footer-grid">
           <div className="footer-brand">
             <img src="/images/logo-horizontal.svg" alt="RESER-VE" className="logo-img-footer" />
-            <p>La primera plataforma especializada en posadas auténticas venezolanas. Conectamos viajeros con anfitriones locales extraordinarios.</p>
+            <p>Reserva posadas en Venezuela, directamente con sus dueños.</p>
           </div>
           <div className="footer-col">
             <h4>Explorar</h4>
@@ -1714,7 +1632,6 @@ export default function Home() {
           <div style={{display:'flex',gap:'1.5rem'}}>
             <a href="/terminos">Términos</a>
             <a href="/privacidad">Privacidad</a>
-            <a href="/vision">Por qué posadas?</a>
             <a href="/vision">Sobre nosotros</a>
           </div>
         </div>

@@ -45,7 +45,7 @@ export default async function CorreoPage({ searchParams }: { searchParams: Promi
                 {open.html
                   ? <iframe sandbox="" srcDoc={CSP + open.html} style={{ width: '100%', minHeight: 500, border: '1px solid rgba(26,43,76,.08)', borderRadius: 10 }} />
                   : <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '.9rem' }}>{open.text}</pre>}
-                {open.attachments?.length > 0 && <div style={{ fontSize: '.8rem', color: '#7A8699', marginTop: '.8rem' }}>📎 {open.attachments.length} adjunto(s): {open.attachments.map(a => a.filename).join(', ')} (descárgalos desde Resend → Emails → Receiving)</div>}
+                {open.attachments?.length > 0 && <div style={{ fontSize: '.8rem', color: '#7A8699', marginTop: '.8rem' }}>Adjuntos: {open.attachments.length} adjunto(s): {open.attachments.map(a => a.filename).join(', ')} (descárgalos desde Resend → Emails → Receiving)</div>}
               </>
             ) : <div style={{ color: '#7A8699', fontSize: '.88rem' }}>Selecciona un correo.</div>}
           </div>
