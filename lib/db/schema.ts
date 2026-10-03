@@ -43,6 +43,8 @@ export const posadas = pgTable('posadas', {
   isDemo: boolean('is_demo').notNull().default(false),
   // Demo que esta posada real reemplazó al publicarse (cada posada real retira como máximo una).
   replacedDemoId: integer('replaced_demo_id'),
+  // Token secreto del enlace iCal de exportación (calendario de la posada).
+  icalToken: text('ical_token').unique(),
   hostNombre: text('host_nombre'),
   hostDesde: text('host_desde'),
   hostIdiomas: json('host_idiomas').$type<string[]>().notNull().default([]),
@@ -110,6 +112,33 @@ export const messages = pgTable('messages', {
 })
 
 // ─── Favoritos (wishlist) ──────────────────────────────────────────────────────
+// Ocupación que no viene de RESER-VE: reservas por WhatsApp/teléfono anotadas a mano,
+// o importadas de Booking/Airbnb vía iCal (feedId). endDate = día de salida (exclusivo).
+export const calendarBlocks = pgTable('calendar_blocks', {
+  id: serial('id').primaryKey(),
+  posadaId: integer('posada_id').references(() => posadas.id).notNull(),
+  startDate: text('start_date').notNull(), // YYYY-MM-DD (primera noche)
+  endDate: text('end_date').notNull(),     // YYYY-MM-DD (día de salida)
+  rooms: integer('rooms').notNull().default(1),
+  source: text('source').notNull().default('manual'), // whatsapp | telefono | booking | airbnb | otro | ical
+  note: text('note'),
+  feedId: integer('feed_id'),
+  externalUid: text('external_uid'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+// Calendarios externos (iCal) que se importan periódicamente.
+export const calendarFeeds = pgTable('calendar_feeds', {
+  id: serial('id').primaryKey(),
+  posadaId: integer('posada_id').references(() => posadas.id).notNull(),
+  name: text('name').notNull(),
+  url: text('url').notNull(),
+  rooms: integer('rooms').notNull().default(1),
+  lastSyncAt: timestamp('last_sync_at'),
+  lastStatus: text('last_status'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
 export const favorites = pgTable('favorites', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').references(() => users.id).notNull(),

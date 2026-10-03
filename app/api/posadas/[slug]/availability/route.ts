@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
-import { posadas, bookings } from '@/lib/db/schema'
-import { eq, and, inArray } from 'drizzle-orm'
+import { posadas } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
+import { fullRanges, addDays } from '@/lib/availability'
 
-// Devuelve los rangos de fechas ya ocupados (reservas pendientes o confirmadas)
-// para que el calendario de reserva los muestre como no disponibles.
+// Devuelve las noches sin habitaciones libres para que el formulario de reserva las marque.
 // Público: solo expone fechas, ninguna información sensible.
 export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -12,13 +12,11 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
   if (!process.env.DATABASE_URL) return NextResponse.json({ ranges: [] })
 
   const db = getDb()
-  const [posada] = await db.select({ id: posadas.id }).from(posadas).where(eq(posadas.slug, slug))
+  const [posada] = await db.select({ id: posadas.id, habitaciones: posadas.habitaciones, capacidad: posadas.capacidad }).from(posadas).where(eq(posadas.slug, slug))
   if (!posada) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const rows = await db.select({ checkIn: bookings.checkIn, checkOut: bookings.checkOut, status: bookings.status })
-    .from(bookings)
-    .where(and(eq(bookings.posadaId, posada.id), inArray(bookings.status, ['pending', 'confirmed'])))
-
-  const ranges = rows.map(r => ({ checkIn: r.checkIn, checkOut: r.checkOut }))
+  // Solo noches sin ninguna habitación libre (no expone reservas ni nombres).
+  const today = new Date().toISOString().slice(0, 10)
+  const ranges = await fullRanges(posada, today, addDays(today, 548))
   return NextResponse.json({ ranges })
 }

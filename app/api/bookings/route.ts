@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
+import { isRangeAvailable, roomsForGuests } from '@/lib/availability'
 import { parseId, readJson } from '@/lib/http'
 import { BOOKINGS_OPEN, PRIVATE_PHASE_MSG } from '@/lib/constants'
 import { getDb } from '@/lib/db'
@@ -112,13 +113,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Esta posada admite hasta ${posada.capacidad} huéspedes` }, { status: 400 })
   }
 
-  // No overlapping confirmed/pending bookings for the same dates
-  const existing = await db.select().from(bookings).where(eq(bookings.posadaId, posadaId))
-  const clash = existing.some(b =>
-    (b.status === 'pending' || b.status === 'confirmed') &&
-    checkIn < b.checkOut && checkOut > b.checkIn
-  )
-  if (clash) {
+  // Disponibilidad por habitaciones: reservas de RESER-VE + ocupación externa (WhatsApp, Booking, Airbnb…).
+  const available = await isRangeAvailable(posada, String(checkIn), String(checkOut), roomsForGuests(posada, guests))
+  if (!available) {
     return NextResponse.json({ error: 'Esas fechas ya no están disponibles' }, { status: 409 })
   }
 

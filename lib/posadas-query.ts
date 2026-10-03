@@ -2,6 +2,7 @@ import { getDb } from './db'
 import { posadas as posadasTable, bookings } from './db/schema'
 import { eq, and, inArray } from 'drizzle-orm'
 import { normalizeStr } from './search'
+import { isRangeAvailable } from './availability'
 
 export type PosadaLite = {
   slug: string; nombre: string; destino: string; destinoSlug: string; tipo: string
@@ -67,12 +68,9 @@ export async function isAvailable(slug: string, checkIn: string, checkOut: strin
   if (!process.env.DATABASE_URL) return true
   try {
     const db = getDb()
-    const [posada] = await db.select({ id: posadasTable.id }).from(posadasTable).where(eq(posadasTable.slug, slug))
-    if (!posada) return true // posada curada que no está en la DB: se considera disponible
-    const rows = await db.select({ checkIn: bookings.checkIn, checkOut: bookings.checkOut })
-      .from(bookings)
-      .where(and(eq(bookings.posadaId, posada.id), inArray(bookings.status, ['pending', 'confirmed'])))
-    return !rows.some(r => checkIn < r.checkOut && checkOut > r.checkIn)
+    const [p] = await db.select({ id: posadasTable.id, habitaciones: posadasTable.habitaciones, capacidad: posadasTable.capacidad }).from(posadasTable).where(eq(posadasTable.slug, slug))
+    if (!p) return true
+    return await isRangeAvailable(p, checkIn, checkOut, 1)
   } catch {
     return true
   }

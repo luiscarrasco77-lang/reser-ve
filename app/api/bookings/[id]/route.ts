@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
+import { isRangeAvailable, roomsForGuests } from '@/lib/availability'
 import { hasContactInfo } from '@/lib/posada-input'
 import { parseId, readJson } from '@/lib/http'
 import { getDb } from '@/lib/db'
@@ -84,6 +85,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
   if (!allowed) {
     return NextResponse.json({ error: `No se puede pasar una reserva de "${booking.status}" a "${status}"` }, { status: 400 })
+  }
+
+  // Al confirmar, comprueba que sigan quedando habitaciones (p. ej. si entró una reserva por WhatsApp o Booking).
+  if (status === 'confirmed') {
+    const [p] = await db.select({ id: posadas.id, habitaciones: posadas.habitaciones, capacidad: posadas.capacidad }).from(posadas).where(eq(posadas.id, booking.posadaId))
+    if (p && !(await isRangeAvailable(p, booking.checkIn, booking.checkOut, roomsForGuests(p, booking.guestCount), booking.id))) {
+      return NextResponse.json({ error: 'No quedan habitaciones libres en esas fechas según tu calendario. Revisa tu calendario antes de confirmar.' }, { status: 409 })
+    }
   }
 
   const [updated] = await db.update(bookings)

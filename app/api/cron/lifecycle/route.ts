@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { bookings, posadas, users } from '@/lib/db/schema'
 import { emailGuestBookingCancelled } from '@/lib/email'
+import { syncAllFeeds } from '@/lib/availability'
 import { eq } from 'drizzle-orm'
 
 // Cron de ciclo de vida de reservas (configurado en vercel.json):
@@ -50,5 +51,8 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, expired, completed })
+  // Sincroniza los calendarios externos (Booking, Airbnb…) de todas las posadas.
+  const feeds = await syncAllFeeds().catch(() => ({ total: 0, ok: 0 }))
+
+  return NextResponse.json({ ok: true, expired, completed, feeds })
 }

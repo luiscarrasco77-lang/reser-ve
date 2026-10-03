@@ -8,6 +8,7 @@ const LINKS = [
   { href: '/dashboard', label: 'Panel' },
   { href: '/dashboard/posadas', label: 'Mis posadas' },
   { href: '/dashboard/reservas', label: 'Reservas' },
+  { href: '/dashboard/calendario', label: 'Calendario' },
   { href: '/mensajes', label: 'Mensajes' },
   { href: '/dashboard/posada/nueva', label: '+ Nueva posada' },
 ]
