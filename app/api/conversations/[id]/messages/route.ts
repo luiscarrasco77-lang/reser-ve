@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
-import { parseId } from '@/lib/http'
+import { parseId, readJson, rateLimit } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { conversations, messages, users } from '@/lib/db/schema'
 import { auth } from '@/auth'
@@ -9,13 +9,15 @@ import { generateVeraReply } from '@/lib/vera'
 import { MAX_MESSAGE } from '@/lib/constants'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const limited = rateLimit(req, 'msg', 60, 60 * 60_000)
+  if (limited) return limited
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
   const userId = parseInt((session.user as any).id)
   const role = (session.user as any).role
-  const { body } = await req.json().catch(() => ({}))
+  const { body } = await readJson(req)
 
   if (typeof body !== 'string' || !body.trim()) return NextResponse.json({ error: 'Mensaje vacío' }, { status: 400 })
   if (body.length > MAX_MESSAGE) return NextResponse.json({ error: `El mensaje no puede superar ${MAX_MESSAGE} caracteres` }, { status: 400 })

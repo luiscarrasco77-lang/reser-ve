@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/http'
 
 export async function GET(req: NextRequest) {
-  const q = req.nextUrl.searchParams.get('q')
+  const limited = rateLimit(req, 'geocode', 60, 60_000)
+  if (limited) return limited
+  const q = req.nextUrl.searchParams.get('q')?.slice(0, 120)
   if (!q) return NextResponse.json([], { status: 400 })
 
   const url =
@@ -12,9 +15,9 @@ export async function GET(req: NextRequest) {
   try {
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'RESER-VE/1.0 (reserva posadas venezuela; contact@reserve-ve.com)',
+        'User-Agent': 'RESER-VE/1.0 (https://reser-ve.com; hola@reser-ve.com)',
         'Accept': 'application/json',
-        'Referer': 'https://reserve-ve.com',
+        'Referer': 'https://reser-ve.com',
       },
       next: { revalidate: 3600 }, // cache 1h
     })

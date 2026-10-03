@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { DESTINOS, OTRO, slugify } from '@/lib/destinos-form'
 import { uploadPosadaImage } from '@/lib/upload-image'
 import { useRouter } from 'next/navigation'
@@ -80,6 +80,22 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
 
+  // Soltar una foto fuera de la zona no debe abrirla en la pestaña (se perdería el formulario).
+  useEffect(() => {
+    const stop = (e: DragEvent) => { if (!(e.target as HTMLElement)?.closest?.('.img-drop')) e.preventDefault() }
+    window.addEventListener('dragover', stop)
+    window.addEventListener('drop', stop)
+    return () => { window.removeEventListener('dragover', stop); window.removeEventListener('drop', stop) }
+  }, [])
+
+  // Con "Otro", busca las coordenadas de la localidad escrita.
+  async function geocodeLocalidad() {
+    if (destinoSlug !== OTRO || localidad.trim().length < 3) return
+    const res = await fetch(`/api/geocode?q=${encodeURIComponent(localidad.trim())}`).catch(() => null)
+    const data = res?.ok ? await res.json().catch(() => []) : []
+    if (Array.isArray(data) && data[0]?.lat) { setLatStr(String(Number(data[0].lat).toFixed(4))); setLngStr(String(Number(data[0].lon).toFixed(4))) }
+  }
+
   const destino = DESTINOS.find(d => d.slug === destinoSlug)
   const destinoLabel = destino ? destino.label : localidad.trim()
   const destinoSlugFinal = destino ? destino.slug : slugify(localidad)
@@ -97,13 +113,15 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
     setUploadingImg(true)
     setError('')
     const uploaded: string[] = []
+    const errores: string[] = []
     for (const file of files) {
       try {
         uploaded.push(await uploadPosadaImage(file))
       } catch (e: any) {
-        setError(`${file.name}: ${e?.message ?? 'no se pudo subir'}`)
+        errores.push(`${file.name}: ${e?.message ?? 'no se pudo subir'}`)
       }
     }
+    if (errores.length) setError(errores.join(' · '))
     setImgs(prev => [...prev, ...uploaded])
     setUploadingImg(false)
   }
@@ -249,7 +267,7 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
                   <option value={OTRO}>Otro (escríbelo)</option>
                 </select>
                 {destinoSlug === OTRO && (
-                  <input type="text" style={{ marginTop: '0.5rem' }} value={localidad} onChange={e => setLocalidad(e.target.value)} placeholder="Ej: Colonia Tovar, Aragua" required />
+                  <input type="text" style={{ marginTop: '0.5rem' }} value={localidad} onChange={e => setLocalidad(e.target.value)} onBlur={geocodeLocalidad} placeholder="Ej: Colonia Tovar, Aragua" required />
                 )}
               </div>
               <div className="field">
@@ -329,7 +347,7 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
           <div className="form-section">
             <div className="section-head">Fotos de la posada</div>
             <div className={`img-drop${dragOver ? ' drag' : ''}`} onDragEnter={() => setDragOver(true)} onDragLeave={() => setDragOver(false)} onDrop={() => setDragOver(false)}>
-              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={e => { const list = Array.from(e.target.files ?? []); e.target.value = ''; handleImageUpload(list) }} />
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" disabled={uploadingImg} multiple onChange={e => { const list = Array.from(e.target.files ?? []); e.target.value = ''; handleImageUpload(list) }} />
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--muted)', marginBottom: '0.5rem' }}>
                 <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
               </svg>
@@ -357,7 +375,7 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
 
           {/* Coordinates */}
           <div className="form-section">
-            <div className="section-head">Coordenadas (opcional)</div>
+            <div className="section-head">{destinoSlug === OTRO ? 'Coordenadas (obligatorias)' : 'Coordenadas (opcional)'}</div>
             <div className="hint" style={{ marginBottom: '0.8rem' }}>Se pre-rellenan del destino. Ajusta solo si tu posada está en una ubicación exacta diferente.</div>
             <div className="field-row">
               <div className="field">

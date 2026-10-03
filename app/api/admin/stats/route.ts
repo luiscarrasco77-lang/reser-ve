@@ -1,3 +1,4 @@
+import { HOST_COMMISSION_RATE } from '@/lib/constants'
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { users, posadas, bookings } from '@/lib/db/schema'
@@ -28,5 +29,5 @@ export async function GET() {
       .where(inArray(bookings.status, ['confirmed', 'completed'])),
   ])
 
-  return NextResponse.json({ totalUsers, totalPosadas, totalBookings, pendingReview, pendingBookings, revenue: Number(revenue ?? 0), commission: Math.round(Number(revenue ?? 0) * 0.1) })
+  return NextResponse.json({ totalUsers, totalPosadas, totalBookings, pendingReview, pendingBookings, revenue: Number(revenue ?? 0), commission: Math.round(Number(revenue ?? 0) * HOST_COMMISSION_RATE) })
 }

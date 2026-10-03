@@ -22,3 +22,9 @@ export function rateLimit(req: NextRequest, key: string, max: number, windowMs: 
   if (hits.size > 5000) hits.clear()
   return null
 }
+
+// Lee el cuerpo JSON como objeto. Cualquier otra cosa (inválido, null, array, número) → {}.
+export async function readJson(req: Request): Promise<Record<string, any>> {
+  const b = await req.json().catch(() => null)
+  return b && typeof b === 'object' && !Array.isArray(b) ? b : {}
+}

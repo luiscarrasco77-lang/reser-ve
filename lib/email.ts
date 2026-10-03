@@ -45,8 +45,25 @@ async function sendViaBrevo(p: Payload): Promise<boolean> {
 }
 
 // Envía y devuelve true/false. Registra el error en los logs de Vercel en vez de tragarlo.
+// Versión en texto plano del HTML (mejora la entrega en Outlook/Hotmail y Gmail).
+function htmlToText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<a [^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, '$2 ($1)')
+    .replace(/<(br|\/div|\/p|\/li|\/h\d)[^>]*>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim()
+}
+
 async function deliver(resend: Resend | null, payload: Payload): Promise<boolean> {
   if (isTestRecipient(payload.to)) { console.log('[email] prueba, no enviado:', payload.subject); return true }
+  const html = (payload as any).html as string | undefined
+  payload = {
+    ...payload,
+    ...(html && !(payload as any).text ? { text: htmlToText(html) } : {}),
+    replyTo: payload.replyTo ?? 'hola@reser-ve.com',
+  } as Payload
   if (resend) {
     try {
       const { error } = await resend.emails.send(payload)
@@ -125,7 +142,7 @@ export async function emailHostNewBooking(opts: {
       <div class="row"><span>Noches</span><strong>${opts.nights}</strong></div>
       <div class="row"><span>Huéspedes</span><strong>${opts.guestCount}</strong></div>
       <div class="row"><span>Método de pago</span><strong>${esc(opts.paymentMethod ?? '—')}</strong></div>
-      <div class="divider"/>
+      <div class="divider"></div>
       <div class="row"><span>Precio que paga el huésped</span><strong>$${opts.totalPrice} USD</strong></div>
       <div class="total"><span>Tu ingreso</span><span>$${hostNet(opts.totalPrice)} USD</span></div>
       ${opts.notes ? `<div class="info-box"><strong>Nota del viajero:</strong> ${esc(opts.notes)}</div>` : ''}
@@ -164,7 +181,7 @@ export async function emailGuestBookingReceived(opts: {
       <div class="row"><span>Check-in</span><strong>${esc(opts.checkIn)}</strong></div>
       <div class="row"><span>Check-out</span><strong>${esc(opts.checkOut)}</strong></div>
       <div class="row"><span>Noches</span><strong>${opts.nights}</strong></div>
-      <div class="divider"/>
+      <div class="divider"></div>
       <div class="total"><span>Total</span><span>$${opts.totalPrice} USD</span></div>
       <div class="info-box">Sin cargos hasta que el posadero confirme. Guarda tu código de reserva para cualquier consulta.</div>
       <a href="${SITE_URL}/mis-reservas" class="btn">Ver mis reservas →</a>
@@ -204,7 +221,7 @@ export async function emailGuestBookingConfirmed(opts: {
       <div class="row"><span>Check-in</span><strong>${esc(opts.checkIn)}</strong></div>
       <div class="row"><span>Check-out</span><strong>${esc(opts.checkOut)}</strong></div>
       <div class="row"><span>Noches</span><strong>${opts.nights}</strong></div>
-      <div class="divider"/>
+      <div class="divider"></div>
       <div class="total"><span>Total a pagar</span><span>$${opts.totalPrice} USD</span></div>
       <div class="info-box"><strong>Instrucciones de pago:</strong><br/>${instruccion}</div>
       ${opts.hostNotes ? `<div class="info-box" style="margin-top:0.75rem"><strong>Mensaje del posadero:</strong> ${esc(opts.hostNotes)}</div>` : ''}
@@ -214,7 +231,7 @@ export async function emailGuestBookingConfirmed(opts: {
   return deliver(resend, {
     from: FROM,
     to: opts.guestEmail,
-    subject: `✓ Confirmada: ${opts.bookingCode} · ${opts.posadaNombre}`,
+    subject: `Reserva confirmada: ${opts.bookingCode} · ${opts.posadaNombre}`,
     html,
   })
 }
@@ -296,7 +313,7 @@ export async function emailHostPosadaApproved(opts: {
   return deliver(resend, {
     from: FROM,
     to: opts.hostEmail,
-    subject: `✓ ${opts.posadaNombre} ya está publicada en RESER-VE`,
+    subject: `${opts.posadaNombre} ya está publicada en RESER-VE`,
     html,
   })
 }
@@ -354,7 +371,7 @@ export async function emailPosadaLead(opts: {
       <div class="row"><span>Habitaciones</span><strong>${esc(opts.habitaciones)} · ${esc(opts.capacidad)} personas</strong></div>
       <div class="row"><span>Precio base</span><strong>$${esc(opts.precio)} USD/noche</strong></div>
       <div class="row"><span>Servicios</span><strong>${esc(opts.servicios.join(', ')) || '—'}</strong></div>
-      <div class="divider"/>
+      <div class="divider"></div>
       <div class="row"><span>Posadero/a</span><strong>${esc(opts.nombrePosadero)}</strong></div>
       <div class="row"><span>Email</span><strong>${esc(opts.emailPosadero)}</strong></div>
       <div class="row"><span>Teléfono</span><strong>${esc(opts.telefono || '—')}</strong></div>

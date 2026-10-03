@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { readJson } from '@/lib/http'
 import { and, eq, count } from 'drizzle-orm'
 import { auth } from '@/auth'
 import { getDb } from '@/lib/db'
@@ -25,8 +26,11 @@ export async function GET() {
 // { action: 'hide' | 'show', destinoSlug? } — retira o restaura demos (reversible).
 export async function POST(req: NextRequest) {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  const { action, destinoSlug } = await req.json().catch(() => ({}))
+  const { action, destinoSlug } = await readJson(req)
   if (action !== 'hide' && action !== 'show') return NextResponse.json({ error: 'Acción inválida' }, { status: 400 })
-  const n = await setDemosVisible(action === 'show', typeof destinoSlug === 'string' ? destinoSlug : undefined)
+  if (destinoSlug !== undefined && (typeof destinoSlug !== 'string' || !destinoSlug.trim())) {
+    return NextResponse.json({ error: 'Destino inválido' }, { status: 400 })
+  }
+  const n = await setDemosVisible(action === 'show', destinoSlug)
   return NextResponse.json({ ok: true, changed: n })
 }

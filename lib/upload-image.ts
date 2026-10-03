@@ -15,7 +15,10 @@ async function shrink(file: File): Promise<Blob> {
   const canvas = document.createElement('canvas')
   canvas.width = Math.round(bitmap.width * scale)
   canvas.height = Math.round(bitmap.height * scale)
-  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+  const ctx = canvas.getContext('2d')!
+  ctx.fillStyle = '#ffffff' // fondo blanco: los PNG transparentes no quedan negros en JPEG
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
   bitmap.close()
   const blob = await new Promise<Blob | null>(r => canvas.toBlob(r, 'image/jpeg', 0.82))
   if (!blob) throw new Error('No pudimos procesar la imagen.')

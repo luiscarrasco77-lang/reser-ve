@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
-import { rateLimit } from '@/lib/http'
+import { rateLimit, readJson } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -11,7 +11,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export async function POST(req: NextRequest) {
   const limited = rateLimit(req, 'register', 10, 60 * 60_000)
   if (limited) return limited
-  const { name, email, password, role } = await req.json().catch(() => ({}))
+  const { name, email, password, role } = await readJson(req)
   if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string' || !name.trim() || !email || !password) return NextResponse.json({ error: 'Faltan campos' }, { status: 400 })
 
   // Never trust the client for privilege: only traveler/host can self-register.

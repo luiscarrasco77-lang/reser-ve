@@ -19,12 +19,13 @@ async function find(slug: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const p = await find((await params).slug)
-  if (!p || p.status !== 'active') return { title: 'Posada' }
+  if (!p || p.status !== 'active') return { title: 'Posada', robots: { index: false } }
   const description = p.descripcion.slice(0, 160)
   return {
     title: `${p.nombre} · ${p.destino}`,
     description,
     openGraph: { title: `${p.nombre} · ${p.destino}`, description, ...(p.img ? { images: [p.img] } : {}) },
+    twitter: { card: 'summary_large_image', title: `${p.nombre} · ${p.destino}`, description, ...(p.img ? { images: [p.img] } : {}) },
   }
 }
 

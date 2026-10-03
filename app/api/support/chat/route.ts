@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { rateLimit } from '@/lib/http'
+import { rateLimit, readJson } from '@/lib/http'
 import { convertToModelMessages, streamText, stepCountIs, tool, type UIMessage } from 'ai'
 import { z } from 'zod'
 import { auth } from '@/auth'
@@ -19,7 +19,7 @@ const MODEL = AI_MODEL
 export async function POST(req: Request) {
   const limited = rateLimit(req as NextRequest, 'vera', 30, 10 * 60_000)
   if (limited) return limited
-  const body = await req.json().catch(() => null)
+  const body = await readJson(req)
   const messages: UIMessage[] = Array.isArray(body?.messages) ? body.messages.slice(-30) : []
   if (messages.length === 0) return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 })
 

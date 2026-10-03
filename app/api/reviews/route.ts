@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { parseId } from '@/lib/http'
+import { parseId, readJson } from '@/lib/http'
 import { recomputeRatings } from '@/lib/reviews'
 import { getDb } from '@/lib/db'
 import { reviews, bookings, posadas, users } from '@/lib/db/schema'
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: 'Inicia sesión para reseñar' }, { status: 401 })
 
   const userId = parseInt((session.user as any).id)
-  const body = await req.json().catch(() => ({}))
+  const body = await readJson(req)
   const posadaId = parseId(body.posadaId)
   const { rating } = body
   const texto = typeof body.texto === 'string' ? body.texto.slice(0, 2000) : ''

@@ -41,6 +41,8 @@ export const posadas = pgTable('posadas', {
   reviewNotes: text('review_notes'),
   // Posada de demostración (catálogo de ejemplo). Se retiran a medida que entran posadas reales.
   isDemo: boolean('is_demo').notNull().default(false),
+  // Demo que esta posada real reemplazó al publicarse (cada posada real retira como máximo una).
+  replacedDemoId: integer('replaced_demo_id'),
   hostNombre: text('host_nombre'),
   hostDesde: text('host_desde'),
   hostIdiomas: json('host_idiomas').$type<string[]>().notNull().default([]),

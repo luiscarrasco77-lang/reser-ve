@@ -28,7 +28,10 @@ async function loadDestino(slug: string) {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { destino } = await loadDestino((await params).slug)
   if (!destino) return { title: 'Destino no encontrado' }
-  return { title: `Posadas en ${destino.nombre}`, description: destino.tagline }
+  return {
+    title: `Posadas en ${destino.nombre}`,
+    description: `Descubre posadas auténticas en ${destino.nombre}, Venezuela: ${destino.tagline}. Fotos, precios y métodos de pago en RESER-VE.`,
+  }
 }
 
 export default async function DestinoPage({

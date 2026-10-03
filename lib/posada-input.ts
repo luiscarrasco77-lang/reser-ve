@@ -4,9 +4,16 @@
 const arr = (v: unknown) => Array.isArray(v) ? v.map(String).slice(0, 60) : []
 
 // Teléfonos, correos, enlaces o redes: la comunicación con huéspedes va por el chat de la app.
-const CONTACT_RE = /(\+?\d[\d\s().-]{8,}\d)|([\w.+-]+@[\w-]+\.[\w.]+)|(https?:\/\/|www\.|wa\.me|\.com\b|\.ve\b)|\b(whats ?app|telegram|instagram|facebook|tiktok)\b/i
+// Un teléfono = una secuencia con 10+ dígitos (ignora fechas, montos o RIF, que tienen menos).
+const EMAIL_RE = /[\w.+-]+@[\w-]+\.[a-z]{2,}/i
+const URL_RE = /(https?:\/\/|www\.|wa\.me|\b[\w-]+\.(com|net|org|ve|info|co|me|link)\b)/i
+const SOCIAL_RE = /\b(whats ?app|wasap|telegram|instagram|facebook|tiktok|arroba)\b|(^|\s)@[a-z0-9_.]{3,}/i
 export function hasContactInfo(text: string): boolean {
-  return CONTACT_RE.test(text)
+  if (EMAIL_RE.test(text) || URL_RE.test(text) || SOCIAL_RE.test(text)) return true
+  for (const m of text.match(/[+\d][\d\s().-]{7,}\d/g) ?? []) {
+    if (m.replace(/\D/g, '').length >= 10) return true
+  }
+  return false
 }
 
 type Result = { ok: true; data: Record<string, unknown> } | { ok: false; error: string }

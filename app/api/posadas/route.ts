@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
+import { readJson } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { posadas, users } from '@/lib/db/schema'
 import { emailAdminPosadaPending, emailHostPosadaReceived } from '@/lib/email'
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
   const role = (session.user as any).role
   if (role !== 'host' && role !== 'admin') return NextResponse.json({ error: 'Solo los posaderos pueden publicar posadas' }, { status: 403 })
 
-  const body = await req.json().catch(() => null)
+  const body = await readJson(req)
   const parsed = parsePosadaInput(body)
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
   const input = parsed.data as any

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { rateLimit } from '@/lib/http'
+import { rateLimit, readJson } from '@/lib/http'
 import { convertToModelMessages, streamText, stepCountIs, tool, type UIMessage } from 'ai'
 import { z } from 'zod'
 import { queryPosadas, isAvailable } from '@/lib/posadas-query'
@@ -21,7 +21,9 @@ const SYSTEM = `Eres **Aurora**, la concierge de viajes IA de RESER-VE, la plata
 - Cálida, venezolana, concreta. Español. Usa **negritas** para los nombres de posadas y títulos.
 - Para cada posada recomendada menciona: nombre, destino, precio/noche y por qué encaja.
 - Incluye un **estimado de costo total** calculado SOLO como noches × precio por noche de cada posada. NO menciones comisiones, cargos de servicio ni ningún "10%": el precio que ve el viajero es el precio final.
-- Cierra invitando a ver cada posada en su página /posadas/<slug> y a guardarla en favoritos.
+- Cierra invitando a ver cada posada en su página (enlace relativo /posadas/<slug>, nunca con http://) y a guardarla en favoritos.
+- Las posadas sin reseñas aparecen como "Nueva": no inventes valoraciones ni digas que se ocultan.
+- Si piden contactos externos (WhatsApp, teléfono, redes), di que toda la comunicación va por el chat de RESER-VE, y busca igualmente las posadas.
 - IMPORTANTE: ${BOOKINGS_OPEN ? 'las reservas están abiertas; cada posada se reserva en su página.' : 'RESER-VE está en FASE PRIVADA: las reservas aún no están abiertas al público (abren muy pronto). Si el usuario quiere reservar, dilo con naturalidad y sugiere guardar sus favoritas para cuando abran. No inventes otra forma de reservar ni des contactos externos.'}
 - Si el presupuesto no alcanza, dilo con honestidad y ofrece la mejor alternativa.
 - Sé concisa: es un plan para leer rápido, no un ensayo.
@@ -31,7 +33,7 @@ Si la petición no tiene que ver con viajar por Venezuela, redirige con amabilid
 export async function POST(req: Request) {
   const limited = rateLimit(req as NextRequest, 'aurora', 20, 10 * 60_000)
   if (limited) return limited
-  const body = await req.json().catch(() => null)
+  const body = await readJson(req)
   const messages: UIMessage[] = Array.isArray(body?.messages) ? body.messages.slice(-30) : []
   if (messages.length === 0) return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 })
 

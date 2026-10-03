@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
+import { readJson, rateLimit } from '@/lib/http'
 import { emailNewMessage } from '@/lib/email'
 import { getDb } from '@/lib/db'
 import { conversations, messages, users, bookings, posadas } from '@/lib/db/schema'
@@ -67,11 +68,13 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, 'ticket', 5, 60 * 60_000)
+  if (limited) return limited
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const userId = parseInt((session.user as any).id)
-  const payload = await req.json().catch(() => ({}))
+  const payload = await readJson(req)
   const subject = String(payload.subject ?? '').trim().slice(0, 150)
   const body = String(payload.body ?? '').trim()
 

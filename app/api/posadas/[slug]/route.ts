@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse, after } from 'next/server'
+import { readJson } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { posadas, users } from '@/lib/db/schema'
 import { emailAdminPosadaPending, emailAdminPosadaEdited } from '@/lib/email'
+import { restoreDemoOf } from '@/lib/demo'
 import { eq, and, desc } from 'drizzle-orm'
 import { auth } from '@/auth'
 import { parsePosadaInput } from '@/lib/posada-input'
@@ -53,8 +55,8 @@ async function update(req: NextRequest, slug: string) {
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const userId = parseInt((session.user as any).id)
   const role = (session.user as any).role
-  const body = await req.json().catch(() => null)
-  if (!body) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
+  const body = await readJson(req)
+  if (Object.keys(body).length === 0) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
   const db = getDb()
 
   const [posada] = await db.select().from(posadas).where(eq(posadas.slug, slug))
@@ -67,6 +69,7 @@ async function update(req: NextRequest, slug: string) {
       return NextResponse.json({ error: 'Solo puedes pausar una posada publicada o en revisión' }, { status: 400 })
     }
     const [updated] = await db.update(posadas).set({ status: 'suspended', reviewNotes: 'Pausada por el posadero.', updatedAt: new Date() }).where(eq(posadas.id, posada.id)).returning()
+    after(() => restoreDemoOf(posada.id))
     return NextResponse.json(updated)
   }
   if (body.action === 'resubmit') {

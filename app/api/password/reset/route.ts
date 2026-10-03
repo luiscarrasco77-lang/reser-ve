@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { readJson } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { users, passwordResets } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -6,7 +7,7 @@ import bcrypt from 'bcryptjs'
 
 // Fija una nueva contraseña usando el token del correo.
 export async function POST(req: NextRequest) {
-  const { token, password } = await req.json().catch(() => ({}))
+  const { token, password } = await readJson(req)
   if (!token || typeof token !== 'string') {
     return NextResponse.json({ error: 'Enlace inválido' }, { status: 400 })
   }

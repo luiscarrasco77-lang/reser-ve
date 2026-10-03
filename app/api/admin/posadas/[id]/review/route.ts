@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse, after } from 'next/server'
-import { parseId } from '@/lib/http'
-import { retireDemoFor } from '@/lib/demo'
+import { parseId, readJson } from '@/lib/http'
+import { retireDemoFor, restoreDemoOf } from '@/lib/demo'
 import { getDb } from '@/lib/db'
 import { posadas, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params
   const posadaId = parseId(id)
   if (!posadaId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  const { action, notes: rawNotes } = await req.json().catch(() => ({}))
+  const { action, notes: rawNotes } = await readJson(req)
   const notes = typeof rawNotes === 'string' ? rawNotes.trim().slice(0, 2000) || null : null
 
   // approve: publica (desde revisión, rechazada, pausada o borrador) · reject: devuelve con notas
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const [current] = await db.select({ status: posadas.status }).from(posadas).where(eq(posadas.id, posadaId))
   if (!current) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (!FROM[action].includes(current.status)) {
-    return NextResponse.json({ error: `No se puede ${action} una posada en estado "${current.status}"` }, { status: 400 })
+    return NextResponse.json({ error: `No se puede ${({ approve: 'aprobar', reject: 'rechazar', suspend: 'suspender' } as Record<string, string>)[action]} una posada en estado "${current.status}"` }, { status: 400 })
   }
   const newStatus = action === 'approve' ? 'active' : action === 'reject' ? 'rejected' : 'suspended'
 
@@ -47,7 +47,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Send email to host (fire-and-forget)
   // Una posada real aprobada reemplaza a una demo del mismo destino.
   if (action === 'approve' && !updated.isDemo) {
-    after(() => retireDemoFor(updated.destinoSlug, updated.nombre).then(() => {}))
+    after(() => retireDemoFor(updated.id).then(() => {}))
+  }
+  if (action === 'suspend' && !updated.isDemo) {
+    after(() => restoreDemoOf(updated.id))
   }
 
   if (updated.hostId && action !== 'suspend') {
@@ -56,6 +59,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const [host] = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, hostId))
       if (!host) return
       if (action === 'approve') {
+        // Reactivar una suspendida no repite el correo de "publicada".
+        if (current.status === 'suspended') return
         await emailHostPosadaApproved({ hostEmail: host.email, hostName: host.name, posadaNombre: updated.nombre, slug: updated.slug })
       } else {
         await emailHostPosadaRejected({ hostEmail: host.email, hostName: host.name, posadaNombre: updated.nombre, notes: notes ?? 'Revisa los requisitos de RESER-VE.' })

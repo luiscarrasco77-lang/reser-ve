@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
-import { parseId } from '@/lib/http'
+import { parseId, readJson } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { conversations, messages, posadas, bookings } from '@/lib/db/schema'
 import { BOOKINGS_OPEN, PRIVATE_PHASE_MSG, MAX_MESSAGE } from '@/lib/constants'
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const userId = parseInt((session.user as any).id)
   const userName = session.user.name ?? 'Viajero'
   const userRole = (session.user as any).role
-  const payload = await req.json().catch(() => ({}))
+  const payload = await readJson(req)
   const posadaId = parseId(payload.posadaId)
   const message = typeof payload.message === 'string' ? payload.message : ''
   if (!posadaId) return NextResponse.json({ error: 'posadaId requerido' }, { status: 400 })
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
   const db = getDb()
   const [posada] = await db.select().from(posadas).where(eq(posadas.id, posadaId))
-  if (!posada || (posada.status !== 'active' && userRole !== 'admin')) return NextResponse.json({ error: 'Posada no encontrada' }, { status: 404 })
+  if (!posada || ((posada.status !== 'active' || posada.isDemo) && userRole !== 'admin')) return NextResponse.json({ error: 'Posada no encontrada' }, { status: 404 })
 
   // Solo se adjunta una reserva si es del propio viajero y de esta posada.
   const myBookings = await db.select({ id: bookings.id }).from(bookings)

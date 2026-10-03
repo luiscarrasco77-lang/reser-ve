@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
-import { parseId } from '@/lib/http'
+import { parseId, readJson } from '@/lib/http'
 import { BOOKINGS_OPEN, PRIVATE_PHASE_MSG } from '@/lib/constants'
 import { getDb } from '@/lib/db'
 import { bookings, posadas, users } from '@/lib/db/schema'
@@ -57,7 +57,8 @@ export async function GET() {
     posadaSlug: posadaMap[b.posadaId]?.slug ?? '',
     posadaImg: ((posadaMap[b.posadaId]?.imgs ?? []) as string[])[0] ?? '',
     guestName: guestMap[b.guestId]?.name ?? `Huésped #${b.guestId}`,
-    guestEmail: guestMap[b.guestId]?.email ?? '',
+    // El email del huésped solo lo ve el propio huésped o un admin (el posadero usa el chat).
+    guestEmail: role === 'admin' || b.guestId === userId ? guestMap[b.guestId]?.email ?? '' : '',
   }))
 
   return NextResponse.json(enriched)
@@ -70,8 +71,8 @@ export async function POST(req: NextRequest) {
   if (!BOOKINGS_OPEN && (session.user as any).role !== 'admin') {
     return NextResponse.json({ error: PRIVATE_PHASE_MSG }, { status: 403 })
   }
-  const body = await req.json().catch(() => null)
-  if (!body) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
+  const body = await readJson(req)
+  if (Object.keys(body).length === 0) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
   const { checkIn, checkOut, guestCount } = body
   const posadaId = parseId(body.posadaId)
   const paymentMethod = typeof body.paymentMethod === 'string' ? body.paymentMethod.slice(0, 40) : null
@@ -89,14 +90,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Fechas inválidas' }, { status: 400 })
   }
   if (inD < today) return NextResponse.json({ error: 'La llegada no puede ser en el pasado' }, { status: 400 })
+  // La fecha debe existir tal cual (rechaza 2026-11-31) y en un rango razonable.
+  const sameDay = (d: Date, s: string) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` === s
+  if (!sameDay(inD, String(checkIn)) || !sameDay(outD, String(checkOut))) return NextResponse.json({ error: 'Fechas inválidas' }, { status: 400 })
   const nights = Math.round((outD.getTime() - inD.getTime()) / 86_400_000)
   if (nights < 1) return NextResponse.json({ error: 'La salida debe ser posterior a la llegada' }, { status: 400 })
+  if (nights > 30) return NextResponse.json({ error: 'La estadía máxima es de 30 noches' }, { status: 400 })
+  if (inD.getTime() - today.getTime() > 548 * 86_400_000) return NextResponse.json({ error: 'Solo se puede reservar hasta 18 meses por adelantado' }, { status: 400 })
 
   const db = getDb()
 
   // Verify posada is active + get host info for email
   const [posada] = await db.select().from(posadas).where(eq(posadas.id, posadaId))
-  if (!posada || posada.status !== 'active') {
+  if (!posada || posada.status !== 'active' || (posada.isDemo && (session.user as any).role !== 'admin')) {
     return NextResponse.json({ error: 'Posada no disponible' }, { status: 400 })
   }
 

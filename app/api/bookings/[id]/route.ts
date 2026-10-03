@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse, after } from 'next/server'
-import { parseId } from '@/lib/http'
+import { hasContactInfo } from '@/lib/posada-input'
+import { parseId, readJson } from '@/lib/http'
 import { getDb } from '@/lib/db'
 import { bookings, posadas, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -50,10 +51,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params
   const bookingId = parseId(id)
   if (!bookingId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  const body = await req.json().catch(() => null)
-  if (!body) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
+  const body = await readJson(req)
+  if (Object.keys(body).length === 0) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
   const status = String(body.status ?? '')
   const hostNotes = typeof body.hostNotes === 'string' ? body.hostNotes.trim().slice(0, 1000) || null : null
+  if (hostNotes && hasContactInfo(hostNotes)) {
+    return NextResponse.json({ error: 'No incluyas teléfonos, correos ni enlaces: los datos de pago y contacto se envían por el chat de RESER-VE.' }, { status: 400 })
+  }
   const userId = parseInt((session.user as any).id)
   const role = (session.user as any).role
 
@@ -68,6 +72,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   let actor: 'host' | 'guest' | 'admin' = 'admin'
   if (role === 'admin') {
     allowed = (ADMIN_TRANSITIONS[booking.status] ?? []).includes(status)
+      && !(status === 'completed' && booking.checkOut > new Date().toISOString().slice(0, 10))
   } else if (isHost) {
     actor = 'host'
     allowed = (HOST_TRANSITIONS[booking.status] ?? []).includes(status)
