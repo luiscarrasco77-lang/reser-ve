@@ -79,7 +79,9 @@ drizzle.config.ts        Config de Drizzle (migraciones)
 | `posada-input.ts` | Validación y lista blanca de campos al crear/editar posadas (bloquea teléfonos/enlaces) |
 | `posadas-query.ts` | Consulta de posadas activas (la usan Aurora y el sitemap) |
 | `reviews.ts`, `rating.ts` | Solo cuentan reseñas **verificadas** (con reserva confirmada); “Nueva” si no hay |
-| `demo.ts` | Posadas de demostración: retirarlas/restaurarlas |
+| `demo.ts` | Posadas de demostración: retirarlas/restaurarlas (cada posada real reemplaza una) |
+| `availability.ts` | **Disponibilidad por habitaciones** (reservas + ocupación externa), iCal: importar (`syncFeed`), exportar (`buildIcal`) |
+| `host-auth.ts` | `getOwnedPosada`: comprueba que la posada sea del usuario (o admin) |
 | `http.ts` | `parseId` (ids seguros) y `rateLimit` (límite de peticiones por IP) |
 | `vera.ts`, `support-kb.ts` | Asistente de soporte Vera (respuestas en tickets + base de conocimiento) |
 | `search.ts`, `regions.ts`, `locations-ve.ts` | Búsqueda por texto, regiones y coordenadas de Venezuela |
@@ -99,6 +101,8 @@ Definida en `lib/db/schema.ts`. Tablas principales:
 | `reviews` | Reseñas | Solo se muestran si el autor tiene una reserva confirmada o completada en esa posada |
 | `conversations`, `messages` | Chat interno | `type` = `booking` (viajero ↔ posadero) o `support` (usuario ↔ equipo/Vera) |
 | `favorites` | Posadas guardadas | `user_id`, `posada_id` |
+| `calendar_blocks` | Ocupación externa: reservas por WhatsApp/teléfono anotadas a mano o importadas por iCal | `posada_id`, `start_date`, `end_date` (salida, exclusiva), `rooms`, `source`, `feed_id` |
+| `calendar_feeds` | Calendarios iCal conectados (Booking, Airbnb, Google…) | `url`, `rooms` por reserva, `last_sync_at`, `last_status` |
 | `password_resets` | Tokens de “olvidé mi contraseña” | Un solo uso, vencen en 1 h |
 | `accounts`, `sessions`, `verification_tokens` | Requeridas por NextAuth | (sin uso activo: las sesiones son JWT) |
 
@@ -125,6 +129,10 @@ Todas devuelven JSON. Los permisos se comprueban en el servidor en cada ruta.
 | `conversations/with-host` | POST | viajero | Chat con el posadero (solo con reserva en fase privada) |
 | `conversations/[id]`, `.../messages` | GET / POST | participantes, admin | Leer / escribir mensajes (+ correo al otro) |
 | `favorites` | GET/POST/DELETE | usuario | Favoritos |
+| `host/calendar` | GET | posadero | Ocupación del mes por noche, lista y calendarios conectados (sincroniza si hace >30 min) |
+| `host/calendar/blocks` | POST / DELETE | posadero | Anotar / quitar ocupación externa |
+| `host/calendar/feeds` | POST / DELETE | posadero | Conectar / desconectar calendario iCal, `action:'sync'` para forzar |
+| `ical/[token]` | GET | público con token secreto | Calendario de la posada en formato iCal (para Booking/Airbnb/Google) |
 | `reviews` | POST | huésped con estadía | Dejar reseña |
 | `upload` | POST | posadero, admin | Subir foto a Vercel Blob (valida que sea imagen real) |
 | `aurora` | POST | público (con límite) | Concierge de viajes IA (streaming) |
@@ -133,7 +141,7 @@ Todas devuelven JSON. Los permisos se comprueban en el servidor en cada ruta.
 | `geocode` | GET | público | Búsqueda de lugares (OpenStreetMap Nominatim) |
 | `admin/*` | varios | admin | Estadísticas, usuarios y roles, reservas, revisión de posadas (`approve`/`reject`/`suspend`), demos |
 | `inbound` | POST | Resend (firmado) | Recibe correos de @reser-ve.com y los reenvía a los admins |
-| `cron/lifecycle` | GET | Vercel Cron (con `CRON_SECRET`) | Diario 04:00 UTC: cancela solicitudes sin respuesta > 24 h y completa estancias pasadas |
+| `cron/lifecycle` | GET | Vercel Cron (con `CRON_SECRET`) | Diario 04:00 UTC: cancela solicitudes sin respuesta > 24 h, completa estancias pasadas y sincroniza todos los calendarios iCal |
 
 ## 7. Servicios externos y cuentas
 
@@ -166,6 +174,8 @@ Se configuran en Vercel → Settings → Environment Variables. En local: copiar
 ## 9. Flujos principales
 
 **Alta de posada:** posadero se registra (`/register?role=host`) → `/dashboard/posada/nueva` → `POST /api/posadas` (estado `pending_review`, correo al posadero y a los admins) → admin aprueba en `/admin` → estado `active`, correo “publicada” y se retira una posada demo del mismo destino.
+
+**Disponibilidad:** cada noche se suman las habitaciones ocupadas (reservas pendientes/confirmadas, que ocupan `ceil(huéspedes / (capacidad/habitaciones))` habitaciones, + `calendar_blocks`) y se comparan con `posadas.habitaciones`. Se comprueba al reservar y al confirmar.
 
 **Reserva (cuando se abra al público):** viajero elige fechas → `POST /api/bookings` (precio recalculado en el servidor, sin comisión al viajero) → correo al posadero y al huésped → posadero confirma/rechaza en `/dashboard/reservas` → chat de la reserva para enviar datos de pago → el cron marca `completed` tras el check-out → el huésped puede reseñar.
 

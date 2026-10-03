@@ -67,8 +67,8 @@ const benefits = [
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
     ),
-    title: 'Panel sencillo',
-    desc: 'Editas precios y fotos, pausas tu posada cuando quieras y gestionas solicitudes y mensajes desde el teléfono.',
+    title: 'Calendario sin overbooking',
+    desc: 'Anota las reservas que te llegan por WhatsApp o teléfono y sincroniza Booking, Airbnb o Google Calendar. Cada noche ves cuántas habitaciones te quedan libres.',
   },
 ]
 

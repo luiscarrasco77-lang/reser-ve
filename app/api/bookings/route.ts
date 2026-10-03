@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server'
-import { isRangeAvailable, roomsForGuests } from '@/lib/availability'
+import { isRangeAvailable, roomsForGuests, syncStaleFeeds } from '@/lib/availability'
 import { parseId, readJson } from '@/lib/http'
 import { BOOKINGS_OPEN, PRIVATE_PHASE_MSG } from '@/lib/constants'
 import { getDb } from '@/lib/db'
@@ -114,6 +114,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Disponibilidad por habitaciones: reservas de RESER-VE + ocupación externa (WhatsApp, Booking, Airbnb…).
+  await syncStaleFeeds(posada.id).catch(() => {})
   const available = await isRangeAvailable(posada, String(checkIn), String(checkOut), roomsForGuests(posada, guests))
   if (!available) {
     return NextResponse.json({ error: 'Esas fechas ya no están disponibles' }, { status: 409 })

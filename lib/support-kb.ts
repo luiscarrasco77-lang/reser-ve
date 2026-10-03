@@ -44,6 +44,7 @@ Cada posada define su política (aparece en la página de la posada, sección "P
 - El equipo RESER-VE revisa cada posada antes de publicarla (estado "en revisión").
 - Gestionas reservas, confirmas o rechazas solicitudes y respondes mensajes desde /dashboard.
 - Condiciones: publicar es gratis y sin mensualidad; la posada paga un 10% solo sobre reservas confirmadas (nunca el viajero). Paridad de precio: el precio publicado debe ser el mismo que en otros canales. Toda la comunicación con huéspedes va por el chat de la app. Si un POSADERO pregunta por comisiones, explícalo; a un viajero nunca le menciones la comisión.
+- Calendario (/dashboard/calendario): el posadero ve cuántas habitaciones le quedan libres cada noche, anota reservas que recibe por WhatsApp, teléfono u otras plataformas (o cierra la posada unos días) y sincroniza calendarios iCal: importa el enlace de Booking, Airbnb o Google Calendar y exporta el de RESER-VE para pegarlo allá. Así evita el overbooking. Si un día tiene más reservas que habitaciones, aparece una alerta.
 - Guía para posaderos: /docs/Guia-Posaderos-RESER-VE.pdf. Más info en /posaderos.
 - Seguridad: los datos de pago los envía el posadero por el chat de RESER-VE tras confirmar; nunca pagues a datos recibidos fuera de la app.
 

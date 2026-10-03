@@ -1570,6 +1570,7 @@ export default function Home() {
               {[
                 'Sin mensualidad ni costo de alta',
                 'Tu propia página con fotos, servicios, políticas y ubicación',
+                'Calendario por habitaciones sincronizado con Booking, Airbnb y Google Calendar',
                 'Cobras como siempre: Zelle, Pago Móvil, transferencia o efectivo',
               ].map((f,i) => (
                 <div className="feature-item" key={i}>

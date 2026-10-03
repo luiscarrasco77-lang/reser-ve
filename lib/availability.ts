@@ -168,6 +168,13 @@ export async function syncFeed(feedId: number): Promise<{ ok: boolean; count: nu
   return status.startsWith('OK') ? { ok: true, count } : { ok: false, count: 0, error: status.slice(7) }
 }
 
+// Resincroniza los calendarios de una posada que lleven más de `maxAgeMin` sin actualizarse.
+export async function syncStaleFeeds(posadaId: number, maxAgeMin = 30) {
+  const feeds = await getDb().select().from(calendarFeeds).where(eq(calendarFeeds.posadaId, posadaId))
+  const stale = feeds.filter(f => !f.lastSyncAt || Date.now() - f.lastSyncAt.getTime() > maxAgeMin * 60_000)
+  await Promise.all(stale.map(f => syncFeed(f.id)))
+}
+
 // Sincroniza todos los calendarios externos (cron diario).
 export async function syncAllFeeds() {
   const feeds = await getDb().select({ id: calendarFeeds.id }).from(calendarFeeds)
