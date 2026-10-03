@@ -132,6 +132,7 @@ export const calendarFeeds = pgTable('calendar_feeds', {
   id: serial('id').primaryKey(),
   posadaId: integer('posada_id').references(() => posadas.id).notNull(),
   name: text('name').notNull(),
+  source: text('source').notNull().default('otro'), // canal: booking | airbnb | expedia | google | otro
   url: text('url').notNull(),
   rooms: integer('rooms').notNull().default(1),
   lastSyncAt: timestamp('last_sync_at'),

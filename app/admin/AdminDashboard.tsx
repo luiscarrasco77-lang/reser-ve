@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { channel } from '@/lib/channels'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Stats = { totalUsers: number; totalPosadas: number; totalBookings: number; pendingReview: number; pendingBookings: number; revenue: number; commission?: number }
+type Stats = { totalUsers: number; totalPosadas: number; totalBookings: number; pendingReview: number; pendingBookings: number; revenue: number; commission?: number; channels?: { source: string; reservas: number; noches: number }[] }
 type Posada = { id: number; slug: string; nombre: string; destino: string; tipo: string; precio: number; status: string; hostName: string; hostEmail: string; createdAt: string; reviewNotes: string | null; imgs: string[]; isDemo?: boolean }
 type Booking = { id: number; bookingCode: string; posadaNombre: string; posadaSlug: string; guestName: string; guestEmail: string; checkIn: string; checkOut: string; nights: number; totalPrice: number; status: string; paymentMethod: string | null; createdAt: string }
 type User = { id: number; name: string; email: string; role: string; country: string | null; createdAt: string }
@@ -252,7 +253,10 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
               </div>
             ))}
             <Link href="/mensajes" className="sb-item" style={{display:'block',marginTop:'0.25rem'}}>
-              Mensajes
+              Mensajes (todos)
+            </Link>
+            <Link href="/dashboard/calendario" className="sb-item" style={{display:'block'}}>
+              Calendarios
             </Link>
             <Link href="/admin/correo" className="sb-item" style={{display:'block'}}>
               Correo hola@
@@ -286,6 +290,23 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
               ) : (
                 <div style={{color:'var(--muted)',fontSize:'0.9rem'}}>Cargando estadísticas…</div>
               )}
+
+              {stats?.channels && stats.channels.length > 0 && (() => {
+                const max = stats.channels![0].noches || 1
+                return (
+                  <div style={{ background: 'white', border: '1.5px solid var(--line)', borderRadius: 12, padding: '1rem 1.2rem', margin: '0 0 1rem' }}>
+                    <div style={{ fontWeight: 700, marginBottom: '.2rem' }}>Canales de reserva de los posaderos</div>
+                    <div style={{ fontSize: '.78rem', color: 'var(--muted)', marginBottom: '.7rem' }}>Noches-habitación por canal, según lo que los posaderos anotan o sincronizan en su calendario (solo posadas reales).</div>
+                    {stats.channels!.map(c => (
+                      <div key={c.source} style={{ display: 'grid', gridTemplateColumns: '150px 1fr 140px', gap: '.6rem', alignItems: 'center', fontSize: '.82rem', margin: '.3rem 0' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><i style={{ width: 8, height: 8, borderRadius: '50%', background: channel(c.source).color, display: 'inline-block' }} />{channel(c.source).label}</span>
+                        <span style={{ height: 8, background: 'rgba(26,43,76,.07)', borderRadius: 6, overflow: 'hidden' }}><i style={{ display: 'block', height: '100%', width: `${(c.noches / max) * 100}%`, background: channel(c.source).color }} /></span>
+                        <span style={{ color: 'var(--muted)', textAlign: 'right' }}>{c.noches} noches · {c.reservas} reservas</span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
 
               {stats && stats.pendingReview > 0 && (
                 <div className="alert-banner">
@@ -403,6 +424,7 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
                         <td>
                           <div className="tbl-name">{p.nombre}{p.isDemo && <span style={{marginLeft:6,fontSize:'0.65rem',fontWeight:800,background:'rgba(26,43,76,0.08)',color:'var(--muted)',padding:'2px 6px',borderRadius:6}}>DEMO</span>}</div>
                           <Link href={`/posadas/${p.slug}`} target="_blank" className="tbl-link">Ver →</Link>
+                          <Link href={`/dashboard/calendario?posada=${p.slug}`} className="tbl-link" style={{ marginLeft: 10 }}>Calendario →</Link>
                         </td>
                         <td>{p.destino}</td>
                         <td>${p.precio}</td>

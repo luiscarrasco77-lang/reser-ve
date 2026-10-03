@@ -18,9 +18,11 @@ export async function GET(req: NextRequest) {
   const role = (session.user as any).role
 
   // Posadas que puede gestionar (para el selector).
-  const mine = role === 'admin' && req.nextUrl.searchParams.get('posada')
-    ? await db.select({ slug: posadas.slug, nombre: posadas.nombre, status: posadas.status }).from(posadas).where(eq(posadas.slug, req.nextUrl.searchParams.get('posada')!))
-    : await db.select({ slug: posadas.slug, nombre: posadas.nombre, status: posadas.status }).from(posadas).where(eq(posadas.hostId, userId))
+  // Los admins ven todas las posadas (primero las reales); el posadero, solo las suyas.
+  const cols = { slug: posadas.slug, nombre: posadas.nombre, status: posadas.status, isDemo: posadas.isDemo }
+  const mine = role === 'admin'
+    ? (await db.select(cols).from(posadas)).sort((a, b) => Number(a.isDemo) - Number(b.isDemo) || a.nombre.localeCompare(b.nombre))
+    : await db.select(cols).from(posadas).where(eq(posadas.hostId, userId))
   if (mine.length === 0) return NextResponse.json({ posadas: [], posada: null })
 
   const p = await getOwnedPosada(req.nextUrl.searchParams.get('posada') || mine[0].slug)
@@ -53,10 +55,11 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     posadas: mine,
-    posada: { slug: p.slug, nombre: p.nombre, habitaciones: p.habitaciones },
+    posada: { slug: p.slug, nombre: p.nombre, habitaciones: p.habitaciones, isDemo: p.isDemo },
+    isAdmin: role === 'admin',
     month, days, items,
     manual: manual.sort((a, b) => a.startDate.localeCompare(b.startDate)),
-    feeds: (await db.select().from(calendarFeeds).where(eq(calendarFeeds.posadaId, p.id))).map(f => ({ id: f.id, name: f.name, url: f.url, rooms: f.rooms, lastSyncAt: f.lastSyncAt, lastStatus: f.lastStatus })),
+    feeds: (await db.select().from(calendarFeeds).where(eq(calendarFeeds.posadaId, p.id))).map(f => ({ id: f.id, name: f.name, source: f.source, url: f.url, rooms: f.rooms, lastSyncAt: f.lastSyncAt, lastStatus: f.lastStatus })),
     exportUrl: `${SITE_URL}/api/ical/${token}`,
   })
 }

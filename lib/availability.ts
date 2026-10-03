@@ -36,6 +36,7 @@ export type OccupancyItem = {
   label: string
   source: string
   status?: string
+  synced?: boolean
 }
 
 // Ocupación de una posada entre [from, to): items y habitaciones usadas por noche.
@@ -57,7 +58,7 @@ export async function getOccupancy(p: PosadaRooms, from: string, to: string, exc
     })),
     ...bl.map(b => ({
       kind: 'block' as const, id: b.id, start: b.startDate, end: b.endDate,
-      rooms: b.rooms, label: b.note ?? '', source: b.source,
+      rooms: b.rooms, label: b.note ?? '', source: b.source, synced: b.feedId != null,
     })),
   ]
   const used = new Map<string, number>()
@@ -156,7 +157,7 @@ export async function syncFeed(feedId: number): Promise<{ ok: boolean; count: nu
     if (events.length) {
       await db.insert(calendarBlocks).values(events.map(e => ({
         posadaId: feed.posadaId, startDate: e.start, endDate: e.end, rooms: feed.rooms,
-        source: 'ical', note: feed.name, feedId: feed.id, externalUid: e.uid,
+        source: feed.source, note: e.summary && !/^(reserved|not available|closed|blocked|ocupado)/i.test(e.summary) ? `${feed.name} · ${e.summary}`.slice(0, 120) : feed.name, feedId: feed.id, externalUid: e.uid,
       })))
     }
     count = events.length

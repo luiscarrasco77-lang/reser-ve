@@ -3,13 +3,15 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import DashboardNav from '@/components/DashboardNav'
+import { CHANNELS, channel } from '@/lib/channels'
 
-type Item = { kind: 'booking' | 'block'; id: number; start: string; end: string; rooms: number; label: string; source: string; status?: string }
+type Item = { kind: 'booking' | 'block'; id: number; start: string; end: string; rooms: number; label: string; source: string; status?: string; synced?: boolean }
 type Block = { id: number; startDate: string; endDate: string; rooms: number; source: string; note: string | null }
-type Feed = { id: number; name: string; url: string; rooms: number; lastSyncAt: string | null; lastStatus: string | null }
+type Feed = { id: number; name: string; source: string; url: string; rooms: number; lastSyncAt: string | null; lastStatus: string | null }
 type Data = {
-  posadas: { slug: string; nombre: string; status: string }[]
-  posada: { slug: string; nombre: string; habitaciones: number } | null
+  posadas: { slug: string; nombre: string; status: string; isDemo?: boolean }[]
+  posada: { slug: string; nombre: string; habitaciones: number; isDemo?: boolean } | null
+  isAdmin?: boolean
   month: string
   days: { date: string; used: number }[]
   items: Item[]
@@ -19,11 +21,12 @@ type Data = {
 }
 
 const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
-const SOURCES: { v: string; l: string }[] = [
-  { v: 'whatsapp', l: 'WhatsApp' }, { v: 'telefono', l: 'Teléfono' }, { v: 'booking', l: 'Booking' },
-  { v: 'airbnb', l: 'Airbnb' }, { v: 'otro', l: 'Otro' }, { v: 'cerrado', l: 'Cerrar posada' },
+// Orígenes que el posadero puede elegir al anotar una reserva externa.
+const SOURCES = CHANNELS.filter(c => !['reserve', 'google'].includes(c.key))
+const FEED_SOURCES = [
+  { key: 'booking', label: 'Booking' }, { key: 'airbnb', label: 'Airbnb' }, { key: 'expedia', label: 'Expedia' },
+  { key: 'google', label: 'Google Calendar' }, { key: 'otro', label: 'Otro' },
 ]
-const SOURCE_LABEL: Record<string, string> = { whatsapp: 'WhatsApp', telefono: 'Teléfono', booking: 'Booking', airbnb: 'Airbnb', otro: 'Otro', cerrado: 'Cerrada', ical: 'Sincronizado', reserve: 'RESER-VE', manual: 'Manual' }
 
 function shiftMonth(m: string, n: number) {
   const [y, mo] = m.split('-').map(Number)
@@ -56,7 +59,7 @@ function CalendarioInner() {
   const [msg, setMsg] = useState('')
 
   // Sincronización
-  const [feedName, setFeedName] = useState('Booking')
+  const [feedSource, setFeedSource] = useState('booking')
   const [feedUrl, setFeedUrl] = useState('')
   const [feedRooms, setFeedRooms] = useState(1)
   const [feedBusy, setFeedBusy] = useState(false)
@@ -77,6 +80,20 @@ function CalendarioInner() {
   const today = new Date().toISOString().slice(0, 10)
   const usedMap = useMemo(() => new Map((data?.days ?? []).map(d => [d.date, d.used])), [data])
   const overbooked = (data?.days ?? []).filter(d => d.used > total && d.date >= today)
+  // Canales presentes cada día (puntos de color) y resumen de noches por canal del mes.
+  const { daySources, summary } = useMemo(() => {
+    const ds = new Map<string, Set<string>>()
+    const sum = new Map<string, number>()
+    for (const it of data?.items ?? []) {
+      for (let d = it.start; d < it.end; d = addDays(d, 1)) {
+        if (!d.startsWith(month)) continue
+        if (!ds.has(d)) ds.set(d, new Set())
+        ds.get(d)!.add(it.source)
+        sum.set(it.source, (sum.get(it.source) ?? 0) + it.rooms)
+      }
+    }
+    return { daySources: ds, summary: [...sum.entries()].sort((a, b) => b[1] - a[1]) }
+  }, [data, month])
 
   // Celdas del mes (lunes primero)
   const cells = useMemo(() => {
@@ -123,7 +140,7 @@ function CalendarioInner() {
     setFeedBusy(true); setFeedMsg('')
     const res = await fetch('/api/host/calendar/feeds', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ posada: data.posada.slug, name: feedName, url: feedUrl, rooms: feedRooms }),
+      body: JSON.stringify({ posada: data.posada.slug, source: feedSource, name: FEED_SOURCES.find(f => f.key === feedSource)?.label, url: feedUrl, rooms: feedRooms }),
     })
     const out = await res.json().catch(() => ({}))
     setFeedBusy(false)
@@ -176,6 +193,11 @@ function CalendarioInner() {
         .day.full{background:#1A2B4C;color:white;border-color:#1A2B4C;}
         .day.over{background:#FDECEC;border-color:#E25555;color:#B42318;}
         .dnum{font-size:.85rem;font-weight:700;}
+        .dtop{display:flex;justify-content:space-between;align-items:center;gap:2px;}
+        .dots{display:flex;gap:2px;}
+        .dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+        .chip .dot{margin-right:.35rem;vertical-align:middle;}
+        .tag .dot{margin-right:.3rem;vertical-align:middle;width:6px;height:6px;}
         .docc{font-size:.68rem;font-weight:600;opacity:.85;}
         .bar{height:4px;border-radius:4px;background:rgba(26,43,76,.08);overflow:hidden;margin-top:3px;}
         .bar i{display:block;height:100%;background:var(--cacao);}
@@ -197,7 +219,7 @@ function CalendarioInner() {
         .row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;}
         .list{display:flex;flex-direction:column;gap:.45rem;}
         .li{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.55rem .7rem;border:1px solid var(--line);border-radius:10px;font-size:.82rem;}
-        .tag{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:999px;background:rgba(26,43,76,.07);color:var(--indigo);white-space:nowrap;}
+        .tag{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:999px;background:rgba(26,43,76,.07);color:var(--indigo);white-space:nowrap;display:inline-flex;align-items:center;}
         .tag.reserve{background:#FFF3E4;color:var(--cacao-dark);}
         .x{border:none;background:none;color:var(--muted);cursor:pointer;font-size:.8rem;text-decoration:underline;font-family:inherit;}
         .alert{background:#FDECEC;border:1px solid #F5B5B5;color:#B42318;border-radius:12px;padding:.8rem 1rem;font-size:.86rem;margin-bottom:1rem;line-height:1.5;}
@@ -218,7 +240,7 @@ function CalendarioInner() {
           </div>
           {data && data.posadas.length > 1 && (
             <select value={data.posada?.slug ?? ''} onChange={e => router.push(`/dashboard/calendario?posada=${e.target.value}`)}>
-              {data.posadas.map(p => <option key={p.slug} value={p.slug}>{p.nombre}</option>)}
+              {data.posadas.map(p => <option key={p.slug} value={p.slug}>{p.nombre}{p.isDemo ? ' · demo' : ''}{p.status !== 'active' ? ` · ${p.status === 'pending_review' ? 'en revisión' : p.status}` : ''}</option>)}
             </select>
           )}
         </div>
@@ -234,6 +256,11 @@ function CalendarioInner() {
 
         {data?.posada && (
           <>
+            {data.isAdmin && (
+              <div className="alert" style={{ background: '#EEF2F8', borderColor: '#C9D3E3', color: '#1A2B4C' }}>
+                Vista de administrador: calendario de <strong>{data.posada.nombre}</strong>{data.posada.isDemo ? ' (posada demo)' : ''}. Los cambios que hagas aquí los verá el posadero.
+              </div>
+            )}
             {overbooked.length > 0 && (
               <div className="alert">
                 <strong>Sobreventa:</strong> tienes más reservas que habitaciones el {overbooked.map(d => fmt(d.date)).join(', ')}. Revisa esas fechas y cancela o reubica lo que sobre.
@@ -255,7 +282,7 @@ function CalendarioInner() {
                     const cls = used > total ? 'over' : used >= total ? 'full' : used > 0 ? 'partial' : ''
                     return (
                       <button key={d} className={`day ${cls}${past ? ' past' : ''}${inSel(d) ? ' sel' : ''}`} disabled={past} onClick={() => clickDay(d)}>
-                        <span className="dnum">{Number(d.slice(8))}</span>
+                        <span className="dtop"><span className="dnum">{Number(d.slice(8))}</span><span className="dots">{[...(daySources.get(d) ?? [])].slice(0, 4).map(src => <i key={src} className="dot" style={{ background: channel(src).color }} />)}</span></span>
                         <span>
                           <span className="docc">{used > total ? `${used}/${total} ⚠` : used >= total ? 'Lleno' : `${total - used} libre${total - used === 1 ? '' : 's'}`}</span>
                           <div className="bar"><i style={{ width: `${Math.min(100, (used / total) * 100)}%` }} /></div>
@@ -285,7 +312,11 @@ function CalendarioInner() {
                       </p>
                       <div className="muted">Origen</div>
                       <div className="chips">
-                        {SOURCES.map(s => <button key={s.v} className={`chip${source === s.v ? ' on' : ''}`} onClick={() => setSource(s.v)}>{s.l}</button>)}
+                        {SOURCES.map(c => (
+                          <button key={c.key} className={`chip${source === c.key ? ' on' : ''}`} onClick={() => setSource(c.key)}>
+                            <i className="dot" style={{ background: c.color }} />{c.key === 'cerrado' ? 'Cerrar posada' : c.label}
+                          </button>
+                        ))}
                       </div>
                       {source !== 'cerrado' && (
                         <div className="row" style={{ marginBottom: '.7rem' }}>
@@ -307,6 +338,25 @@ function CalendarioInner() {
                   )}
                 </div>
 
+                {summary.length > 0 && (
+                  <div className="card">
+                    <div className="h3">De dónde vienen tus reservas este mes</div>
+                    <div className="list">
+                      {summary.map(([src, n]) => {
+                        const max = summary[0][1]
+                        return (
+                          <div key={src} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 78px', alignItems: 'center', gap: '.5rem', fontSize: '.8rem' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}><i className="dot" style={{ background: channel(src).color }} />{channel(src).label}</span>
+                            <span className="bar" style={{ height: 6, marginTop: 0 }}><i style={{ width: `${(n / max) * 100}%`, background: channel(src).color }} /></span>
+                            <span className="muted" style={{ textAlign: 'right' }}>{n} noche{n === 1 ? '' : 's'}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <p className="muted" style={{ fontSize: '.72rem', marginTop: '.5rem' }}>Noches-habitación ocupadas por canal.</p>
+                  </div>
+                )}
+
                 <div className="card">
                   <div className="h3">Este mes</div>
                   {monthItems.length === 0 ? <p className="muted">No hay reservas ni ocupación este mes.</p> : (
@@ -318,8 +368,11 @@ function CalendarioInner() {
                             {it.label && <div className="muted" style={{ fontSize: '.75rem' }}>{it.label}</div>}
                           </div>
                           <div className="row">
-                            <span className={`tag${it.kind === 'booking' ? ' reserve' : ''}`}>{it.kind === 'booking' ? `RESER-VE${it.status === 'pending' ? ' · pendiente' : ''}` : SOURCE_LABEL[it.source] ?? it.source}</span>
-                            {it.kind === 'block' && it.source !== 'ical' && <button className="x" onClick={() => removeBlock(it.id)}>Quitar</button>}
+                            <span className="tag" style={{ background: channel(it.kind === 'booking' ? 'reserve' : it.source).color + '1A', color: channel(it.kind === 'booking' ? 'reserve' : it.source).color }}>
+                              <i className="dot" style={{ background: channel(it.kind === 'booking' ? 'reserve' : it.source).color }} />
+                              {it.kind === 'booking' ? `RESER-VE${it.status === 'pending' ? ' · pendiente' : ''}` : channel(it.source).label}{it.synced ? ' · sinc.' : ''}
+                            </span>
+                            {it.kind === 'block' && !it.synced && <button className="x" onClick={() => removeBlock(it.id)}>Quitar</button>}
                           </div>
                         </div>
                       ))}
@@ -344,8 +397,8 @@ function CalendarioInner() {
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '.86rem', marginBottom: '.3rem' }}>2. Trae tus reservas de otras plataformas</div>
                   <div className="row" style={{ marginBottom: '.5rem' }}>
-                    <select value={feedName} onChange={e => setFeedName(e.target.value)}>
-                      {['Booking', 'Airbnb', 'Google Calendar', 'Vrbo', 'Otro'].map(n => <option key={n}>{n}</option>)}
+                    <select value={feedSource} onChange={e => setFeedSource(e.target.value)}>
+                      {FEED_SOURCES.map(f => <option key={f.key} value={f.key}>{f.label}</option>)}
                     </select>
                     <span className="muted">bloquea</span>
                     <div className="stepper">

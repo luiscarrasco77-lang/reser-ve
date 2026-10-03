@@ -106,15 +106,17 @@ export default function NavUser({ dark = false }: { dark?: boolean }) {
               <MenuItem href="/dashboard" icon="grid">Mi dashboard</MenuItem>
               <MenuItem href="/dashboard/posadas" icon="home">Mis posadas</MenuItem>
               <MenuItem href="/dashboard/posada/nueva" icon="plus">Publicar posada</MenuItem>
-              <MenuItem href="/dashboard/reservas" icon="calendar">Mis reservas</MenuItem>
+              <MenuItem href="/dashboard/reservas" icon="calendar">Reservas</MenuItem>
+              <MenuItem href="/dashboard/calendario" icon="calendar">Calendario</MenuItem>
             </>
           ) : (
             <MenuItem href="/mis-reservas" icon="calendar">Mis reservas</MenuItem>
           )}
-          <MenuItem href="/aurora" icon="sparkle">Aurora · Concierge IA</MenuItem>
+          <MenuItem href="/aurora" icon="sparkle">Planifica con IA</MenuItem>
           <MenuItem href="/favoritos" icon="heart">Favoritos</MenuItem>
           <MenuItem href="/mensajes" icon="message">Mensajes</MenuItem>
           <MenuItem href="/buscar" icon="search">Explorar posadas</MenuItem>
+          <MenuItem href="/cuenta" icon="grid">Mi cuenta</MenuItem>
 
           <div style={{ height: 1, background: 'rgba(26,43,76,0.07)', margin: '0.3rem 0' }} />
           <button

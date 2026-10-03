@@ -1,9 +1,9 @@
 import { HOST_COMMISSION_RATE } from '@/lib/constants'
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
-import { users, posadas, bookings } from '@/lib/db/schema'
+import { users, posadas, bookings, calendarBlocks } from '@/lib/db/schema'
 import { auth } from '@/auth'
-import { count, sum, eq, inArray } from 'drizzle-orm'
+import { count, sum, eq, inArray, and } from 'drizzle-orm'
 
 export async function GET() {
   const session = await auth()
@@ -29,5 +29,21 @@ export async function GET() {
       .where(inArray(bookings.status, ['confirmed', 'completed'])),
   ])
 
-  return NextResponse.json({ totalUsers, totalPosadas, totalBookings, pendingReview, pendingBookings, revenue: Number(revenue ?? 0), commission: Math.round(Number(revenue ?? 0) * HOST_COMMISSION_RATE) })
+  // Canales de reserva de las posadas reales: lo que anotan o sincronizan en su calendario
+  // (WhatsApp, Booking, Airbnb…) frente a las reservas de RESER-VE.
+  const realIds = (await db.select({ id: posadas.id }).from(posadas).where(eq(posadas.isDemo, false))).map(p => p.id)
+  const nightsOf = (a: string, b: string) => Math.max(0, Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000))
+  const chan = new Map<string, { reservas: number; noches: number }>()
+  const add = (k: string, n: number) => { const c = chan.get(k) ?? { reservas: 0, noches: 0 }; c.reservas++; c.noches += n; chan.set(k, c) }
+  if (realIds.length) {
+    for (const b of await db.select().from(calendarBlocks).where(inArray(calendarBlocks.posadaId, realIds))) {
+      if (b.source !== 'cerrado') add(b.source, nightsOf(b.startDate, b.endDate) * b.rooms)
+    }
+    for (const b of await db.select().from(bookings).where(and(inArray(bookings.posadaId, realIds), inArray(bookings.status, ['confirmed', 'completed'])))) {
+      add('reserve', b.nights)
+    }
+  }
+  const channels = [...chan.entries()].map(([source, v]) => ({ source, ...v })).sort((a, b) => b.noches - a.noches)
+
+  return NextResponse.json({ channels, totalUsers, totalPosadas, totalBookings, pendingReview, pendingBookings, revenue: Number(revenue ?? 0), commission: Math.round(Number(revenue ?? 0) * HOST_COMMISSION_RATE) })
 }

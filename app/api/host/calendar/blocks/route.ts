@@ -5,7 +5,8 @@ import { calendarBlocks } from '@/lib/db/schema'
 import { getOwnedPosada } from '@/lib/host-auth'
 import { parseId, readJson } from '@/lib/http'
 
-const SOURCES = ['whatsapp', 'telefono', 'booking', 'airbnb', 'otro', 'cerrado']
+import { CHANNEL_KEYS } from '@/lib/channels'
+const SOURCES = CHANNEL_KEYS.filter(k => k !== 'reserve' && k !== 'google')
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
 // Anotar ocupación externa: { posada, start, end, rooms, source, note }
