@@ -81,6 +81,7 @@ drizzle.config.ts        Config de Drizzle (migraciones)
 | `reviews.ts`, `rating.ts` | Solo cuentan reseñas **verificadas** (con reserva confirmada); “Nueva” si no hay |
 | `demo.ts` | Posadas de demostración: retirarlas/restaurarlas (cada posada real reemplaza una) |
 | `availability.ts` | **Disponibilidad por habitaciones** (reservas + ocupación externa), iCal: importar (`syncFeed`), exportar (`buildIcal`) |
+| `channels.ts` | Canales de reserva (WhatsApp, Instagram, Booking, Airbnb…) con nombre y color |
 | `host-auth.ts` | `getOwnedPosada`: comprueba que la posada sea del usuario (o admin) |
 | `http.ts` | `parseId` (ids seguros) y `rateLimit` (límite de peticiones por IP) |
 | `vera.ts`, `support-kb.ts` | Asistente de soporte Vera (respuestas en tickets + base de conocimiento) |
@@ -132,6 +133,7 @@ Todas devuelven JSON. Los permisos se comprueban en el servidor en cada ruta.
 | `host/calendar` | GET | posadero | Ocupación del mes por noche, lista y calendarios conectados (sincroniza si hace >30 min) |
 | `host/calendar/blocks` | POST / DELETE | posadero | Anotar / quitar ocupación externa |
 | `host/calendar/feeds` | POST / DELETE | posadero | Conectar / desconectar calendario iCal, `action:'sync'` para forzar |
+| `account` | GET / DELETE | usuario | Datos de la cuenta / eliminarla (anonimiza; bloqueado con reservas activas o posadas publicadas) |
 | `ical/[token]` | GET | público con token secreto | Calendario de la posada en formato iCal (para Booking/Airbnb/Google) |
 | `reviews` | POST | huésped con estadía | Dejar reseña |
 | `upload` | POST | posadero, admin | Subir foto a Vercel Blob (valida que sea imagen real) |
