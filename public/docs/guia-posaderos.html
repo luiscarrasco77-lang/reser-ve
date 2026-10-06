@@ -1,137 +1,348 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"/><title>RESER-VE · Guía para posaderos</title><style>:root{ --indigo:#1A2B4C; --cacao:#E67E22; --cacao-dark:#C96510; --sand:#FDFBF7; --muted:#5d6b80; --line:rgba(26,43,76,0.12); }
-*{box-sizing:border-box;}
-@page{ size:A4; margin:16mm 15mm; }
-html,body{margin:0;padding:0;}
-body{font-family:'Helvetica Neue',Arial,sans-serif;color:var(--indigo);line-height:1.55;font-size:11pt;background:#fff;}
-h1,h2,h3{font-family:Georgia,'Times New Roman',serif;line-height:1.2;color:var(--indigo);}
-h2{font-size:18pt;margin:1.4rem 0 .5rem;border-bottom:2px solid var(--cacao);padding-bottom:.3rem;page-break-after:avoid;}
-h2:first-child{margin-top:0}
-h3{font-size:12.5pt;margin:1rem 0 .3rem;color:var(--cacao-dark);page-break-after:avoid;}
-p{margin:.4rem 0;} ul,ol{margin:.35rem 0 .6rem;padding-left:1.25rem;} li{margin:.22rem 0;}
-code{background:rgba(26,43,76,.06);border:1px solid var(--line);border-radius:5px;padding:.05rem .3rem;font-family:Menlo,Consolas,monospace;font-size:9.5pt;color:var(--cacao-dark);}
-.lead{color:var(--muted);font-size:11.5pt;}
-.pill{display:inline-block;background:var(--cacao);color:#fff;font-size:9pt;font-weight:700;padding:.3rem .8rem;border-radius:999px;letter-spacing:.05em;}
-.pill-i{background:var(--indigo);}
-.box{background:var(--sand);border:1px solid var(--line);border-left:4px solid var(--cacao);border-radius:0 10px 10px 0;padding:.7rem 1rem;margin:.7rem 0;page-break-inside:avoid;}
-.box-ok{border-left-color:#10b981;background:rgba(16,185,129,.05);}
-.box-warn{border-left-color:#dc2626;background:rgba(220,38,38,.04);}
-.step{display:flex;gap:.7rem;margin:.6rem 0;align-items:flex-start;page-break-inside:avoid;}
-.step-n{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--cacao);color:#fff;font-weight:700;font-size:10.5pt;display:flex;align-items:center;justify-content:center;}
-.step b{color:var(--indigo)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:.6rem 0;}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin:.6rem 0;}
-.cardv{background:var(--sand);border:1px solid var(--line);border-radius:12px;padding:.7rem .85rem;font-size:9.8pt;page-break-inside:avoid;}
-.cardv .big{font-family:Georgia,serif;font-size:19pt;font-weight:800;color:var(--cacao);line-height:1;margin-bottom:.3rem}
-.cardv b{color:var(--indigo);}
-table{width:100%;border-collapse:collapse;margin:.6rem 0;font-size:9.8pt;page-break-inside:avoid;}
-th,td{border:1px solid var(--line);padding:.4rem .55rem;text-align:left;vertical-align:top;}
-th{background:var(--indigo);color:#fff;font-weight:700;}
-tr:nth-child(even) td{background:var(--sand);}
-.muted{color:var(--muted);}
-.cover{height:252mm;display:flex;flex-direction:column;justify-content:center;page-break-after:always;}
-.cover .logo{font-size:44pt;font-weight:800;letter-spacing:-.04em;font-family:'Helvetica Neue',Arial,sans-serif;}
-.cover .logo span{color:var(--cacao);}
-.cover .sub{font-size:17pt;color:var(--muted);margin-top:.6rem;}
-.pb{page-break-before:always;}
-.chk{list-style:none;padding-left:0}
+<html lang="es"><head><meta charset="UTF-8"/>
+<title>RESER-VE · Guía para posaderos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--indigo:#1A2B4C;--ink:#0F1B30;--cacao:#E67E22;--cacao-d:#C96510;--sand:#FDFBF7;--sand2:#F6EFE4;--muted:#66748A;--line:rgba(26,43,76,.12);--green:#0E9F6E;}
+*{box-sizing:border-box;margin:0;padding:0;}
+@page{size:A4;margin:0;}
+html,body{background:#fff;}
+body{font-family:'Inter',Arial,sans-serif;color:var(--indigo);font-size:10.5pt;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.page{width:210mm;height:297mm;position:relative;overflow:hidden;page-break-after:always;padding:18mm 17mm 16mm;}
+.page:last-child{page-break-after:auto;}
+h1,h2,h3,.serif{font-family:'Playfair Display',Georgia,serif;}
+h2{font-size:25pt;line-height:1.12;font-weight:800;letter-spacing:-.01em;margin-bottom:3mm;}
+h2 em{color:var(--cacao);font-style:italic;}
+h3{font-size:13pt;font-weight:700;margin-bottom:1.5mm;}
+p{margin-bottom:2mm;}
+.eyebrow{font-size:8pt;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cacao);margin-bottom:2.5mm;}
+.lead{font-size:11.5pt;color:var(--muted);max-width:150mm;margin-bottom:6mm;}
+.pill{display:inline-block;padding:1.6mm 4mm;border-radius:99px;font-size:8pt;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+.foot{position:absolute;left:17mm;right:17mm;bottom:9mm;display:flex;justify-content:space-between;font-size:7.5pt;color:var(--muted);}
+.foot b{color:var(--indigo);}
+code{font-family:'Inter',sans-serif;font-weight:700;color:var(--cacao-d);background:rgba(230,126,34,.08);padding:.2mm 1.5mm;border-radius:4px;}
+
+/* Portada */
+.cover{padding:0;color:#fff;}
+.cover .bg{position:absolute;inset:0;background:url('img/cover-pos.jpg') center/cover;}
+.cover .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,27,48,.55) 0%,rgba(15,27,48,.15) 35%,rgba(15,27,48,.85) 72%,rgba(15,27,48,.97) 100%);}
+.cover .top{position:absolute;top:16mm;left:17mm;right:17mm;display:flex;justify-content:space-between;align-items:center;}
+.cover .body{position:absolute;left:17mm;right:17mm;bottom:22mm;}
+.cover h1{font-size:44pt;line-height:1.02;font-weight:800;letter-spacing:-.02em;margin:5mm 0 5mm;}
+.cover h1 em{color:#FFC88A;font-style:italic;}
+.cover .sub{font-size:13pt;color:rgba(255,255,255,.86);max-width:150mm;line-height:1.5;}
+.cover .chips{display:flex;gap:3mm;margin-top:8mm;flex-wrap:wrap;}
+.cover .chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);color:#fff;padding:2.2mm 4.5mm;border-radius:99px;font-size:9pt;font-weight:700;}
+.cover .chip b{color:#FFC88A;}
+
+/* Beneficios */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;}
+.ben{background:var(--sand);border:1px solid var(--line);border-radius:5mm;padding:5mm 4.5mm;}
+.ben .ic{width:11mm;height:11mm;border-radius:3.2mm;background:var(--indigo);display:flex;align-items:center;justify-content:center;margin-bottom:3mm;}
+.ben .ic svg{width:6mm;height:6mm;stroke:#FFC88A;}
+.ben h3{font-family:'Inter',sans-serif;font-size:10.5pt;font-weight:800;margin-bottom:1.2mm;}
+.ben p{font-size:9pt;color:var(--muted);margin:0;line-height:1.5;}
+.founder{margin-top:6mm;border-radius:6mm;background:linear-gradient(135deg,#1A2B4C,#24406E);color:#fff;padding:7mm 8mm;display:flex;gap:7mm;align-items:center;}
+.founder .seal{flex-shrink:0;width:30mm;height:30mm;border-radius:50%;border:2px dashed rgba(255,200,138,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.founder .seal b{font-family:'Playfair Display',serif;font-size:24pt;color:#FFC88A;line-height:1;}
+.founder .seal span{font-size:6.5pt;letter-spacing:.12em;text-transform:uppercase;font-weight:800;margin-top:1mm;}
+.founder h3{color:#fff;font-size:15pt;margin-bottom:2mm;}
+.founder ul{list-style:none;}
+.founder li{font-size:9.5pt;padding-left:5mm;position:relative;margin:1.2mm 0;color:rgba(255,255,255,.9);}
+.founder li::before{content:'✓';position:absolute;left:0;color:#FFC88A;font-weight:800;}
+
+/* Cuentas */
+.money{display:grid;grid-template-columns:1.1fr 1fr;gap:6mm;align-items:stretch;}
+.calc{background:var(--sand);border:1px solid var(--line);border-radius:5mm;padding:6mm;}
+.calc .row{display:flex;justify-content:space-between;padding:2.2mm 0;border-bottom:1px dashed var(--line);font-size:10.5pt;}
+.calc .row:last-child{border:none;}
+.calc .tot{font-weight:800;font-size:13pt;color:var(--green);}
+.big0{background:var(--cacao);color:#fff;border-radius:5mm;padding:6mm;display:flex;flex-direction:column;justify-content:center;}
+.big0 .num{font-family:'Playfair Display',serif;font-size:46pt;font-weight:800;line-height:1;}
+.big0 p{font-size:10.5pt;margin-top:2mm;color:rgba(255,255,255,.95);}
+table.cmp{width:100%;border-collapse:separate;border-spacing:0;margin-top:6mm;font-size:9.3pt;border:1px solid var(--line);border-radius:4mm;overflow:hidden;}
+table.cmp th,table.cmp td{padding:2.6mm 3mm;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle;}
+table.cmp th{background:var(--indigo);color:#fff;font-weight:700;font-size:8.8pt;}
+table.cmp th.us{background:var(--cacao);}
+table.cmp td.us{background:rgba(230,126,34,.07);font-weight:700;}
+table.cmp tr:last-child td{border-bottom:none;}
+.y{color:var(--green);font-weight:800;}
+.n{color:#B42318;font-weight:700;}
+.shot{margin-top:6mm;border-radius:4mm;overflow:hidden;border:1px solid var(--line);box-shadow:0 6mm 14mm rgba(26,43,76,.14);}
+.shot img{display:block;width:100%;}
+.cap{font-size:8.5pt;color:var(--muted);margin-top:2mm;text-align:center;}
+
+/* Objeciones */
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:4mm;}
+.q{border:1px solid var(--line);border-radius:4.5mm;padding:4.5mm 5mm;background:#fff;}
+.q h3{font-family:'Inter',sans-serif;font-size:10.5pt;font-weight:800;margin-bottom:1.5mm;}
+.q h3 span{color:var(--cacao);}
+.q p{font-size:9.3pt;color:#3B4A63;margin:0;}
+
+/* Pasos */
+.steps{display:flex;flex-direction:column;gap:3mm;}
+.st{display:flex;gap:4mm;align-items:flex-start;}
+.st .n2{flex-shrink:0;width:9mm;height:9mm;border-radius:50%;background:var(--cacao);color:#fff;font-weight:800;font-size:10pt;display:flex;align-items:center;justify-content:center;}
+.st p{margin:0;padding-top:1.2mm;font-size:10pt;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8mm;}
+.note{background:var(--sand2);border-radius:4mm;padding:4mm 5mm;font-size:9.3pt;margin-top:4mm;}
+.note.warn{background:rgba(180,35,24,.06);border-left:3mm solid #B42318;}
+.note.ok{background:rgba(14,159,110,.07);border-left:3mm solid var(--green);}
+.hr{height:1px;background:var(--line);margin:7mm 0;}
+table.t{width:100%;border-collapse:collapse;font-size:9.3pt;margin:3mm 0;}
+table.t th,table.t td{padding:2.3mm 3mm;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+table.t th{font-size:8pt;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+
+.compact{font-size:9.6pt;}
+.compact .lead{margin-bottom:4mm;}
+.compact h3{margin-top:4mm !important;}
+.compact .steps{gap:2mm;}
+.compact .st p{font-size:9.3pt;padding-top:1.5mm;}
+.compact .st .n2{width:7.5mm;height:7.5mm;font-size:9pt;}
+.compact table.t td,.compact table.t th{padding:1.7mm 2.5mm;}
+/* Contraportada */
+.back{padding:0;color:#fff;}
+.back .bg{position:absolute;inset:0;background:url('img/back-pos.jpg') center/cover;}
+.back .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,27,48,.35),rgba(15,27,48,.92) 60%);}
+.back .body{position:absolute;left:17mm;right:17mm;bottom:24mm;}
+.back h2{color:#fff;font-size:34pt;}
+.back h2 em{color:#FFC88A;}
+.cta{display:inline-block;margin-top:7mm;background:var(--cacao);color:#fff;font-weight:800;font-size:14pt;padding:4.5mm 9mm;border-radius:99px;text-decoration:none;}
+.contact{margin-top:8mm;display:flex;gap:10mm;font-size:10pt;color:rgba(255,255,255,.85);}
+.contact b{display:block;color:#fff;font-size:11pt;}
 </style></head>
 <body>
 
-<div class="cover">
-  <div class="pill">GUÍA PARA POSADEROS</div>
-  <div class="logo" style="margin-top:1.2rem;">RESER<span>-VE</span></div>
-  <div class="sub">Publica tu posada y recibe más viajeros</div>
-  <div style="margin-top:1.4rem"><span class="pill pill-i">FASE PRIVADA · POSADAS FUNDADORAS</span></div>
-  <div class="muted" style="margin-top:2rem;font-size:10pt">reser-ve.com/posaderos · hola@reser-ve.com</div>
-</div>
+<!-- 1 · PORTADA -->
+<section class="page cover">
+  <div class="bg"></div><div class="shade"></div>
+  <div class="top">
+    <svg width="190" height="46" viewBox="0 0 180 44"><path d="M10 5 L24 39" stroke="#fff" stroke-width="9" stroke-linecap="round"/><path d="M38 5 L24 39" stroke="#E67E22" stroke-width="9" stroke-linecap="round"/><text x="54" y="30" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="22" fill="#fff">RESER-</text><text x="128" y="30" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="22" fill="#E67E22">VE</text></svg>
+    <span class="pill" style="background:#E67E22;color:#fff">Guía para posaderos</span>
+  </div>
+  <div class="body">
+    <span class="pill" style="background:rgba(255,200,138,.18);color:#FFC88A;border:1px solid rgba(255,200,138,.5)">Invitación · Posadas fundadoras</span>
+    <h1>Más viajeros para<br/>tu posada. <em>Sin riesgo.</em></h1>
+    <p class="sub">RESER-VE es la nueva plataforma hecha para las posadas de Venezuela. Publicar es gratis, cobras como siempre lo has hecho y solo pagas cuando recibes una reserva confirmada.</p>
+    <div class="chips">
+      <span class="chip"><b>$0</b> para publicar</span>
+      <span class="chip"><b>Sin</b> mensualidad</span>
+      <span class="chip"><b>10%</b> solo si reservan</span>
+      <span class="chip">Listo en <b>10 min</b></span>
+    </div>
+  </div>
+</section>
 
-<h2>¿Qué es RESER-VE?</h2>
-<p class="lead">La plataforma para descubrir y reservar <b>posadas auténticas de Venezuela</b>. Mostramos tu posada a viajeros de todo el país y de la diáspora, con una página profesional, buscador y mapa.</p>
+<!-- 2 · POR QUÉ -->
+<section class="page">
+  <div class="eyebrow">Por qué RESER-VE</div>
+  <h2>Todo lo que tu posada necesita<br/>para llenarse, <em>en un solo lugar</em></h2>
+  <p class="lead">Las grandes plataformas no se hicieron pensando en Venezuela. Nosotros sí: pagos locales, precios en dólares, chat en español y un equipo que conoce el país y te atiende en persona.</p>
+  <div class="grid3">
+    <div class="ben"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div><h3>Te encuentran</h3><p>Apareces en el buscador, en el mapa, en tu página de destino y en las rutas que arma Aurora, nuestra asistente de viajes.</p></div>
+    <div class="ben"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Cobras como siempre</h3><p>Zelle, Pago Móvil, transferencia, efectivo en dólares o bolívares. El huésped te paga directo a ti.</p></div>
+    <div class="ben"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><h3>Tu página profesional</h3><p>Fotos, servicios, políticas, ubicación y reseñas. Una web propia sin pagar diseñador ni hosting.</p></div>
+    <div class="ben"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><h3>Cero overbooking</h3><p>Calendario por habitaciones que se sincroniza con Booking, Airbnb y Google Calendar, y donde anotas las reservas de WhatsApp.</p></div>
+    <div class="ben"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Protegido contra fraudes</h3><p>Todo se habla por el chat de la app y queda registrado. Nuestro sistema detecta estafas y te protege a ti y al viajero.</p></div>
+    <div class="ben"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><h3>Reseñas reales</h3><p>Solo opinan huéspedes que de verdad se alojaron contigo. Tu buena reputación se convierte en más reservas.</p></div>
+  </div>
+  <div class="founder">
+    <div class="seal"><b>10%</b><span>Fijo 12 meses</span></div>
+    <div>
+      <h3>Beneficios de posada fundadora</h3>
+      <ul>
+        <li><b>Comisión del 10% garantizada durante 12 meses</b> desde que abramos las reservas al público. Quien llegue después podrá tener otra tarifa.</li>
+        <li><b>Sales primero</b> el día del lanzamiento, cuando lleguen los primeros viajeros.</li>
+        <li><b>Te acompañamos</b> a publicar: si te trabas con algo, lo resolvemos contigo.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span><b>RESER-VE</b> · Guía para posaderos</span><span>reser-ve.com/posaderos</span></div>
+</section>
 
-<h2>Condiciones</h2>
-<div class="grid4">
-  <div class="cardv"><div class="big">$0</div><b>Publicar y mantener</b><br/>Sin mensualidad, sin costo de alta, sin permanencia.</div>
-  <div class="cardv"><div class="big">10%</div><b>Solo si recibes una reserva</b><br/>Sobre cada reserva confirmada. Si no hay reservas, no pagas nada.</div>
-  <div class="cardv"><div class="big">=</div><b>Mismo precio y ofertas</b><br/>Igual que en tus otros canales. Si haces una promoción fuera, también va aquí.</div>
-  <div class="cardv"><div class="big">💬</div><b>Todo por la app</b><br/>Hablas con los huéspedes por el chat de RESER-VE.</div>
-</div>
-<div class="box box-ok"><b>Tarifa fundadora: 10% garantizado.</b> Las posadas que se unan durante la fase privada mantienen la comisión del <b>10% durante 12 meses</b> desde la apertura de las reservas al público. Las posadas que se sumen después podrán tener una tarifa mayor.</div>
-<div class="box box-warn"><b>Importante:</b> si el precio o las ofertas en RESER-VE son peores que en tus otros canales, o si invitas a los viajeros a reservar o pagar por fuera, podemos suspender tu posada. Los chats se revisan de forma automática para proteger a todos.</div>
-<ul>
-  <li><b>El viajero no paga comisión:</b> ve y paga exactamente tu precio publicado.</li>
-  <li><b>Ejemplo:</b> 3 noches a $50 = $150. Comisión RESER-VE: $15. Tú recibes $135.</li>
-</ul>
+<!-- 2b · VITRINA -->
+<section class="page">
+  <div class="eyebrow">Tu vitrina</div>
+  <h2>Así se verá <em>tu posada</em></h2>
+  <p class="lead">Una página profesional, lista para compartir y para que los viajeros se enamoren de tu lugar. Sin pagar diseñador, sin mantener una web.</p>
+  <div class="shot" style="margin-top:2mm"><img src="img/ficha.jpg" alt="Página de una posada en RESER-VE"/></div>
+  <div class="grid3" style="margin-top:6mm">
+    <div class="ben"><h3>Fotos que venden</h3><p>Galería grande a pantalla completa. Subes las fotos desde el teléfono y las optimizamos solas.</p></div>
+    <div class="ben"><h3>Precio claro</h3><p>El viajero ve tu precio final en dólares y los métodos de pago que aceptas. Sin sorpresas.</p></div>
+    <div class="ben"><h3>Un botón para escribirte</h3><p>El viajero te contacta por el chat de RESER-VE y la solicitud te llega por correo.</p></div>
+  </div>
+  <div class="foot"><span><b>RESER-VE</b> · Guía para posaderos</span><span>reser-ve.com/posaderos</span></div>
+</section>
 
-<h2>Cómo publicar tu posada (paso a paso)</h2>
-<div class="step"><div class="step-n">1</div><div><b>Crea tu cuenta de posadero</b> en <code>reser-ve.com/posaderos</code> → “Registra tu posada”. Te llega un correo de bienvenida.</div></div>
-<div class="step"><div class="step-n">2</div><div><b>Entra a tu panel</b> (<code>reser-ve.com/dashboard</code>) y pulsa <b>“+ Nueva posada”</b>.</div></div>
-<div class="step"><div class="step-n">3</div><div><b>Completa los datos:</b> nombre, destino (si no aparece, elige “Otro” y escríbelo), descripción, políticas, precio por noche, habitaciones, capacidad, servicios y métodos de pago que aceptas.</div></div>
-<div class="step"><div class="step-n">4</div><div><b>Sube al menos 5 fotos</b> reales, horizontales y con buena luz. Puedes subirlas desde el teléfono: las optimizamos solas.</div></div>
-<div class="step"><div class="step-n">5</div><div><b>Revisa la ubicación</b> (latitud y longitud). Se rellena con la del destino; para la exacta, abre Google Maps, mantén pulsado sobre tu posada y copia los números.</div></div>
-<div class="step"><div class="step-n">6</div><div>Pulsa <b>“Enviar a revisión”</b>. Nuestro equipo la revisa en 24–72 h y te avisa por correo cuando esté publicada (o qué debes ajustar).</div></div>
-<div class="box">No escribas teléfonos, correos, enlaces ni redes sociales en la posada: la plataforma no los acepta. Toda la comunicación va por el chat de RESER-VE.</div>
+<!-- 3 · LAS CUENTAS -->
+<section class="page">
+  <div class="eyebrow">Las cuentas claras</div>
+  <h2>Si no recibes reservas,<br/><em>no pagas nada.</em> Nunca.</h2>
+  <p class="lead">Sin mensualidad, sin costo de alta, sin contratos de permanencia. Solo un 10% de cada reserva confirmada, que es menos de lo que suelen cobrar las grandes plataformas internacionales.</p>
+  <div class="money">
+    <div class="calc">
+      <h3>Ejemplo real</h3>
+      <div class="row"><span>3 noches × $50</span><b>$150</b></div>
+      <div class="row"><span>El viajero paga</span><b>$150 (tu precio, sin recargos)</b></div>
+      <div class="row"><span>Comisión RESER-VE (10%)</span><b>− $15</b></div>
+      <div class="row"><span>Tú recibes</span><span class="tot">$135</span></div>
+    </div>
+    <div class="big0"><div class="num">$0</div><p>Es lo que cuesta publicar tu posada, mantenerla en línea, usar el calendario, el chat y tu página.</p></div>
+  </div>
+  <table class="cmp">
+    <tr><th></th><th class="us">RESER-VE</th><th>Grandes plataformas internacionales</th><th>Solo WhatsApp e Instagram</th></tr>
+    <tr><td><b>Costo por reserva</b></td><td class="us">10%</td><td>Suele ser del 15% al 18%</td><td>0%, pero te encuentran pocos</td></tr>
+    <tr><td><b>Pagos locales</b> (Pago Móvil, efectivo, Zelle)</td><td class="us"><span class="y">✓</span>&nbsp;Los que tú aceptes</td><td><span class="n">Limitados</span></td><td><span class="y">✓</span></td></tr>
+    <tr><td><b>Pensado para Venezuela</b></td><td class="us"><span class="y">✓</span>&nbsp;Hecho aquí, en español</td><td><span class="n">✕</span></td><td>—</td></tr>
+    <tr><td><b>Página profesional y mapa</b></td><td class="us"><span class="y">✓</span></td><td><span class="y">✓</span></td><td><span class="n">✕</span></td></tr>
+    <tr><td><b>Calendario sin overbooking</b></td><td class="us"><span class="y">✓</span>&nbsp;Y se sincroniza con ellas</td><td><span class="y">✓</span></td><td><span class="n">✕</span>&nbsp;Cuaderno y memoria</td></tr>
+    <tr><td><b>Chat con registro y antifraude</b></td><td class="us"><span class="y">✓</span></td><td><span class="y">✓</span></td><td><span class="n">✕</span></td></tr>
+    <tr><td><b>Atención cercana</b></td><td class="us"><span class="y">✓</span>&nbsp;Personas reales</td><td><span class="n">Centros de llamadas</span></td><td>—</td></tr>
+  </table>
+  <div class="foot"><span><b>RESER-VE</b> · Guía para posaderos</span><span>reser-ve.com/posaderos</span></div>
+</section>
 
-<h2 class="pb">Cómo funcionarán las reservas (paso a paso)</h2>
-<p class="muted">Hoy estamos en fase privada: tu posada ya se ve en la web, pero los viajeros aún no pueden reservar. Te avisaremos por correo antes de abrir.</p>
-<div class="step"><div class="step-n">1</div><div><b>Recibes una solicitud</b> por correo y en <code>Panel → Reservas</code>.</div></div>
-<div class="step"><div class="step-n">2</div><div><b>Confirma o rechaza en menos de 24 h.</b> Las solicitudes sin respuesta se cancelan solas.</div></div>
-<div class="step"><div class="step-n">3</div><div><b>Pulsa “💬 Chat”</b> en la reserva y envíale al viajero tus datos de pago (Zelle, Pago Móvil, etc.) y las indicaciones de llegada.</div></div>
-<div class="step"><div class="step-n">4</div><div><b>El viajero te paga directamente</b> y llega a tu posada.</div></div>
-<div class="step"><div class="step-n">5</div><div>Después de la estancia puede dejarte una <b>reseña</b> ⭐ que aparece en tu página.</div></div>
-<div class="step"><div class="step-n">6</div><div><b>Comisión:</b> te enviaremos un resumen de las reservas confirmadas y el 10% a pagar. La forma de pago de la comisión la comunicaremos antes del lanzamiento.</div></div>
+<!-- 4 · ¿Y SI…? -->
+<section class="page">
+  <div class="eyebrow">Tus dudas, respondidas</div>
+  <h2>“Sí, pero…”</h2>
+  <p class="lead">Estas son las preguntas que más nos hacen los posaderos antes de unirse.</p>
+  <div class="qa">
+    <div class="q"><h3><span>¿</span>Y si ya estoy en Booking o Airbnb?</h3><p>Perfecto: RESER-VE no los reemplaza, los complementa. Conectas sus calendarios una sola vez y las fechas se bloquean solas en todos lados. Es un canal más de ventas, con menos comisión.</p></div>
+    <div class="q"><h3><span>¿</span>Y si no soy bueno con la tecnología?</h3><p>Se publica desde el teléfono en unos 10 minutos, como llenar un formulario. Y si prefieres, escríbenos y lo hacemos contigo, paso a paso.</p></div>
+    <div class="q"><h3><span>¿</span>Cuánto pierdo si no me funciona?</h3><p>Nada. Publicar es gratis y no hay mensualidad. Si no recibes reservas, no pagas ni un dólar. Puedes pausar tu posada cuando quieras.</p></div>
+    <div class="q"><h3><span>¿</span>Cómo y cuándo cobro?</h3><p>El huésped te paga directamente a ti, con los métodos que tú aceptes. RESER-VE no retiene tu dinero.</p></div>
+    <div class="q"><h3><span>¿</span>Quién me asegura que el huésped es serio?</h3><p>Cada solicitud llega con nombre, fechas y número de huéspedes, y tú decides si la confirmas. Todo queda escrito en el chat, que nuestro sistema vigila contra fraudes.</p></div>
+    <div class="q"><h3><span>¿</span>Tengo que bajar mis precios?</h3><p>No. Tú pones tu precio. Solo pedimos que sea el mismo que en tus otros canales y que, si haces una oferta en otro lado, también la pongas aquí. Así el viajero confía.</p></div>
+    <div class="q"><h3><span>¿</span>Por qué todo por el chat de la app?</h3><p>Porque te protege: si hay un malentendido, queda registro de lo acordado. Y evita que alguien se haga pasar por ti para estafar a tus huéspedes.</p></div>
+    <div class="q"><h3><span>¿</span>Quién está detrás de RESER-VE?</h3><p>Un equipo venezolano, nacido de Dos Locos de Viaje, una comunidad de viajeros que recorre el país y cree en las posadas como la mejor forma de conocerlo.</p></div>
+  </div>
+  <div class="note ok" style="margin-top:6mm"><b>En resumen:</b> lo peor que puede pasar es que no te llegue ninguna reserva, y eso no te cuesta nada. Lo mejor: más huéspedes, mejor organizados y con menos comisión.</div>
+  <div class="foot"><span><b>RESER-VE</b> · Guía para posaderos</span><span>reser-ve.com/posaderos</span></div>
+</section>
 
-<h2 class="pb">Tu calendario: adiós al overbooking</h2>
-<p class="lead">Si también recibes reservas por WhatsApp, teléfono, Booking o Airbnb, anótalas o sincronízalas aquí. RESER-VE cuenta tus habitaciones libres cada noche y <b>nunca acepta una reserva si no te queda habitación</b>.</p>
-<h3>Elige cómo usarlo, según cómo trabajes</h3>
-<table>
-  <tr><th style="width:30%">Si…</th><th>Haz esto</th></tr>
-  <tr><td><b>Lo llevas todo a mano</b> (cuaderno, WhatsApp, teléfono)</td><td>Cada vez que te reserven por fuera, anótalo en el calendario (10 segundos). Y recuerda: <b>ninguna reserva de RESER-VE es firme hasta que tú la confirmas</b>, así que antes de confirmar puedes revisar tu cuaderno.</td></tr>
-  <tr><td><b>También estás en Booking, Airbnb o Expedia</b></td><td>Conecta sus calendarios una sola vez (ver abajo) y se bloquean solos en ambos lados.</td></tr>
-  <tr><td><b>Usas Google Calendar</b></td><td>Conéctalo igual, y anota tus reservas donde te sea más cómodo.</td></tr>
-  <tr><td><b>Prefieres no hacerlo tú</b></td><td>Escríbenos a hola@reser-ve.com o al chat de ayuda con las fechas ocupadas y las anotamos nosotros.</td></tr>
-</table>
+<!-- 5 · PUBLICAR Y RESERVAS -->
+<section class="page">
+  <div class="eyebrow">Paso a paso</div>
+  <h2>Publica en <em>10 minutos</em></h2>
+  <div class="steps" style="margin-top:5mm">
+    <div class="st"><div class="n2">1</div><p><b>Crea tu cuenta de posadero</b> en <code>reser-ve.com/posaderos</code> → “Registra tu posada”. Te llega un correo de bienvenida.</p></div>
+    <div class="st"><div class="n2">2</div><p><b>Entra a tu panel</b> (<code>reser-ve.com/dashboard</code>) y pulsa <b>“+ Nueva posada”</b>.</p></div>
+    <div class="st"><div class="n2">3</div><p><b>Llena los datos:</b> nombre, destino (si no aparece, elige “Otro”), descripción, políticas, precio por noche, habitaciones, capacidad, servicios y métodos de pago que aceptas.</p></div>
+    <div class="st"><div class="n2">4</div><p><b>Sube al menos 5 fotos</b> reales, horizontales y con buena luz. Puedes subirlas desde el teléfono: las optimizamos solas.</p></div>
+    <div class="st"><div class="n2">5</div><p><b>Revisa la ubicación.</b> Se rellena con la del destino; para la exacta, mantén pulsado sobre tu posada en Google Maps y copia los números.</p></div>
+    <div class="st"><div class="n2">6</div><p>Pulsa <b>“Enviar a revisión”</b>. La revisamos en 24 a 72 horas y te avisamos por correo cuando esté publicada (o qué ajustar).</p></div>
+  </div>
+  <div class="note">No escribas teléfonos, correos, enlaces ni redes sociales en la ficha: la plataforma no los acepta. La comunicación va por el chat de RESER-VE.</div>
+  <div class="hr"></div>
+  <div class="eyebrow">Cuando abran las reservas</div>
+  <h2 style="font-size:20pt">Así te llega cada huésped</h2>
+  <p class="muted" style="margin-bottom:4mm">Hoy estamos en fase privada: tu posada ya se ve en la web y te avisaremos por correo antes de abrir las reservas al público.</p>
+  <div class="two">
+    <div class="steps">
+      <div class="st"><div class="n2">1</div><p><b>Recibes la solicitud</b> por correo y en <code>Panel → Reservas</code>.</p></div>
+      <div class="st"><div class="n2">2</div><p><b>Confirmas o rechazas en menos de 24 h.</b> Sin respuesta, se cancela sola.</p></div>
+      <div class="st"><div class="n2">3</div><p><b>Pulsas “Chat”</b> y le envías tus datos de pago y cómo llegar.</p></div>
+    </div>
+    <div class="steps">
+      <div class="st"><div class="n2">4</div><p><b>El viajero te paga</b> directamente a ti.</p></div>
+      <div class="st"><div class="n2">5</div><p><b>Lo recibes</b> y, al irse, puede dejarte una reseña ⭐.</p></div>
+      <div class="st"><div class="n2">6</div><p><b>Comisión:</b> te enviaremos el resumen de reservas confirmadas y el 10% a pagar. Te explicaremos cómo pagarla antes del lanzamiento.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span><b>RESER-VE</b> · Guía para posaderos</span><span>reser-ve.com/posaderos</span></div>
+</section>
 
-<h3>Anotar una reserva que te llegó por otro lado</h3>
-<div class="step"><div class="step-n">1</div><div>Entra a <code>Panel → Calendario</code>. Cada día muestra cuántas habitaciones te quedan libres.</div></div>
-<div class="step"><div class="step-n">2</div><div>Toca el <b>día de llegada</b> y luego la <b>última noche</b>, o escribe las fechas de llegada y salida.</div></div>
-<div class="step"><div class="step-n">3</div><div>Elige <b>de dónde viene</b> la reserva (WhatsApp, Instagram, Facebook, Teléfono, En persona, Booking, Airbnb, Expedia, Agencia u Otro), cuántas habitaciones ocupa y, si quieres, el nombre del huésped. Pulsa <b>Guardar</b>.</div></div>
-<p>Cada canal tiene su color: en el calendario verás puntos de colores en cada día, y el recuadro <b>“De dónde vienen tus reservas”</b> te muestra cuántas noches te llegan por cada canal en el mes.</p>
-<div class="box">¿Vas a cerrar unos días por vacaciones o mantenimiento? Elige <b>“Cerrar posada”</b> y se bloquean todas las habitaciones.</div>
-<h3>Sincronizar con Booking, Airbnb o Google Calendar (una sola vez)</h3>
-<div class="box"><b>¿Qué es “iCal”?</b> Es un enlace (una dirección web) que representa tu calendario de ocupación. Booking, Airbnb, Expedia y Google Calendar te dan uno y aceptan los de otros. Pegando el enlace de una plataforma en la otra, cada una ve las fechas ocupadas de la otra. No hay que instalar nada ni pagar nada.</div>
-<div class="step"><div class="step-n">1</div><div><b>De ellos hacia RESER-VE:</b> elige la plataforma (Booking, Airbnb, Expedia o Google Calendar), copia su enlace de calendario (iCal), pégalo en <code>Calendario → Trae tus reservas de otras plataformas</code> y pulsa <b>Conectar</b>. Sus reservas bloquearán tus habitaciones aquí automáticamente.</div></div>
-<div class="step"><div class="step-n">2</div><div><b>De RESER-VE hacia ellos:</b> copia tu enlace de RESER-VE (botón <b>Copiar</b>) y pégalo en Booking o Airbnb como calendario importado. Así lo que se reserve aquí se bloquea allá.</div></div>
-<table>
-  <tr><th style="width:22%">Plataforma</th><th>Dónde está el enlace</th></tr>
-  <tr><td>Booking</td><td>Extranet → Tarifas y disponibilidad → Sincronizar calendarios</td></tr>
-  <tr><td>Airbnb</td><td>Calendario → Disponibilidad → Conectar calendarios</td></tr>
-  <tr><td>Google Calendar</td><td>Configuración del calendario → Dirección secreta en formato iCal</td></tr>
-</table>
-<p class="muted"><b>¿Se actualiza en vivo?</b> No del todo. Booking y Airbnb leen los calendarios externos cada cierto tiempo, normalmente cada pocas horas. RESER-VE lee los tuyos cada día, cada vez que abres tu calendario y justo antes de aceptar una reserva; también puedes pulsar <b>“Sincronizar ahora”</b>. Por eso es buena idea revisar antes de confirmar. Si algún día tienes más reservas que habitaciones, verás un aviso en rojo para resolverlo a tiempo.</p>
+<!-- 6 · CALENDARIO -->
+<section class="page compact">
+  <div class="eyebrow">Tu calendario</div>
+  <h2>Adiós al <em>overbooking</em></h2>
+  <p class="lead">RESER-VE cuenta tus habitaciones libres cada noche y <b>nunca acepta una reserva si no te queda habitación</b>. Anota lo que te llega por otros lados o sincroniza tus otras plataformas.</p>
+  <table class="t">
+    <tr><th style="width:34%">Si…</th><th>Haz esto</th></tr>
+    <tr><td><b>Lo llevas todo a mano</b> (cuaderno, WhatsApp, teléfono)</td><td>Cada reserva que te llegue por fuera, anótala en el calendario: son 10 segundos. Y ninguna reserva de RESER-VE es firme hasta que tú la confirmas, así que siempre puedes revisar antes.</td></tr>
+    <tr><td><b>Estás en Booking, Airbnb o Expedia</b></td><td>Conecta sus calendarios una sola vez y se bloquean solos en ambos lados.</td></tr>
+    <tr><td><b>Prefieres no hacerlo tú</b></td><td>Escríbenos con las fechas ocupadas y las anotamos nosotros.</td></tr>
+  </table>
+  <h3 style="margin-top:6mm">Anotar una reserva de otro canal</h3>
+  <div class="steps">
+    <div class="st"><div class="n2">1</div><p>Entra a <code>Panel → Calendario</code>. Cada día muestra cuántas habitaciones te quedan libres.</p></div>
+    <div class="st"><div class="n2">2</div><p>Toca el <b>día de llegada</b> y luego la <b>última noche</b>, o escribe las fechas.</p></div>
+    <div class="st"><div class="n2">3</div><p>Elige <b>de dónde viene</b> (WhatsApp, Instagram, teléfono, Booking, Airbnb…), cuántas habitaciones ocupa y, si quieres, el nombre del huésped. <b>Guardar</b>.</p></div>
+  </div>
+  <p style="margin-top:2mm;font-size:9.3pt">¿Vas a cerrar por vacaciones? Usa <b>“Cerrar posada”</b> y se bloquean todas las habitaciones.</p>
+  <h3 style="margin-top:6mm">Sincronizar Booking, Airbnb o Google (una sola vez)</h3>
+  <div class="note"><b>¿Qué es “iCal”?</b> Un enlace que representa tu calendario de ocupación. Booking, Airbnb, Expedia y Google Calendar te dan uno y aceptan los de otros. Pegando el enlace de una plataforma en la otra, cada una ve las fechas ocupadas de la otra. No se instala ni se paga nada.</div>
+  <div class="steps" style="margin-top:4mm">
+    <div class="st"><div class="n2">1</div><p><b>De ellos hacia RESER-VE:</b> copia el enlace iCal de la plataforma y pégalo en <code>Calendario → Trae tus reservas de otras plataformas</code> → <b>Conectar</b>.</p></div>
+    <div class="st"><div class="n2">2</div><p><b>De RESER-VE hacia ellos:</b> copia tu enlace de RESER-VE (botón <b>Copiar</b>) y pégalo en Booking o Airbnb como calendario importado.</p></div>
+  </div>
+  <table class="t" style="margin-top:4mm">
+    <tr><th style="width:24%">Plataforma</th><th>Dónde está el enlace</th></tr>
+    <tr><td>Booking</td><td>Extranet → Tarifas y disponibilidad → Sincronizar calendarios</td></tr>
+    <tr><td>Airbnb</td><td>Calendario → Disponibilidad → Conectar calendarios</td></tr>
+    <tr><td>Google Calendar</td><td>Configuración del calendario → Dirección secreta en formato iCal</td></tr>
+  </table>
+  <p class="muted" style="font-size:8.6pt;margin-top:2mm">Se actualiza cada pocas horas (y justo antes de aceptar una reserva). Si algún día hay más reservas que habitaciones, verás un aviso en rojo.</p>
+  <div class="foot"><span><b>RESER-VE</b> · Guía para posaderos</span><span>reser-ve.com/posaderos</span></div>
+</section>
 
-<h2>Tu panel</h2>
-<ul>
-  <li><b>Mis posadas:</b> editar datos, precios y fotos cuando quieras. <b>Pausar</b> la posada si no quieres recibir viajeros; al reactivarla pasa por una revisión rápida.</li>
-  <li><b>Reservas:</b> confirmar, rechazar, cancelar y abrir el chat con el huésped.</li>
-  <li><b>Calendario:</b> habitaciones libres por noche, reservas de otros canales y sincronización con Booking, Airbnb y Google.</li>
-  <li><b>Mensajes:</b> todas tus conversaciones.</li>
-</ul>
+<!-- 7 · PANEL, REGLAS Y CONSEJOS -->
+<section class="page">
+  <div class="eyebrow">Tu panel</div>
+  <h2>Todo bajo control</h2>
+  <div class="grid3" style="margin-top:5mm">
+    <div class="ben"><h3>Mis posadas</h3><p>Edita datos, precios y fotos cuando quieras. Pausa tu posada si no quieres recibir viajeros; al reactivarla pasa por una revisión rápida.</p></div>
+    <div class="ben"><h3>Reservas y calendario</h3><p>Confirma, rechaza o cancela, abre el chat con el huésped y mira tus habitaciones libres por noche.</p></div>
+    <div class="ben"><h3>Mensajes y cuenta</h3><p>Todas tus conversaciones en un lugar. En <b>Mi cuenta</b> cambias tu contraseña o eliminas tu cuenta.</p></div>
+  </div>
+  <div class="hr"></div>
+  <div class="eyebrow">Reglas simples</div>
+  <h2 style="font-size:20pt">Lo que pedimos a cambio</h2>
+  <div class="steps" style="margin-top:3mm">
+    <div class="st"><div class="n2">=</div><p><b>Mismo precio y mismas ofertas</b> que en tus otros canales (WhatsApp, redes, tu web, Booking, Airbnb). Si haces una promoción fuera, también va aquí.</p></div>
+    <div class="st"><div class="n2">💬</div><p><b>Todo por la app:</b> no invites a los viajeros que te llegaron por RESER-VE a reservar o pagar por fuera.</p></div>
+    <div class="st"><div class="n2">✓</div><p><b>Información veraz:</b> fotos reales, precios y servicios al día.</p></div>
+  </div>
+  <div class="note warn">Incumplir estas reglas puede llevar a un aviso y, si se repite, a la suspensión de la posada. Los chats se revisan de forma automática para proteger a todos.</div>
+  <div class="hr"></div>
+  <div class="two">
+    <div>
+      <div class="eyebrow">Consejos</div>
+      <h3>Para recibir más reservas</h3>
+      <ul style="padding-left:5mm;font-size:9.8pt">
+        <li>Fotos luminosas de habitaciones, áreas comunes y vistas.</li>
+        <li>Una descripción honesta: qué hace especial tu posada y su entorno.</li>
+        <li>Responde rápido: los viajeros reservan con quien contesta primero.</li>
+        <li>Mantén tu calendario al día para no perder ninguna fecha.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="eyebrow">Próximamente</div>
+      <h3>Lo que viene</h3>
+      <ul style="padding-left:5mm;font-size:9.8pt">
+        <li><b>Fotografía profesional y digitalización</b> opcionales para destacar tu posada.</li>
+        <li><b>Pagos dentro de la plataforma</b> y más herramientas de gestión.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span><b>RESER-VE</b> · Guía para posaderos</span><span>reser-ve.com/posaderos</span></div>
+</section>
 
-<h2>Tu cuenta</h2>
-<p>En el menú de tu nombre → <b>Mi cuenta</b> ves tus datos y puedes cambiar tu contraseña. También puedes <b>eliminar tu cuenta</b>, siempre que no tengas reservas activas ni posadas publicadas o en revisión (primero cancélalas o pausa tu posada).</p>
-
-<h2>Próximamente</h2>
-<ul>
-  <li><b>Fotografía profesional y digitalización:</b> más adelante ofreceremos servicios opcionales (sesión de fotos, mejora de tu perfil y descripción, y visibilidad destacada). Por ahora publicas gratis con tus propias fotos.</li>
-  <li><b>Pagos dentro de la plataforma</b> y más herramientas de gestión.</li>
-</ul>
-
-<h2>Consejos para recibir más reservas</h2>
-<ul>
-  <li>Fotos luminosas de habitaciones, áreas comunes y vistas.</li>
-  <li>Descripción honesta: qué hace especial tu posada y su entorno.</li>
-  <li>Responde rápido: los viajeros reservan con quien contesta primero.</li>
-</ul>
-<div class="box box-ok"><b>¿Dudas?</b> Escríbenos a <b>hola@reser-ve.com</b> o usa el botón naranja de ayuda en la web.</div>
+<!-- 8 · CONTRAPORTADA -->
+<section class="page back">
+  <div class="bg"></div><div class="shade"></div>
+  <div class="body">
+    <span class="pill" style="background:#E67E22;color:#fff">Cupos de posada fundadora</span>
+    <h2 style="margin-top:5mm">Las primeras posadas<br/>se quedan con las<br/><em>mejores condiciones.</em></h2>
+    <p style="font-size:12.5pt;color:rgba(255,255,255,.88);max-width:150mm">Publica hoy gratis, asegura tu 10% durante 12 meses y sal primero cuando abramos las reservas al público.</p>
+    <a class="cta" href="https://reser-ve.com/register?role=host">Publicar mi posada → reser-ve.com/posaderos</a>
+    <div class="contact">
+      <div><b>Escríbenos</b>hola@reser-ve.com</div>
+      <div><b>Ayuda en la web</b>Botón naranja de Chigüi</div>
+      <div><b>Un proyecto de</b>Dos Locos de Viaje</div>
+    </div>
+  </div>
+</section>
 </body></html>
