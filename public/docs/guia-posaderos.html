@@ -69,7 +69,7 @@ table.cmp td.us{background:rgba(230,126,34,.07);font-weight:700;}
 table.cmp tr:last-child td{border-bottom:none;}
 .y{color:var(--green);font-weight:800;}
 .n{color:#B42318;font-weight:700;}
-.shot{margin-top:6mm;border-radius:4mm;overflow:hidden;border:1px solid var(--line);box-shadow:0 6mm 14mm rgba(26,43,76,.14);}
+.shot{margin-top:6mm;border-radius:4mm;overflow:hidden;border:1px solid rgba(26,43,76,.16);}
 .shot img{display:block;width:100%;}
 .cap{font-size:8.5pt;color:var(--muted);margin-top:2mm;text-align:center;}
 
@@ -101,14 +101,20 @@ table.t th{font-size:8pt;letter-spacing:.08em;text-transform:uppercase;color:var
 .compact .st p{font-size:9.3pt;padding-top:1.5mm;}
 .compact .st .n2{width:7.5mm;height:7.5mm;font-size:9pt;}
 .compact table.t td,.compact table.t th{padding:1.7mm 2.5mm;}
-.ss{display:grid;grid-template-columns:1fr 1.05fr;gap:7mm;align-items:center;margin-bottom:6mm;}
+.ss{display:grid;grid-template-columns:1fr 1.1fr;gap:8mm;align-items:center;margin-bottom:5.5mm;padding-bottom:5.5mm;border-bottom:1px dashed rgba(26,43,76,.12);}
+.ss:last-of-type{border-bottom:none;}
 .ss-txt{display:flex;gap:4mm;align-items:flex-start;}
 .ss-txt .n2{flex-shrink:0;width:10mm;height:10mm;border-radius:50%;background:var(--cacao);color:#fff;font-weight:800;font-size:12pt;display:flex;align-items:center;justify-content:center;}
 .ss-txt h3{font-family:'Playfair Display',serif;font-size:14pt;margin-bottom:1.5mm;}
 .ss-txt p{font-size:9.6pt;margin-bottom:1.5mm;}
 .ss-txt .tip{font-size:8.8pt;color:var(--muted);background:var(--sand2);border-radius:3mm;padding:2mm 3mm;}
-.ss-img{border-radius:4mm;overflow:hidden;border:1px solid var(--line);box-shadow:0 4mm 10mm rgba(26,43,76,.12);height:68mm;background:#fff;}
-.ss-img img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;}
+.ss-img{border-radius:3.5mm;overflow:hidden;border:1px solid rgba(26,43,76,.16);background:#fff;}
+.ss-img .bar{height:6.5mm;background:#F3EEE6;border-bottom:1px solid rgba(26,43,76,.1);display:flex;align-items:center;gap:1.3mm;padding:0 3mm;}
+.ss-img .bar i{width:2.1mm;height:2.1mm;border-radius:50%;background:#D8CFC2;display:block;}
+.ss-img .bar i:first-child{background:#F28B6E;}.ss-img .bar i:nth-child(2){background:#F5C451;}.ss-img .bar i:nth-child(3){background:#7FCB8C;}
+.ss-img .bar span{margin-left:2.5mm;flex:1;height:3.6mm;border-radius:99px;background:#fff;font-size:6.4pt;color:#7A8699;display:flex;align-items:center;padding-left:2.5mm;}
+.ss-img img{width:100%;height:60mm;object-fit:cover;object-position:top center;display:block;background:#fff;}
+.ss-img img.fit{object-fit:contain;object-position:center;}
 /* Contraportada */
 .back{padding:0;color:#fff;}
 .back .bg{position:absolute;inset:0;background:url('img/back-pos.jpg') center/cover;}
@@ -269,15 +275,15 @@ table.t th{font-size:8pt;letter-spacing:.08em;text-transform:uppercase;color:var
   <p class="lead" style="margin-bottom:5mm">Así se ve cada pantalla. Puedes seguir esta guía con el teléfono en la mano.</p>
   <div class="ss">
     <div class="ss-txt"><div class="n2">1</div><div><h3>Crea tu cuenta</h3><p>Entra a <code>reser-ve.com/posaderos</code> y pulsa <b>“Registra tu posada”</b>. Elige <b>Posadero</b>, escribe tu nombre, tu correo y una contraseña, y pulsa <b>“Crear cuenta gratis”</b>.</p><p class="tip">¿Ya tienes cuenta de viajero? Usa la misma: en tu menú, pulsa <b>“Publica tu posada”</b> y acepta las condiciones.</p></div></div>
-    <div class="ss-img"><img src="img/paso-1.jpg" alt="Crear cuenta"/></div>
+    <div class="ss-img"><div class="bar"><i></i><i></i><i></i><span>reser-ve.com/register</span></div><img src="img/paso-1.jpg" alt="Crear cuenta"/></div>
   </div>
   <div class="ss">
     <div class="ss-txt"><div class="n2">2</div><div><h3>Llegas a tu panel</h3><p>Es tu centro de control: reservas, posadas, calendario y mensajes. Pulsa <b>“+ Nueva posada”</b> (o “Publicar mi primera posada”).</p></div></div>
-    <div class="ss-img"><img src="img/paso-2.jpg" alt="Panel del posadero"/></div>
+    <div class="ss-img"><div class="bar"><i></i><i></i><i></i><span>reser-ve.com/dashboard</span></div><img src="img/paso-2.jpg" alt="Panel del posadero"/></div>
   </div>
   <div class="ss">
     <div class="ss-txt"><div class="n2">3</div><div><h3>Escribe lo básico</h3><p><b>Nombre</b> de la posada, <b>destino</b> (si no está, elige “Otro” y escríbelo), <b>tipo</b> y una <b>descripción</b> corta y honesta. Más abajo pones el <b>precio por noche</b>, las <b>habitaciones</b> y la <b>capacidad</b>.</p></div></div>
-    <div class="ss-img"><img src="img/paso-3.jpg" alt="Datos básicos"/></div>
+    <div class="ss-img"><div class="bar"><i></i><i></i><i></i><span>reser-ve.com/dashboard/posada/nueva</span></div><img src="img/paso-3.jpg" alt="Datos básicos"/></div>
   </div>
   <div class="foot"><span><b>RESER-VE</b> · Guía para posaderos</span><span>reser-ve.com/posaderos</span></div>
 </section>
@@ -287,15 +293,15 @@ table.t th{font-size:8pt;letter-spacing:.08em;text-transform:uppercase;color:var
   <div class="eyebrow">Paso a paso</div>
   <div class="ss">
     <div class="ss-txt"><div class="n2">4</div><div><h3>Elige tus políticas</h3><p>Nada que redactar: elige en los menús tu <b>check-in</b>, <b>check-out</b>, <b>cancelación</b>, <b>anticipo</b>, <b>mascotas</b>, <b>niños</b> y más. Debajo, marca con un clic los extras que apliquen: planta eléctrica, tanque de agua, acceso en lancha…</p></div></div>
-    <div class="ss-img"><img src="img/paso-4.jpg" alt="Políticas"/></div>
+    <div class="ss-img"><div class="bar"><i></i><i></i><i></i><span>reser-ve.com/dashboard/posada/nueva</span></div><img src="img/paso-4.jpg" alt="Políticas"/></div>
   </div>
   <div class="ss">
     <div class="ss-txt"><div class="n2">5</div><div><h3>Sube tus fotos y marca lo que ofreces</h3><p>Toca el recuadro o arrastra tus fotos: <b>5 o más</b>, horizontales y con buena luz. Se suben y optimizan solas. Luego marca tus <b>características</b>, <b>servicios</b> y <b>métodos de pago</b>.</p><p class="tip">Espera a que terminen de subir las fotos: el botón de enviar se activa cuando acaban.</p></div></div>
-    <div class="ss-img"><img src="img/paso-5.jpg" alt="Fotos"/></div>
+    <div class="ss-img"><div class="bar"><i></i><i></i><i></i><span>reser-ve.com/dashboard/posada/nueva</span></div><img class="fit" src="img/paso-5.jpg" alt="Fotos"/></div>
   </div>
   <div class="ss">
     <div class="ss-txt"><div class="n2">6</div><div><h3>Envía a revisión</h3><p>Pulsa <b>“Enviar a revisión”</b>. En tu panel verás <b>“En revisión”</b>. La revisamos en <b>24 a 72 horas</b> y te avisamos por correo cuando esté publicada, o qué debes ajustar.</p><p class="tip">Puedes editarla cuando quieras desde <b>Mis posadas → Editar</b>.</p></div></div>
-    <div class="ss-img"><img src="img/paso-6.jpg" alt="En revisión"/></div>
+    <div class="ss-img"><div class="bar"><i></i><i></i><i></i><span>reser-ve.com/dashboard</span></div><img src="img/paso-6.jpg" alt="En revisión"/></div>
   </div>
   <div class="note ok" style="margin-top:2mm"><b>¿Te trabaste?</b> Escríbenos a <b>hola@reser-ve.com</b> o pregúntale a Chigüi (abajo a la derecha en la web). Si prefieres, la publicamos contigo.</div>
   <div class="foot"><span><b>RESER-VE</b> · Guía para posaderos</span><span>reser-ve.com/posaderos</span></div>
