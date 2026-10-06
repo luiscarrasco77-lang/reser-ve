@@ -3,22 +3,29 @@
 import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { useLang, useT } from '@/components/LangProvider'
+import type { Lang, T } from '@/lib/i18n'
 
 // MVP: RESER-VE aún no cobra a nombre de la posada. El posadero envía sus datos de
 // pago por el chat de la app una vez confirmada la reserva (nunca por fuera).
-function instrucciones(metodoLabel: string, total: number, codigo: string) {
-  const via = metodoLabel ? ` por ${metodoLabel}` : ''
-  return `No pagues todavía. Cuando el posadero confirme tu reserva te llegará un correo y te enviará sus datos de pago${via} por el chat de RESER-VE (Mis mensajes). Monto: $${total} USD · referencia ${codigo}. Nunca envíes dinero a datos recibidos fuera de la plataforma.`
+function instrucciones(metodoLabel: string, total: number, codigo: string, t: T) {
+  const via = metodoLabel ? t(' por {method}', { method: t(metodoLabel) }) : ''
+  return t('No pagues todavía. Cuando el posadero confirme tu reserva te llegará un correo y te enviará sus datos de pago{via} por el chat de RESER-VE (Mis mensajes). Monto: ${total} USD · referencia {code}. Nunca envíes dinero a datos recibidos fuera de la plataforma.', { via, total, code: codigo })
 }
 
-function fmt(fecha: string) {
+const MONTHS: Record<Lang, string[]> = {
+  es: ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],
+  en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+}
+function fmt(fecha: string, lang: Lang) {
   if (!fecha) return ''
   const [y, m, d] = fecha.split('-')
-  return `${d} ${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][+m-1]} ${y}`
+  return lang === 'en' ? `${MONTHS.en[+m-1]} ${+d}, ${y}` : `${d} ${MONTHS.es[+m-1]} ${y}`
 }
 
 function ConfirmadaContent() {
   const sp = useSearchParams()
+  const { t, lang } = useLang()
   const id = sp.get('id')
   const [b, setB] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -32,13 +39,13 @@ function ConfirmadaContent() {
   }, [id])
 
   if (loading) {
-    return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>Cargando tu reserva…</div>
+    return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>{t("Cargando tu reserva…")}</div>
   }
   if (!b) {
     return (
       <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C',gap:'1rem'}}>
-        <p style={{fontSize:'1rem',color:'#7A8699'}}>No se encontraron datos de reserva.</p>
-        <Link href="/mis-reservas" style={{color:'#E67E22',textDecoration:'none',fontWeight:600}}>Ver mis reservas →</Link>
+        <p style={{fontSize:'1rem',color:'#7A8699'}}>{t("No se encontraron datos de reserva.")}</p>
+        <Link href="/mis-reservas" style={{color:'#E67E22',textDecoration:'none',fontWeight:600}}>{t("Ver mis reservas →")}</Link>
       </div>
     )
   }
@@ -110,11 +117,11 @@ function ConfirmadaContent() {
       <nav className="nav">
         <Link href="/" className="logo">RESER<span>-VE</span></Link>
         <div className="steps">
-          <span className="step">✓ Posada</span>
+          <span className="step">{t("✓ Posada")}</span>
           <span style={{color:'var(--muted)',fontSize:'0.7rem'}}>—</span>
-          <span className="step">✓ Reserva</span>
+          <span className="step">{t("✓ Reserva")}</span>
           <span style={{color:'var(--muted)',fontSize:'0.7rem'}}>—</span>
-          <span className="step">✓ Confirmada</span>
+          <span className="step">{t("✓ Confirmada")}</span>
         </div>
       </nav>
 
@@ -127,19 +134,19 @@ function ConfirmadaContent() {
               <text x="40" y="47" textAnchor="middle" fontSize="22" fill="#E67E22" fontWeight="700">✓</text>
             </svg>
           </div>
-          <div className="page-title">¡Solicitud enviada!</div>
-          <div className="page-sub">Tu reserva está pendiente de confirmación por el posadero.<br />Recibirás instrucciones de pago cuando sea aceptada.</div>
+          <div className="page-title">{t("¡Solicitud enviada!")}</div>
+          <div className="page-sub">{t('Tu reserva está pendiente de confirmación por el posadero.')}<br />{t('Recibirás instrucciones de pago cuando sea aceptada.')}</div>
 
           <div className="status-banner">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{flexShrink:0}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>El posadero tiene <strong>24 horas</strong> para confirmar o rechazar tu solicitud. Sin cargos hasta la confirmación.</span>
+            <span>{t('El posadero tiene')} <strong>{t('24 horas')}</strong> {t('para confirmar o rechazar tu solicitud. Sin cargos hasta la confirmación.')}</span>
           </div>
 
           <div style={{display:'flex',justifyContent:'center'}}>
             <div className="codigo-box">
-              <div className="codigo-label">Código de reserva</div>
+              <div className="codigo-label">{t("Código de reserva")}</div>
               <div className="codigo-value">{code}</div>
-              <div className="codigo-hint">Guarda este código — lo necesitarás para cualquier consulta</div>
+              <div className="codigo-hint">{t("Guarda este código — lo necesitarás para cualquier consulta")}</div>
             </div>
           </div>
         </div>
@@ -147,19 +154,19 @@ function ConfirmadaContent() {
         <div className="card">
           <div className="card-header">
             <div className="card-header-icon">⌂</div>
-            <div className="card-header-title">Tu alojamiento</div>
+            <div className="card-header-title">{t("Tu alojamiento")}</div>
           </div>
           <div className="card-body">
             <div className="posada-grid">
               {img && <img src={img} alt={posada} className="posada-img" />}
               <div>
                 <div className="posada-nombre">{posada}</div>
-                <div className="posada-meta">{noches} noche{noches>1?'s':''} · {huespedes} huésped{huespedes>1?'es':''}</div>
+                <div className="posada-meta">{t(noches>1?'{n} noches':'{n} noche', { n: noches })} · {t(huespedes>1?'{n} huéspedes':'{n} huésped', { n: huespedes })}</div>
               </div>
             </div>
             <div className="fechas">
-              <div><div className="fecha-label">Llegada</div><div className="fecha-val">{fmt(llegada)}</div></div>
-              <div><div className="fecha-label">Salida</div><div className="fecha-val">{fmt(salida)}</div></div>
+              <div><div className="fecha-label">{t("Llegada")}</div><div className="fecha-val">{fmt(llegada, lang)}</div></div>
+              <div><div className="fecha-label">{t("Salida")}</div><div className="fecha-val">{fmt(salida, lang)}</div></div>
             </div>
           </div>
         </div>
@@ -168,22 +175,22 @@ function ConfirmadaContent() {
           <div className="card">
             <div className="card-header">
               <div className="card-header-icon">$</div>
-              <div className="card-header-title">Detalle del pago</div>
+              <div className="card-header-title">{t("Detalle del pago")}</div>
             </div>
             <div className="card-body">
-              <div className="linea"><span>${precio} × {noches} noche{noches>1?'s':''}</span><span>${subtotal}</span></div>
-              <div className="linea-total"><span>Total</span><span>${total} USD</span></div>
+              <div className="linea"><span>${precio} × {t(noches>1?'{n} noches':'{n} noche', { n: noches })}</span><span>${subtotal}</span></div>
+              <div className="linea-total"><span>{t("Total")}</span><span>${total} USD</span></div>
               <div className="instrucciones-box">
-                <div className="instrucciones-label">Instrucciones · {metodoLabel}</div>
-                <p className="instrucciones-text">{instrucciones(metodo, total, code)}</p>
+                <div className="instrucciones-label">{t('Instrucciones')} · {t(metodoLabel)}</div>
+                <p className="instrucciones-text">{instrucciones(metodo, total, code, t)}</p>
               </div>
             </div>
           </div>
         )}
 
         <div className="btns">
-          <Link href="/mis-reservas" className="btn-primary">Ver mis reservas</Link>
-          {slug && <Link href={`/posadas/${slug}`} className="btn-secondary">Ver la posada</Link>}
+          <Link href="/mis-reservas" className="btn-primary">{t("Ver mis reservas")}</Link>
+          {slug && <Link href={`/posadas/${slug}`} className="btn-secondary">{t("Ver la posada")}</Link>}
         </div>
       </div>
     </>
@@ -192,8 +199,10 @@ function ConfirmadaContent() {
 
 export default function ConfirmadaPage() {
   return (
-    <Suspense fallback={<div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>Cargando…</div>}>
+    <Suspense fallback={<div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}><LoadingText /></div>}>
       <ConfirmadaContent />
     </Suspense>
   )
 }
+
+function LoadingText() { return <>{useT()('Cargando…')}</> }

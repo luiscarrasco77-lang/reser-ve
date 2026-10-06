@@ -2,8 +2,21 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useState, useRef, useEffect } from 'react'
+import LangSwitch from './LangSwitch'
+import { useT } from './LangProvider'
 
-export default function NavUser({ dark = false }: { dark?: boolean }) {
+// Menú de usuario + selector de idioma a su derecha.
+export default function NavUser({ dark = false, hideLang = false }: { dark?: boolean; hideLang?: boolean }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+      <UserMenu dark={dark} />
+      {!hideLang && <LangSwitch dark={dark} />}
+    </div>
+  )
+}
+
+function UserMenu({ dark = false }: { dark?: boolean }) {
+  const t = useT()
   const { data: session, status } = useSession()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -28,16 +41,16 @@ export default function NavUser({ dark = false }: { dark?: boolean }) {
           color: dark ? 'rgba(255,255,255,0.82)' : 'rgba(26,43,76,0.7)',
           transition: 'color 0.2s',
         }}>
-          Iniciar sesión
+          {t('Iniciar sesión')}
         </a>
-        <a href="/register" style={{
+        <a href="/register" className="nu-signup" style={{
           padding: '0.55rem 1.1rem', borderRadius: 999,
           fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none',
           background: 'var(--cacao)', color: 'white',
           boxShadow: '0 6px 18px rgba(230,126,34,0.28)',
           transition: 'all 0.2s',
         }}>
-          Registrarse
+          {t('Registrarse')}
         </a>
       </div>
     )
@@ -93,30 +106,30 @@ export default function NavUser({ dark = false }: { dark?: boolean }) {
               color: role === 'admin' ? '#dc2626' : role === 'host' ? 'var(--cacao)' : 'var(--muted)',
               padding: '0.18rem 0.52rem', borderRadius: 999,
             }}>
-              {role === 'host' ? 'Posadero' : role === 'admin' ? 'Admin' : 'Viajero'}
+              {role === 'host' ? t('Posadero') : role === 'admin' ? 'Admin' : t('Viajero')}
             </div>
           </div>
 
           {/* Links */}
           {role === 'admin' && (
-            <MenuItem href="/admin" icon="shield">Dashboard admin</MenuItem>
+            <MenuItem href="/admin" icon="shield">{t('Panel de admin')}</MenuItem>
           )}
           {role === 'host' || role === 'admin' ? (
             <>
-              <MenuItem href="/dashboard" icon="grid">Mi dashboard</MenuItem>
-              <MenuItem href="/dashboard/posadas" icon="home">Mis posadas</MenuItem>
-              <MenuItem href="/dashboard/posada/nueva" icon="plus">Publicar posada</MenuItem>
-              <MenuItem href="/dashboard/reservas" icon="calendar">Reservas</MenuItem>
-              <MenuItem href="/dashboard/calendario" icon="calendar">Calendario</MenuItem>
+              <MenuItem href="/dashboard" icon="grid">{t('Mi panel')}</MenuItem>
+              <MenuItem href="/dashboard/posadas" icon="home">{t('Mis posadas')}</MenuItem>
+              <MenuItem href="/dashboard/posada/nueva" icon="plus">{t('Publicar posada')}</MenuItem>
+              <MenuItem href="/dashboard/reservas" icon="calendar">{t('Reservas')}</MenuItem>
+              <MenuItem href="/dashboard/calendario" icon="calendar">{t('Calendario')}</MenuItem>
             </>
           ) : (
-            <MenuItem href="/mis-reservas" icon="calendar">Mis reservas</MenuItem>
+            <MenuItem href="/mis-reservas" icon="calendar">{t('Mis reservas')}</MenuItem>
           )}
-          <MenuItem href="/aurora" icon="sparkle">Sueña tu viaje</MenuItem>
-          <MenuItem href="/favoritos" icon="heart">Favoritos</MenuItem>
-          <MenuItem href="/mensajes" icon="message">Mensajes</MenuItem>
-          <MenuItem href="/buscar" icon="search">Explorar posadas</MenuItem>
-          <MenuItem href="/cuenta" icon="grid">Mi cuenta</MenuItem>
+          <MenuItem href="/aurora" icon="sparkle">{t('Sueña tu viaje')}</MenuItem>
+          <MenuItem href="/favoritos" icon="heart">{t('Favoritos')}</MenuItem>
+          <MenuItem href="/mensajes" icon="message">{t('Mensajes')}</MenuItem>
+          <MenuItem href="/buscar" icon="search">{t('Explorar posadas')}</MenuItem>
+          <MenuItem href="/cuenta" icon="grid">{t('Mi cuenta')}</MenuItem>
 
           <div style={{ height: 1, background: 'rgba(26,43,76,0.07)', margin: '0.3rem 0' }} />
           <button
@@ -132,7 +145,7 @@ export default function NavUser({ dark = false }: { dark?: boolean }) {
             onMouseLeave={e => (e.currentTarget.style.background = 'none')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Cerrar sesión
+            {t('Cerrar sesión')}
           </button>
         </div>
       )}

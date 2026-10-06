@@ -3,10 +3,13 @@
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useT } from '@/components/LangProvider'
+import LangCorner from '@/components/LangCorner'
 
 function Inner() {
   const sp = useSearchParams()
   const router = useRouter()
+  const t = useT()
   const token = sp.get('token') ?? ''
   const [pass, setPass] = useState('')
   const [pass2, setPass2] = useState('')
@@ -17,8 +20,8 @@ function Inner() {
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (pass.length < 8) { setError('La contraseña debe tener al menos 8 caracteres'); return }
-    if (pass !== pass2) { setError('Las contraseñas no coinciden'); return }
+    if (pass.length < 8) { setError(t('La contraseña debe tener al menos 8 caracteres')); return }
+    if (pass !== pass2) { setError(t('Las contraseñas no coinciden')); return }
     setBusy(true)
     try {
       const res = await fetch('/api/password/reset', {
@@ -26,10 +29,10 @@ function Inner() {
         body: JSON.stringify({ token, password: pass }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) { setError(data.error || 'No se pudo restablecer'); return }
+      if (!res.ok) { setError(t(data.error || 'No se pudo restablecer')); return }
       setDone(true)
       setTimeout(() => router.push('/login'), 2500)
-    } catch { setError('Error de red. Intenta de nuevo.') } finally { setBusy(false) }
+    } catch { setError(t('Error de red. Intenta de nuevo.')) } finally { setBusy(false) }
   }
 
   return (
@@ -53,32 +56,33 @@ function Inner() {
         .ok{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);color:#0f9d6b;border-radius:12px;padding:1rem;font-size:.9rem;line-height:1.6;text-align:center;}
         .back{display:block;text-align:center;margin-top:1.25rem;font-size:.84rem;color:var(--muted);text-decoration:none;}
       `}</style>
+      <LangCorner />
       <div className="wrap">
         <div className="card">
           <Link href="/" className="logo">RESER<span>-VE</span></Link>
           {!token ? (
             <>
-              <h1>Enlace inválido</h1>
-              <div className="ok" style={{background:'rgba(239,68,68,.06)',border:'1px solid rgba(239,68,68,.2)',color:'#b91c1c'}}>Este enlace no es válido. Solicita uno nuevo.</div>
-              <Link href="/recuperar" className="back">← Solicitar enlace de recuperación</Link>
+              <h1>{t("Enlace inválido")}</h1>
+              <div className="ok" style={{background:'rgba(239,68,68,.06)',border:'1px solid rgba(239,68,68,.2)',color:'#b91c1c'}}>{t("Este enlace no es válido. Solicita uno nuevo.")}</div>
+              <Link href="/recuperar" className="back">{t("← Solicitar enlace de recuperación")}</Link>
             </>
           ) : done ? (
             <>
-              <h1>¡Contraseña actualizada!</h1>
-              <div className="ok">Listo. Ya puedes iniciar sesión con tu nueva contraseña. Redirigiendo…</div>
-              <Link href="/login" className="back">Ir a iniciar sesión →</Link>
+              <h1>{t("¡Contraseña actualizada!")}</h1>
+              <div className="ok">{t("Listo. Ya puedes iniciar sesión con tu nueva contraseña. Redirigiendo…")}</div>
+              <Link href="/login" className="back">{t("Ir a iniciar sesión →")}</Link>
             </>
           ) : (
             <>
-              <h1>Nueva contraseña</h1>
-              <div className="sub">Crea una contraseña nueva para tu cuenta.</div>
+              <h1>{t("Nueva contraseña")}</h1>
+              <div className="sub">{t("Crea una contraseña nueva para tu cuenta.")}</div>
               <form onSubmit={submit}>
-                <label>Nueva contraseña</label>
-                <input type="password" required placeholder="Mínimo 8 caracteres" value={pass} onChange={e => setPass(e.target.value)} />
-                <label>Repite la contraseña</label>
-                <input type="password" required placeholder="Repite la contraseña" value={pass2} onChange={e => setPass2(e.target.value)} />
+                <label>{t("Nueva contraseña")}</label>
+                <input type="password" required placeholder={t('Mínimo 8 caracteres')} value={pass} onChange={e => setPass(e.target.value)} />
+                <label>{t("Repite la contraseña")}</label>
+                <input type="password" required placeholder={t('Repite la contraseña')} value={pass2} onChange={e => setPass2(e.target.value)} />
                 {error && <div className="err">{error}</div>}
-                <button type="submit" disabled={busy}>{busy ? 'Guardando…' : 'Guardar contraseña'}</button>
+                <button type="submit" disabled={busy}>{busy ? t('Guardando…') : t('Guardar contraseña')}</button>
               </form>
             </>
           )}

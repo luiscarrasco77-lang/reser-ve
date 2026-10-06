@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import NavUser from '@/components/NavUser'
+import { getT } from '@/lib/i18n-server'
 
-export const metadata: Metadata = {
-  title: 'Para posaderos',
-  description: 'Publica tu posada gratis en RESER-VE. Solo pagas una comisión cuando recibes una reserva confirmada.',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t('Para posaderos'), description: t('Publica tu posada gratis en RESER-VE. Solo pagas una comisión cuando recibes una reserva confirmada.') }
 }
 
 const benefits = [
@@ -95,7 +97,8 @@ const steps = [
   },
 ]
 
-export default function PosaderosPage() {
+export default async function PosaderosPage() {
+  const t = await getT()
   return (
     <>
       <style>{`
@@ -295,7 +298,10 @@ export default function PosaderosPage() {
       {/* Nav */}
       <nav className="nav">
         <a href="/" className="logo">RESER<span>-VE</span></a>
-        <a href="/register?role=host" className="nav-cta">Registra tu posada</a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+          <a href="/register?role=host" className="nav-cta pos-nav-cta">{t('Registra tu posada')}</a>
+          <NavUser />
+        </div>
       </nav>
 
       {/* Hero */}
@@ -304,16 +310,16 @@ export default function PosaderosPage() {
         <div className="hero-overlay" />
         <div className="hero-content">
           <div className="hero-panel">
-            <div className="hero-eyebrow">Para posaderos · Fase privada</div>
-            <h1>Publica tu posada<br/><em>en RESER-VE</em></h1>
+            <div className="hero-eyebrow">{t("Para posaderos · Fase privada")}</div>
+            <h1>{t('Publica tu posada')}<br/><em>{t('en RESER-VE')}</em></h1>
             <p className="hero-sub">
-              Llega a viajeros de Venezuela y del exterior que buscan dónde quedarse. Publicar es gratis: solo pagas un 10% cuando recibes una reserva confirmada.
+              {t("Llega a viajeros de Venezuela y del exterior que buscan dónde quedarse. Publicar es gratis: solo pagas un 10% cuando recibes una reserva confirmada.")}
             </p>
             <div className="hero-btns">
               <a href="/register?role=host" className="btn-primary">
-                Publicar mi posada
+                {t('Publicar mi posada')}
               </a>
-              <a href="#como-funciona" className="btn-ghost-white">Cómo funciona</a>
+              <a href="#como-funciona" className="btn-ghost-white">{t("Cómo funciona")}</a>
             </div>
           </div>
         </div>
@@ -321,15 +327,15 @@ export default function PosaderosPage() {
 
       {/* Benefits */}
       <div className="section">
-        <div className="sec-eyebrow">Por qué RESER-VE</div>
-        <h2 className="sec-title">Qué te ofrece RESER-VE</h2>
-        <p className="sec-sub">Hecha para cómo funcionan las posadas en Venezuela.</p>
+        <div className="sec-eyebrow">{t("Por qué RESER-VE")}</div>
+        <h2 className="sec-title">{t("Qué te ofrece RESER-VE")}</h2>
+        <p className="sec-sub">{t("Hecha para cómo funcionan las posadas en Venezuela.")}</p>
         <div className="benefits-grid">
           {benefits.map(b => (
             <div key={b.title} className="benefit-card">
               <div className="benefit-icon">{b.icon}</div>
-              <div className="benefit-title">{b.title}</div>
-              <div className="benefit-desc">{b.desc}</div>
+              <div className="benefit-title">{t(b.title)}</div>
+              <div className="benefit-desc">{t(b.desc)}</div>
             </div>
           ))}
         </div>
@@ -337,41 +343,41 @@ export default function PosaderosPage() {
         {/* Vision callout */}
         <div className="vision-callout">
           <div className="vision-text">
-            <h3>¿Quiénes somos?</h3>
-            <p>RESER-VE es un proyecto de Dos Locos de Viaje, una comunidad de viajeros venezolanos. Te contamos por qué nos enfocamos en las posadas.</p>
+            <h3>{t("¿Quiénes somos?")}</h3>
+            <p>{t("RESER-VE es un proyecto de Dos Locos de Viaje, una comunidad de viajeros venezolanos. Te contamos por qué nos enfocamos en las posadas.")}</p>
           </div>
-          <a href="/vision" className="vision-link">Sobre nosotros</a>
+          <a href="/vision" className="vision-link">{t("Sobre nosotros")}</a>
         </div>
       </div>
 
       {/* Condiciones */}
       <section className="section" id="condiciones" style={{paddingTop:0}}>
-        <div className="sec-eyebrow">Condiciones claras</div>
-        <h2 className="sec-title">Reglas simples, sin letra pequeña</h2>
+        <div className="sec-eyebrow">{t("Condiciones claras")}</div>
+        <h2 className="sec-title">{t("Reglas simples, sin letra pequeña")}</h2>
         <div className="terms-grid">
-          <div className="term"><div className="term-big">0 $</div><div className="term-t">Publicar y mantener tu posada</div><p>Sin mensualidad, sin costo de alta, sin permanencia. Puedes pausar tu publicación cuando quieras (al reactivarla pasa por una revisión rápida).</p></div>
-          <div className="term"><div className="term-big">10%</div><div className="term-t">Solo por reserva confirmada</div><p>Lo asume la posada; el viajero paga exactamente tu precio. <strong>Tarifa fundadora:</strong> si te unes en la fase privada, 10% garantizado 12 meses desde la apertura.</p></div>
-          <div className="term"><div className="term-big">=</div><div className="term-t">Paridad de precio</div><p>El precio en RESER-VE debe ser el mismo que en tus otros canales, y si haces una oferta o promoción en otro lado, también debe estar aquí. Incumplirlo puede llevar a la suspensión.</p></div>
-          <div className="term"><div className="term-big">Chat</div><div className="term-t">Todo por la app</div><p>La comunicación con huéspedes se hace por el chat de RESER-VE. Así evitamos fraudes y protegemos a ambas partes.</p></div>
+          <div className="term"><div className="term-big">0 $</div><div className="term-t">{t('Publicar y mantener tu posada')}</div><p>{t('Sin mensualidad, sin costo de alta, sin permanencia. Puedes pausar tu publicación cuando quieras (al reactivarla pasa por una revisión rápida).')}</p></div>
+          <div className="term"><div className="term-big">10%</div><div className="term-t">{t('Solo por reserva confirmada')}</div><p>{t('Lo asume la posada; el viajero paga exactamente tu precio.')} <strong>{t('Tarifa fundadora:')}</strong> {t('si te unes en la fase privada, 10% garantizado 12 meses desde la apertura.')}</p></div>
+          <div className="term"><div className="term-big">=</div><div className="term-t">{t('Paridad de precio')}</div><p>{t('El precio en RESER-VE debe ser el mismo que en tus otros canales, y si haces una oferta o promoción en otro lado, también debe estar aquí. Incumplirlo puede llevar a la suspensión.')}</p></div>
+          <div className="term"><div className="term-big">{t('Chat')}</div><div className="term-t">{t('Todo por la app')}</div><p>{t('La comunicación con huéspedes se hace por el chat de RESER-VE. Así evitamos fraudes y protegemos a ambas partes.')}</p></div>
         </div>
         <div className="mvp-note">
-          <strong>Estamos en fase privada (MVP).</strong> Ya puedes crear tu cuenta y publicar tu posada; las reservas del público se abrirán en unas semanas, cuando terminemos de perfeccionar el proceso de pago y reserva. Las posadas fundadoras mantienen el 10% de comisión durante 12 meses tras la apertura y salen primero en el lanzamiento. Más adelante ofreceremos servicios opcionales de fotografía profesional y digitalización.
-          {' '}<a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener">Lee la guía completa para posaderos →</a>
+          <strong>{t('Estamos en fase privada (MVP).')}</strong> {t('Ya puedes crear tu cuenta y publicar tu posada; las reservas del público se abrirán en unas semanas, cuando terminemos de perfeccionar el proceso de pago y reserva. Las posadas fundadoras mantienen el 10% de comisión durante 12 meses tras la apertura y salen primero en el lanzamiento. Más adelante ofreceremos servicios opcionales de fotografía profesional y digitalización.')}
+          {' '}<a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener">{t("Lee la guía completa para posaderos →")}</a>
         </div>
       </section>
 
       {/* Steps */}
       <section className="steps-section" id="como-funciona">
         <div className="steps-inner">
-          <div className="sec-eyebrow">Proceso</div>
-          <h2 className="sec-title" style={{color:'white'}}>Cómo empezar</h2>
-          <p className="sec-sub">Toma unos 10 minutos.</p>
+          <div className="sec-eyebrow">{t("Proceso")}</div>
+          <h2 className="sec-title" style={{color:'white'}}>{t("Cómo empezar")}</h2>
+          <p className="sec-sub">{t("Toma unos 10 minutos.")}</p>
           <div className="steps-grid">
             {steps.map(s => (
               <div key={s.n} className="step-card">
                 <div className="step-num">{s.n}</div>
-                <div className="step-title">{s.title}</div>
-                <div className="step-desc">{s.desc}</div>
+                <div className="step-title">{t(s.title)}</div>
+                <div className="step-desc">{t(s.desc)}</div>
               </div>
             ))}
           </div>
@@ -381,11 +387,11 @@ export default function PosaderosPage() {
       {/* CTA */}
       <section className="cta-section">
         <div className="cta-box">
-          <h2>Publica tu posada</h2>
-          <p>Crea tu cuenta de posadero y envía tu posada a revisión. Si tienes dudas, escríbenos a hola@reser-ve.com.</p>
+          <h2>{t("Publica tu posada")}</h2>
+          <p>{t("Crea tu cuenta de posadero y envía tu posada a revisión. Si tienes dudas, escríbenos a hola@reser-ve.com.")}</p>
           <div className="cta-btns">
-            <a href="/register?role=host" className="btn-primary">Registrar mi posada</a>
-            <a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener" className="btn-indigo">Descargar guía (PDF)</a>
+            <a href="/register?role=host" className="btn-primary">{t("Registrar mi posada")}</a>
+            <a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener" className="btn-indigo">{t("Descargar guía (PDF)")}</a>
           </div>
         </div>
       </section>

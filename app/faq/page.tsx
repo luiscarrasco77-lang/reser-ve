@@ -1,9 +1,14 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import NavUser from '@/components/NavUser'
+import { getT } from '@/lib/i18n-server'
 
-export const metadata: Metadata = {
-  title: 'Preguntas frecuentes',
-  description: 'Respuestas a las preguntas más comunes sobre RESER-VE, reservas, pagos y posadas venezolanas.',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return {
+    title: t('Preguntas frecuentes'),
+    description: t('Respuestas a las preguntas más comunes sobre RESER-VE, reservas, pagos y posadas venezolanas.'),
+  }
 }
 
 const faqs = [
@@ -85,7 +90,8 @@ const faqs = [
   },
 ]
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const t = await getT()
   return (
     <>
       <style>{`
@@ -206,36 +212,33 @@ export default function FaqPage() {
 
       <nav className="nav">
         <a href="/" className="logo">RESER<span>-VE</span></a>
-        <a href="/" className="nav-back">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-          Volver al inicio
-        </a>
+        <NavUser />
       </nav>
 
       <section className="hero-faq">
-        <h1>Preguntas frecuentes</h1>
-        <p>Todo lo que necesitas saber antes de reservar tu próxima aventura venezolana.</p>
+        <h1>{t("Preguntas frecuentes")}</h1>
+        <p>{t("Todo lo que necesitas saber antes de reservar tu próxima aventura venezolana.")}</p>
       </section>
 
       <div className="faq-wrap">
         {faqs.map(cat => (
           <div key={cat.category} className="faq-category">
-            <div className="cat-title">{cat.category}</div>
+            <div className="cat-title">{t(cat.category)}</div>
             {cat.items.map(item => (
               <details key={item.q}>
-                <summary>{item.q}</summary>
-                <div className="faq-answer">{item.a}</div>
+                <summary>{t(item.q)}</summary>
+                <div className="faq-answer">{t(item.a)}</div>
               </details>
             ))}
           </div>
         ))}
 
         <div className="cta-box">
-          <h2>¿Tienes otra pregunta?</h2>
-          <p>Escríbenos y te respondemos en menos de 24 horas.</p>
+          <h2>{t("¿Tienes otra pregunta?")}</h2>
+          <p>{t("Escríbenos y te respondemos en menos de 24 horas.")}</p>
           <div className="cta-btns">
-            <a href="mailto:hola@reser-ve.com" className="btn-primary">Contáctanos</a>
-            <a href="/buscar" className="btn-ghost">Explorar posadas</a>
+            <a href="mailto:hola@reser-ve.com" className="btn-primary">{t("Contáctanos")}</a>
+            <a href="/buscar" className="btn-ghost">{t("Explorar posadas")}</a>
           </div>
         </div>
       </div>

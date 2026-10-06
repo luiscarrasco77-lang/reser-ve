@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import NavUser from '@/components/NavUser'
+import { useT } from '@/components/LangProvider'
+import { ratingText } from '@/lib/rating'
 
 type Fav = {
   id: number; slug: string; nombre: string; destino: string; tipo: string
@@ -14,6 +16,7 @@ type Fav = {
 export default function FavoritosPage() {
   const { status } = useSession()
   const router = useRouter()
+  const t = useT()
   const [posadas, setPosadas] = useState<Fav[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -70,15 +73,15 @@ export default function FavoritosPage() {
       </nav>
 
       <main className="main">
-        <div className="page-title">Mis favoritos</div>
-        <div className="page-sub">Las posadas que has guardado para tu próxima escapada.</div>
+        <div className="page-title">{t("Mis favoritos")}</div>
+        <div className="page-sub">{t("Las posadas que has guardado para tu próxima escapada.")}</div>
 
         {loading ? (
-          <div className="empty">Cargando…</div>
+          <div className="empty">{t("Cargando…")}</div>
         ) : posadas.length === 0 ? (
           <div className="empty">
-            Aún no has guardado posadas.<br />
-            <Link href="/buscar">Explorar posadas →</Link>
+            {t('Aún no has guardado posadas.')}<br />
+            <Link href="/buscar">{t("Explorar posadas →")}</Link>
           </div>
         ) : (
           <div className="grid">
@@ -87,17 +90,17 @@ export default function FavoritosPage() {
                 <Link href={`/posadas/${p.slug}`} className="card">
                   <img className="card-img" src={p.imgs?.[0] ?? ''} alt={p.nombre} loading="lazy" />
                   <div className="card-body">
-                    <div className="card-tipo">{p.tipo} · {p.destino}</div>
+                    <div className="card-tipo">{t(p.tipo)} · {p.destino}</div>
                     <div className="card-nombre">{p.nombre}</div>
                     <div className="card-meta">
-                      <span>{p.reviews ? `★ ${p.rating} · ${p.reviews} reseñas` : 'Nueva en RESER-VE'}</span>
-                      <span className="card-precio">${p.precio}<span style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '0.72rem' }}>/noche</span></span>
+                      <span>{ratingText(p.rating, p.reviews, false, t)}</span>
+                      <span className="card-precio">${p.precio}<span style={{ fontWeight: 400, color: 'var(--muted)', fontSize: '0.72rem' }}>{t('/noche')}</span></span>
                     </div>
                   </div>
                 </Link>
                 <button className="rm" onClick={() => remove(p.id)}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                  Quitar
+                  {t("Quitar")}
                 </button>
               </div>
             ))}

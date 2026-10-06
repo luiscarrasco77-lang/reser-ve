@@ -1,0 +1,20 @@
+// Textos compartidos (navegación, menús, botones).
+export const common: Record<string, string> = {
+  'Iniciar sesión': 'Log in',
+  'Registrarse': 'Sign up',
+  'Posadero': 'Host',
+  'Viajero': 'Traveler',
+  'Panel de admin': 'Admin panel',
+  'Mi panel': 'My dashboard',
+  'Mis posadas': 'My posadas',
+  'Publicar posada': 'List a posada',
+  'Reservas': 'Bookings',
+  'Calendario': 'Calendar',
+  'Mis reservas': 'My bookings',
+  'Sueña tu viaje': 'Dream your trip',
+  'Favoritos': 'Favorites',
+  'Mensajes': 'Messages',
+  'Explorar posadas': 'Explore posadas',
+  'Mi cuenta': 'My account',
+  'Cerrar sesión': 'Log out',
+}

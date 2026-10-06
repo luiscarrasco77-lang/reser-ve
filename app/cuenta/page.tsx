@@ -4,10 +4,13 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { signOut } from 'next-auth/react'
 import NavUser from '@/components/NavUser'
+import { useLang } from '@/components/LangProvider'
+import { LOCALE } from '@/lib/i18n'
 
 type Info = { user: { name: string; email: string; role: string; createdAt: string }; activeBookings: number; activePosadas: string[] }
 
 export default function CuentaPage() {
+  const { t, lang } = useLang()
   const [info, setInfo] = useState<Info | null>(null)
   const [open, setOpen] = useState(false)
   const [password, setPassword] = useState('')
@@ -24,11 +27,11 @@ export default function CuentaPage() {
     const res = await fetch('/api/account', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) })
     const data = await res.json().catch(() => ({}))
     setBusy(false)
-    if (!res.ok) { setError(data.error ?? 'No se pudo eliminar la cuenta'); return }
+    if (!res.ok) { setError(t(data.error ?? 'No se pudo eliminar la cuenta')); return }
     await signOut({ callbackUrl: '/?cuenta=eliminada' })
   }
 
-  const rol = info?.user.role === 'host' ? 'Posadero' : info?.user.role === 'admin' ? 'Administrador' : 'Viajero'
+  const rol = info?.user.role === 'host' ? t('Posadero') : info?.user.role === 'admin' ? t('Administrador') : t('Viajero')
 
   return (
     <>
@@ -60,41 +63,41 @@ export default function CuentaPage() {
         <NavUser />
       </nav>
       <div className="wrap">
-        <h1>Mi cuenta</h1>
-        {!info ? <div className="muted">Cargando…</div> : (
+        <h1>{t("Mi cuenta")}</h1>
+        {!info ? <div className="muted">{t("Cargando…")}</div> : (
           <>
             <div className="card">
-              <div className="row"><span>Nombre</span><strong>{info.user.name}</strong></div>
-              <div className="row"><span>Correo</span><strong>{info.user.email}</strong></div>
-              <div className="row"><span>Tipo de cuenta</span><strong>{rol}</strong></div>
-              <div className="row"><span>Miembro desde</span><strong>{new Date(info.user.createdAt).toLocaleDateString('es-VE', { month: 'long', year: 'numeric' })}</strong></div>
-              <p className="muted" style={{ marginTop: '.6rem' }}>¿Quieres cambiar tu contraseña? <Link href="/recuperar" style={{ color: 'var(--cacao)' }}>Te enviamos un enlace</Link>.</p>
+              <div className="row"><span>{t("Nombre")}</span><strong>{info.user.name}</strong></div>
+              <div className="row"><span>{t("Correo")}</span><strong>{info.user.email}</strong></div>
+              <div className="row"><span>{t("Tipo de cuenta")}</span><strong>{rol}</strong></div>
+              <div className="row"><span>{t("Miembro desde")}</span><strong>{new Date(info.user.createdAt).toLocaleDateString(LOCALE[lang], { month: 'long', year: 'numeric' })}</strong></div>
+              <p className="muted" style={{ marginTop: '.6rem' }}>{t('¿Quieres cambiar tu contraseña?')} <Link href="/recuperar" style={{ color: 'var(--cacao)' }}>{t("Te enviamos un enlace")}</Link>.</p>
             </div>
 
             <div className="card danger">
-              <div className="h">Eliminar cuenta</div>
+              <div className="h">{t("Eliminar cuenta")}</div>
               {blocked ? (
                 <>
-                  <p className="muted">Para eliminar tu cuenta primero tienes que:</p>
+                  <p className="muted">{t("Para eliminar tu cuenta primero tienes que:")}</p>
                   <ul>
-                    {info.activeBookings > 0 && <li>Cancelar o terminar tus {info.activeBookings} reserva{info.activeBookings === 1 ? '' : 's'} activa{info.activeBookings === 1 ? '' : 's'} ({info.user.role === 'traveler' ? <Link href="/mis-reservas">Mis reservas</Link> : <Link href="/dashboard/reservas">Reservas</Link>}).</li>}
-                    {info.activePosadas.length > 0 && <li>Pausar tus posadas publicadas o en revisión: {info.activePosadas.join(', ')} (<Link href="/dashboard/posadas">Mis posadas</Link>).</li>}
+                    {info.activeBookings > 0 && <li>{t(info.activeBookings === 1 ? 'Cancelar o terminar tu reserva activa' : 'Cancelar o terminar tus {n} reservas activas', { n: info.activeBookings })} ({info.user.role === 'traveler' ? <Link href="/mis-reservas">{t("Mis reservas")}</Link> : <Link href="/dashboard/reservas">{t("Reservas")}</Link>}).</li>}
+                    {info.activePosadas.length > 0 && <li>{t('Pausar tus posadas publicadas o en revisión:')} {info.activePosadas.join(', ')} (<Link href="/dashboard/posadas">{t("Mis posadas")}</Link>).</li>}
                   </ul>
                 </>
               ) : !open ? (
                 <>
-                  <p className="muted">Se borrarán tus datos personales y tus favoritos, y no podrás volver a entrar. El historial de reservas y mensajes se conserva sin tu nombre ni tu correo.</p>
-                  <button className="btn btn-red" style={{ marginTop: '.6rem' }} onClick={() => setOpen(true)}>Eliminar mi cuenta</button>
+                  <p className="muted">{t("Se borrarán tus datos personales y tus favoritos, y no podrás volver a entrar. El historial de reservas y mensajes se conserva sin tu nombre ni tu correo.")}</p>
+                  <button className="btn btn-red" style={{ marginTop: '.6rem' }} onClick={() => setOpen(true)}>{t("Eliminar mi cuenta")}</button>
                 </>
               ) : (
                 <>
-                  <p className="muted">Esta acción no se puede deshacer. Escribe tu contraseña y la palabra <strong>ELIMINAR</strong> para confirmar.</p>
-                  <input type="password" placeholder="Tu contraseña" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" />
-                  <input placeholder="Escribe ELIMINAR" value={confirmText} onChange={e => setConfirmText(e.target.value)} />
+                  <p className="muted">{t('Esta acción no se puede deshacer. Escribe tu contraseña y la palabra')} <strong>ELIMINAR</strong> {t('para confirmar.')}</p>
+                  <input type="password" placeholder={t('Tu contraseña')} value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" />
+                  <input placeholder={t('Escribe ELIMINAR')} value={confirmText} onChange={e => setConfirmText(e.target.value)} />
                   {error && <div className="err">{error}</div>}
                   <div style={{ display: 'flex', gap: '.5rem' }}>
-                    <button className="btn btn-red" disabled={busy || !password || confirmText.trim().toUpperCase() !== 'ELIMINAR'} onClick={eliminar}>{busy ? 'Eliminando…' : 'Eliminar definitivamente'}</button>
-                    <button className="btn btn-ghost" onClick={() => { setOpen(false); setError('') }}>Cancelar</button>
+                    <button className="btn btn-red" disabled={busy || !password || confirmText.trim().toUpperCase() !== 'ELIMINAR'} onClick={eliminar}>{busy ? t('Eliminando…') : t('Eliminar definitivamente')}</button>
+                    <button className="btn btn-ghost" onClick={() => { setOpen(false); setError('') }}>{t("Cancelar")}</button>
                   </div>
                 </>
               )}

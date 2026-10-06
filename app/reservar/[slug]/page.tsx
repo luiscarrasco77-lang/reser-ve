@@ -7,12 +7,17 @@ import { useSession } from 'next-auth/react'
 import { type Posada } from '@/lib/data'
 import { useBookingsOpen, PrivatePhaseNotice } from '@/components/PrivatePhase'
 import { BOOKINGS_OPEN } from '@/lib/constants'
+import { useLang, useT } from '@/components/LangProvider'
+import type { Lang } from '@/lib/i18n'
 
-const MONTHS_SHORT = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
-function fmt(fecha: string) {
+const MONTHS: Record<Lang, string[]> = {
+  es: ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],
+  en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+}
+function fmt(fecha: string, lang: Lang) {
   if (!fecha) return ''
   const [y, m, d] = fecha.split('-')
-  return `${d} ${MONTHS_SHORT[+m-1]} ${y}`
+  return lang === 'en' ? `${MONTHS.en[+m-1]} ${+d}, ${y}` : `${d} ${MONTHS.es[+m-1]} ${y}`
 }
 
 function ReservarContent() {
@@ -20,6 +25,7 @@ function ReservarContent() {
   const slug = rawParams?.slug ?? ''
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { t, lang } = useLang()
   const { data: session, status: authStatus } = useSession()
   const bookingsOpen = useBookingsOpen()
 
@@ -82,9 +88,9 @@ function ReservarContent() {
   const total = subtotal // el viajero paga solo noches × precio; la comisión la asume la posada
 
   const metodos: Record<typeof metodoPago, { label: string; desc: string; icon: string }> = {
-    zelle:     { label: 'Zelle',      desc: 'USD desde EE.UU. o internacionalmente', icon: '$' },
-    zinli:     { label: 'Zinli',      desc: 'Billetera digital en USD',              icon: 'Ƶ' },
-    pagomovil: { label: 'Pago Móvil', desc: 'Transferencia en bolívares',            icon: 'PM' },
+    zelle:     { label: 'Zelle',      desc: t('USD desde EE.UU. o internacionalmente'), icon: '$' },
+    zinli:     { label: 'Zinli',      desc: t('Billetera digital en USD'),              icon: 'Ƶ' },
+    pagomovil: { label: 'Pago Móvil', desc: t('Transferencia en bolívares'),            icon: 'PM' },
     tarjeta:   { label: 'Tarjeta',    desc: 'Visa / Mastercard',                     icon: 'CC' },
   }
 
@@ -109,11 +115,11 @@ function ReservarContent() {
         }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error || 'Error al crear la reserva'); return }
+      if (!res.ok) { setError(t(data.error || 'Error al crear la reserva')); return }
       // Solo pasamos el id; la página de confirmación obtiene los detalles de forma segura.
       router.push(`/reserva/confirmada?id=${data.id}`)
     } catch {
-      setError('Error de red. Intenta de nuevo.')
+      setError(t('Error de red. Intenta de nuevo.'))
     } finally {
       setSubmitting(false)
     }
@@ -122,14 +128,14 @@ function ReservarContent() {
   const isLoading = loadingPosada || authStatus === 'loading'
 
   if (isLoading) {
-    return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>Cargando…</div>
+    return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>{t("Cargando…")}</div>
   }
 
   if (notFound || !posada) {
     return (
       <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C',gap:'1rem'}}>
-        <p style={{fontSize:'1.1rem',fontWeight:700}}>Posada no encontrada</p>
-        <Link href="/buscar" style={{color:'#E67E22',textDecoration:'none'}}>← Volver a búsqueda</Link>
+        <p style={{fontSize:'1.1rem',fontWeight:700}}>{t("Posada no encontrada")}</p>
+        <Link href="/buscar" style={{color:'#E67E22',textDecoration:'none'}}>{t("← Volver a búsqueda")}</Link>
       </div>
     )
   }
@@ -138,13 +144,13 @@ function ReservarContent() {
     return (
       <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'2rem 1.25rem',gap:'1rem'}}>
         <div style={{maxWidth:420,width:'100%'}}><PrivatePhaseNotice /></div>
-        <Link href={`/posadas/${slug}`} style={{color:'#E67E22',textDecoration:'none',fontFamily:'Inter,sans-serif',fontWeight:700,fontSize:'0.9rem'}}>← Volver a {posada.nombre}</Link>
+        <Link href={`/posadas/${slug}`} style={{color:'#E67E22',textDecoration:'none',fontFamily:'Inter,sans-serif',fontWeight:700,fontSize:'0.9rem'}}>{t('← Volver a {name}', { name: posada.nombre })}</Link>
       </div>
     )
   }
 
   if (authStatus === 'unauthenticated') {
-    return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>Redirigiendo…</div>
+    return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>{t("Redirigiendo…")}</div>
   }
 
   return (
@@ -222,19 +228,19 @@ function ReservarContent() {
         <Link href="/" className="logo">RESER<span>-VE</span></Link>
         <div style={{display:'flex',alignItems:'center',gap:'1.5rem'}}>
           <div className="steps">
-            <div className="step-item"><span className="step done">✓ Posada</span></div>
+            <div className="step-item"><span className="step done">{t("✓ Posada")}</span></div>
             <div className="step-line done" />
-            <div className="step-item"><span className="step active">Reserva</span></div>
+            <div className="step-item"><span className="step active">{t("Reserva")}</span></div>
             <div className="step-line" />
-            <div className="step-item"><span className="step pending">Confirmación</span></div>
+            <div className="step-item"><span className="step pending">{t("Confirmación")}</span></div>
           </div>
-          <Link href={`/posadas/${slug}`} className="nav-back">← Volver</Link>
+          <Link href={`/posadas/${slug}`} className="nav-back">{t("← Volver")}</Link>
         </div>
       </nav>
 
       <div className="page">
-        <div className="page-title">Completa tu reserva</div>
-        <div className="page-sub">Revisa los detalles y confirma. El posadero aceptará en 24h.</div>
+        <div className="page-title">{t("Completa tu reserva")}</div>
+        <div className="page-sub">{t("Revisa los detalles y confirma. El posadero aceptará en 24h.")}</div>
 
         <form onSubmit={handleConfirmar}>
           <div className="layout">
@@ -244,19 +250,19 @@ function ReservarContent() {
               {session?.user && (
                 <div className="guest-info">
                   <div className="guest-avatar">{session.user.name?.charAt(0).toUpperCase()}</div>
-                  <span>Reservando como <strong>{session.user.name}</strong> · {session.user.email}</span>
+                  <span>{t('Reservando como')} <strong>{session.user.name}</strong> · {session.user.email}</span>
                 </div>
               )}
 
               <div className="form-section">
-                <div className="section-label">Fechas de estancia</div>
+                <div className="section-label">{t("Fechas de estancia")}</div>
                 <div className="form-row">
                   <div className="form-group" style={{marginBottom:0}}>
-                    <label className="form-label">Llegada <span className="req">*</span></label>
+                    <label className="form-label">{t('Llegada')} <span className="req">*</span></label>
                     <input type="date" className="form-input" value={llegada} onChange={e => setLlegada(e.target.value)} required min={new Date().toISOString().split('T')[0]} />
                   </div>
                   <div className="form-group" style={{marginBottom:0}}>
-                    <label className="form-label">Salida <span className="req">*</span></label>
+                    <label className="form-label">{t('Salida')} <span className="req">*</span></label>
                     <input type="date" className="form-input" value={salida} onChange={e => setSalida(e.target.value)} required min={llegada || new Date().toISOString().split('T')[0]} />
                   </div>
                 </div>
@@ -265,11 +271,11 @@ function ReservarContent() {
               <hr />
 
               <div className="form-section">
-                <div className="section-label">Notas para el posadero (opcional)</div>
+                <div className="section-label">{t("Notas para el posadero (opcional)")}</div>
                 <div className="form-group">
                   <textarea
                     className="form-input"
-                    placeholder="Hora de llegada estimada, peticiones especiales, alergias…"
+                    placeholder={t('Hora de llegada estimada, peticiones especiales, alergias…')}
                     rows={3}
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
@@ -281,30 +287,30 @@ function ReservarContent() {
               <hr />
 
               <div className="form-section">
-                <div className="section-label">Método de pago preferido</div>
+                <div className="section-label">{t("Método de pago preferido")}</div>
                 <div className="metodos">
                   {(Object.entries(metodos) as [typeof metodoPago, {label:string;desc:string;icon:string}][]).map(([key, info]) => (
                     <button type="button" key={key} className={`metodo-btn${metodoPago===key?' active':''}`} onClick={() => setMetodoPago(key)}>
                       <span className="metodo-icon">{info.icon}</span>
-                      <div className="metodo-name">{info.label}</div>
+                      <div className="metodo-name">{t(info.label)}</div>
                       <div className="metodo-desc">{info.desc}</div>
                     </button>
                   ))}
                 </div>
                 {fechasOcupadas && (
                   <div className="error-banner" style={{ marginBottom: '1rem' }}>
-                    Esas fechas no están disponibles para esta posada. Por favor elige otras.
+                    {t("Esas fechas no están disponibles para esta posada. Por favor elige otras.")}
                   </div>
                 )}
                 <button type="submit" className="btn-confirmar" disabled={!llegada || !salida || noches < 1 || submitting || !!fechasOcupadas}>
-                  {submitting ? 'Enviando solicitud…' : 'Confirmar reserva'}
+                  {submitting ? t('Enviando solicitud…') : t('Confirmar reserva')}
                 </button>
                 <p className="nota">
-                  Recibirás las instrucciones de pago cuando el posadero confirme.<br />Sin cargos automáticos.
+                  {t('Recibirás las instrucciones de pago cuando el posadero confirme.')}<br />{t('Sin cargos automáticos.')}
                 </p>
                 <div className="trust-row">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                  Tu reserva queda registrada y protegida en RESER-VE
+                  {t("Tu reserva queda registrada y protegida en RESER-VE")}
                 </div>
               </div>
             </div>
@@ -317,19 +323,19 @@ function ReservarContent() {
                 </div>
                 <div className="resumen-body">
                   <div className="resumen-nombre">{posada.nombre}</div>
-                  <div className="resumen-dest">{posada.destino} · {posada.tipo}</div>
-                  <div className="resumen-rating"><strong>★ {posada.rating}</strong> · {posada.reviews} reseñas · {posada.habitaciones} hab.</div>
+                  <div className="resumen-dest">{posada.destino} · {t(posada.tipo)}</div>
+                  <div className="resumen-rating"><strong>★ {posada.rating}</strong> · {t('{n} reseñas', { n: posada.reviews })} · {t('{n} hab.', { n: posada.habitaciones })}</div>
                   {noches > 0 ? (
                     <>
                       <div className="resumen-hr" />
-                      <div className="resumen-linea"><span>{fmt(llegada)} → {fmt(salida)}</span><span>{noches} noche{noches>1?'s':''}</span></div>
-                      <div className="resumen-linea"><span>${posada.precio} × {noches} noche{noches>1?'s':''}</span><span>${subtotal}</span></div>
-                      <div className="resumen-total"><span>Total</span><span>${total} USD</span></div>
+                      <div className="resumen-linea"><span>{fmt(llegada, lang)} → {fmt(salida, lang)}</span><span>{t(noches>1?'{n} noches':'{n} noche', { n: noches })}</span></div>
+                      <div className="resumen-linea"><span>${posada.precio} × {t(noches>1?'{n} noches':'{n} noche', { n: noches })}</span><span>${subtotal}</span></div>
+                      <div className="resumen-total"><span>{t("Total")}</span><span>${total} USD</span></div>
                     </>
                   ) : (
                     <>
                       <div className="resumen-hr" />
-                      <div className="resumen-no-fechas">Selecciona fechas para ver el total</div>
+                      <div className="resumen-no-fechas">{t("Selecciona fechas para ver el total")}</div>
                     </>
                   )}
                 </div>
@@ -344,8 +350,10 @@ function ReservarContent() {
 
 export default function ReservarPage() {
   return (
-    <Suspense fallback={<div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>Cargando…</div>}>
+    <Suspense fallback={<div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}><LoadingText /></div>}>
       <ReservarContent />
     </Suspense>
   )
 }
+
+function LoadingText() { return <>{useT()('Cargando…')}</> }

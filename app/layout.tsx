@@ -4,6 +4,9 @@ import "./globals.css";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import SupportChat from "@/components/SupportChat";
 import { PrivatePhaseBar } from "@/components/PrivatePhase";
+import { LangProvider } from "@/components/LangProvider";
+import { getLang } from "@/lib/i18n-server";
+import { makeT } from "@/lib/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,39 +32,44 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLang()
+  const t = makeT(lang)
+  return {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://reser-ve.com"),
   title: {
-    default: "RESER-VE | Posadas en Venezuela",
+    default: t("RESER-VE | Posadas en Venezuela"),
     template: "%s | RESER-VE",
   },
-  description: "Encuentra y reserva posadas en Los Roques, Mérida, Mochima, Canaima, la Gran Sabana y más. Sin comisiones para el viajero.",
+  description: t("Encuentra y reserva posadas en Los Roques, Mérida, Mochima, Canaima, la Gran Sabana y más. Sin comisiones para el viajero."),
   keywords: ["posadas Venezuela", "Los Roques", "Canaima", "Mérida", "Mochima", "Morrocoy", "reservar posada", "turismo Venezuela"],
   openGraph: {
-    title: "RESER-VE | Posadas en Venezuela",
-    description: "Encuentra y reserva posadas en Los Roques, Mérida, Mochima, Canaima y más.",
+    title: t("RESER-VE | Posadas en Venezuela"),
+    description: t("Encuentra y reserva posadas en Los Roques, Mérida, Mochima, Canaima y más."),
     url: "/",
     siteName: "RESER-VE",
-    locale: "es_VE",
+    locale: lang === 'en' ? 'en_US' : 'es_VE',
     type: "website",
-    images: [{ url: "/images/los-roques-hero.webp", width: 1200, height: 630, alt: "Posadas de Venezuela" }],
+    images: [{ url: "/images/los-roques-hero.webp", width: 1200, height: 630, alt: t("Posadas de Venezuela") }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "RESER-VE | Posadas en Venezuela",
-    description: "Encuentra y reserva posadas en Venezuela.",
+    title: t("RESER-VE | Posadas en Venezuela"),
+    description: t("Encuentra y reserva posadas en Venezuela."),
     images: ["/images/los-roques-hero.webp"],
   },
-};
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const lang = await getLang();
   return (
     <html
-      lang="es"
+      lang={lang}
       className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
@@ -82,9 +90,11 @@ export default function RootLayout({
             ]) }}
           />
           <SessionProviderWrapper>
+          <LangProvider lang={lang}>
             <PrivatePhaseBar />
             {children}
             <SupportChat />
+            </LangProvider>
           </SessionProviderWrapper>
         </body>
     </html>

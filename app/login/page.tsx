@@ -3,6 +3,8 @@
 import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useT } from '@/components/LangProvider'
+import LangCorner from '@/components/LangCorner'
 
 // Solo rutas del propio sitio: descarta //, \\, caracteres de control y otros orígenes.
 function safeCallback(raw: string): string {
@@ -15,6 +17,7 @@ function safeCallback(raw: string): string {
 
 function LoginForm() {
   const router = useRouter()
+  const t = useT()
   const searchParams = useSearchParams()
   // Solo rutas internas (evita redirecciones abiertas a otros dominios).
   const rawCb = searchParams.get('callbackUrl') || ''
@@ -31,7 +34,7 @@ function LoginForm() {
     const res = await signIn('credentials', { email, password, redirect: false })
     setLoading(false)
     if (res?.error) {
-      setError('Email o contraseña incorrectos')
+      setError(t('Email o contraseña incorrectos'))
       return
     }
     if (callbackUrl) { router.push(callbackUrl); return }
@@ -67,35 +70,36 @@ function LoginForm() {
         .back-link{display:flex;align-items:center;justify-content:center;gap:0.35rem;font-size:0.8rem;color:var(--muted);text-decoration:none;margin-bottom:1.5rem;transition:color 0.2s;}
         .back-link:hover{color:var(--indigo);}
       `}</style>
+      <LangCorner />
       <div className="auth-wrap">
         <div>
           <a href="/" className="back-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-            Volver al inicio
+            {t("Volver al inicio")}
           </a>
           <div className="auth-card">
             <div className="auth-logo">
               <a href="/">RESER<span>-VE</span></a>
             </div>
-            <h1 className="auth-title">Bienvenido de vuelta</h1>
-            <p className="auth-sub">Inicia sesión para gestionar tus reservas</p>
+            <h1 className="auth-title">{t("Bienvenido de vuelta")}</h1>
+            <p className="auth-sub">{t("Inicia sesión para gestionar tus reservas")}</p>
             {error && <div className="auth-error">{error}</div>}
             <form onSubmit={handleSubmit}>
               <div className="field">
                 <label>Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="tu@email.com" />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder={t('tu@email.com')} />
               </div>
               <div className="field">
-                <label>Contraseña</label>
+                <label>{t("Contraseña")}</label>
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" />
-                <a href="/recuperar" style={{ display: 'block', textAlign: 'right', marginTop: '0.5rem', fontSize: '0.8rem', color: '#E67E22', textDecoration: 'none', fontWeight: 600 }}>¿Olvidaste tu contraseña?</a>
+                <a href="/recuperar" style={{ display: 'block', textAlign: 'right', marginTop: '0.5rem', fontSize: '0.8rem', color: '#E67E22', textDecoration: 'none', fontWeight: 600 }}>{t("¿Olvidaste tu contraseña?")}</a>
               </div>
               <button type="submit" className="btn-submit" disabled={loading}>
-                {loading ? 'Iniciando sesión…' : 'Iniciar sesión'}
+                {loading ? t('Iniciando sesión…') : t('Iniciar sesión')}
               </button>
             </form>
             <div className="auth-footer">
-              ¿No tienes cuenta? <a href="/register">Regístrate gratis</a>
+              {t('¿No tienes cuenta?')} <a href="/register">{t("Regístrate gratis")}</a>
             </div>
           </div>
         </div>

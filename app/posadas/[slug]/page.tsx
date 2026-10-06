@@ -7,14 +7,15 @@ import { type Posada } from '@/lib/data'
 import NavUser from '@/components/NavUser'
 import { useBookingsOpen, PrivatePhaseNotice } from '@/components/PrivatePhase'
 import FavoriteButton from '@/components/FavoriteButton'
-import ReportPrice from '@/components/ReportPrice'
 import { SITE_URL } from '@/lib/constants'
 import { ratingText } from '@/lib/rating'
+import { useT } from '@/components/LangProvider'
 
 export default function FichaPosada() {
   const rawParams = useParams<{ slug: string }>()
   const slug = rawParams?.slug ?? ''
   const router = useRouter()
+  const t = useT()
   const bookingsOpen = useBookingsOpen()
 
   const [posada, setPosada] = useState<Posada | null>(null)
@@ -63,14 +64,14 @@ export default function FichaPosada() {
   if (!rawParams) return null
 
   if (loading) {
-    return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>Cargando…</div>
+    return <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C'}}>{t("Cargando…")}</div>
   }
 
   if (notFound || !posada) {
     return (
       <div style={{minHeight:'100vh',background:'#FDFBF7',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',fontFamily:'Inter,sans-serif',color:'#1A2B4C',gap:'1rem'}}>
-        <p style={{fontSize:'1.2rem',fontWeight:700}}>Posada no encontrada</p>
-        <Link href="/buscar" style={{color:'#E67E22',textDecoration:'none',fontSize:'0.9rem'}}>← Volver a búsqueda</Link>
+        <p style={{fontSize:'1.2rem',fontWeight:700}}>{t("Posada no encontrada")}</p>
+        <Link href="/buscar" style={{color:'#E67E22',textDecoration:'none',fontSize:'0.9rem'}}>{t("← Volver a búsqueda")}</Link>
       </div>
     )
   }
@@ -246,14 +247,14 @@ export default function FichaPosada() {
       <nav className="nav">
         <Link href="/" className="logo">RESER<span>-VE</span></Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <Link href="/buscar" className="nav-back">← Volver a búsqueda</Link>
+          <Link href="/buscar" className="nav-back">{t("← Volver a búsqueda")}</Link>
           <NavUser />
         </div>
       </nav>
       <div className="page">
         <div className="breadcrumb">
-          <Link href="/">Inicio</Link> /
-          <Link href="/buscar">Posadas</Link> /
+          <Link href="/">{t("Inicio")}</Link> /
+          <Link href="/buscar">{t("Posadas")}</Link> /
           <span>{posada.destino}</span>
         </div>
 
@@ -299,48 +300,48 @@ export default function FichaPosada() {
 
         <div className="layout">
           <div>
-            <div className="ficha-tipo">{posada.tipo}</div>
+            <div className="ficha-tipo">{t(posada.tipo)}</div>
             <h1 className="ficha-nombre">{posada.nombre}</h1>
             <div className="ficha-meta">
-              <span className="ficha-rating">{ratingText(posada.rating, posada.reviews)}</span>
-              <span className="ficha-hab">{posada.habitaciones} habitaciones</span>
+              <span className="ficha-rating">{ratingText(posada.rating, posada.reviews, false, t)}</span>
+              <span className="ficha-hab">{t(posada.habitaciones === 1 ? '{n} habitación' : '{n} habitaciones', { n: posada.habitaciones })}</span>
             </div>
             <hr />
-            <div className="section-label">Sobre esta posada</div>
+            <div className="section-label">{t("Sobre esta posada")}</div>
             <p className="descripcion" style={{ whiteSpace: 'pre-line' }}>{posada.descripcion}</p>
-            <div className="section-label">Servicios incluidos</div>
+            <div className="section-label">{t("Servicios incluidos")}</div>
             <div className="servicios-grid">
               {posada.servicios.map(s => (
                 <div className="servicio" key={s}>
                   <span className="servicio-dot" />
-                  {s}
+                  {t(s)}
                 </div>
               ))}
             </div>
             <hr />
-            <div className="section-label">Tu anfitrión</div>
+            <div className="section-label">{t("Tu anfitrión")}</div>
             <div className="host-card">
               <div className="host-avatar">{(posada.host.nombre || 'P')[0]}</div>
               <div>
                 <div className="host-nombre-wrap">
-                  <div className="host-nombre">{posada.host.nombre || 'Posadero'}</div>
-                  {isSuperhost && <span className="host-badge">Superposadero</span>}
+                  <div className="host-nombre">{posada.host.nombre || t('Posadero')}</div>
+                  {isSuperhost && <span className="host-badge">{t("Superposadero")}</span>}
                 </div>
                 {(posada.host.desde || posada.host.idiomas.length > 0) && (
                   <div className="host-meta">
-                    {[posada.host.desde && `Posadero desde ${posada.host.desde}`, posada.host.idiomas.length > 0 && `Idiomas: ${posada.host.idiomas.join(', ')}`].filter(Boolean).join(' · ')}
+                    {[posada.host.desde && t('Posadero desde {y}', { y: posada.host.desde }), posada.host.idiomas.length > 0 && t('Idiomas: {list}', { list: posada.host.idiomas.map(i => t(i)).join(', ') })].filter(Boolean).join(' · ')}
                   </div>
                 )}
               </div>
             </div>
-            {posada.politicas.length > 0 && <div className="section-label">Políticas de la posada</div>}
+            {posada.politicas.length > 0 && <div className="section-label">{t("Políticas de la posada")}</div>}
             <div className="politicas">
               {posada.politicas.map(p => <div className="politica" key={p}>{p}</div>)}
             </div>
             {posada.reseñas.length > 0 && (
               <>
                 <hr />
-                <div className="section-label">Reseñas · ★ {posada.rating} · {posada.reviews} opiniones</div>
+                <div className="section-label">{t('Reseñas · ★ {r} · {n} opiniones', { r: posada.rating, n: posada.reviews })}</div>
                 <div className="reseñas">
                   {posada.reseñas.map((r, i) => (
                     <div className="reseña" key={i}>
@@ -364,29 +365,29 @@ export default function FichaPosada() {
 
           <div>
             <div className="booking-card">
-              <div className="booking-precio">${posada.precio} <span>USD / noche</span></div>
-              <div className="booking-rating"><strong>{ratingText(posada.rating, posada.reviews)}</strong></div>
+              <div className="booking-precio">${posada.precio} <span>{t('USD / noche')}</span></div>
+              <div className="booking-rating"><strong>{ratingText(posada.rating, posada.reviews, false, t)}</strong></div>
               <div className="booking-fields">
                 <div className="booking-row">
                   <div className="booking-field">
-                    <label>Llegada</label>
+                    <label>{t("Llegada")}</label>
                     <input type="date" value={fechaEntrada} onChange={e => setFechaEntrada(e.target.value)} />
                   </div>
                   <div className="booking-field">
-                    <label>Salida</label>
+                    <label>{t("Salida")}</label>
                     <input type="date" value={fechaSalida} onChange={e => setFechaSalida(e.target.value)} />
                   </div>
                 </div>
               </div>
               <div className="booking-huespedes">
-                <label>Huéspedes</label>
+                <label>{t("Huéspedes")}</label>
                 <select value={huespedes} onChange={e => setHuespedes(Number(e.target.value))}>
-                  {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n} {n === 1 ? 'huésped' : 'huéspedes'}</option>)}
+                  {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{t(n === 1 ? '{n} huésped' : '{n} huéspedes', { n })}</option>)}
                 </select>
               </div>
               {bookingsOpen ? (<>
               <button className="btn-reservar" onClick={handleReservar}>
-                <span>{noches > 0 ? `Reservar · ${noches} noche${noches > 1 ? 's' : ''}` : 'Reservar ahora'}</span>
+                <span>{noches > 0 ? t(noches > 1 ? 'Reservar · {n} noches' : 'Reservar · {n} noche', { n: noches }) : t('Reservar ahora')}</span>
                 <span className="btn-reservar-arrow">→</span>
               </button>
               <div className="btn-protegida">
@@ -394,13 +395,13 @@ export default function FichaPosada() {
                   <path d="M6 0.5L1 2.5V6.5C1 9.5 3.2 12.3 6 13C8.8 12.3 11 9.5 11 6.5V2.5L6 0.5Z" stroke="currentColor" strokeWidth="1.2" fill="none"/>
                   <path d="M4 7L5.5 8.5L8 5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                Reserva protegida · Sin cobro automático
+                {t("Reserva protegida · Sin cobro automático")}
               </div>
               <button className="btn-whatsapp" style={{ fontWeight: 700, color: 'var(--cacao)', borderColor: 'rgba(230,126,34,0.4)' }} onClick={contactarPosadero} disabled={contactando}>
-                {contactando ? 'Abriendo chat…' : 'Escribir al posadero'}
+                {contactando ? t('Abriendo chat…') : t('Escribir al posadero')}
               </button>
               <p style={{ fontSize: '0.68rem', color: 'var(--muted)', textAlign: 'center', marginTop: '0.4rem' }}>
-                Chatea con el posadero dentro de RESER-VE. Por tu seguridad, mantén la comunicación y el pago en la plataforma.
+                {t("Chatea con el posadero dentro de RESER-VE. Por tu seguridad, mantén la comunicación y el pago en la plataforma.")}
               </p>
               </>) : <PrivatePhaseNotice />}
               {(posada as any).id && (
@@ -411,22 +412,21 @@ export default function FichaPosada() {
               {noches > 0 && (
                 <div className="booking-desglose">
                   <div className="booking-linea">
-                    <span>${posada.precio} × {noches} noche{noches > 1 ? 's' : ''}</span>
+                    <span>${posada.precio} × {t(noches > 1 ? '{n} noches' : '{n} noche', { n: noches })}</span>
                     <span>${posada.precio * noches}</span>
                   </div>
                   <div className="booking-total">
-                    <span>Total</span>
+                    <span>{t("Total")}</span>
                     <span>${posada.precio * noches} USD</span>
                   </div>
                 </div>
               )}
-              {bookingsOpen && <p className="booking-nota">Sin cargos hasta confirmar. El posadero acepta en 24h.</p>}
+              {bookingsOpen && <p className="booking-nota">{t("Sin cargos hasta confirmar. El posadero acepta en 24h.")}</p>}
               <div className="booking-badges">
                 {posada.metodoPago.map(m => (
-                  <span className="booking-badge" key={m}>{m}</span>
+                  <span className="booking-badge" key={m}>{t(m)}</span>
                 ))}
               </div>
-              {!(posada as any).isDemo && <ReportPrice slug={slug} />}
             </div>
           </div>
         </div>

@@ -11,6 +11,8 @@ import { regions, findRegionsByQuery, type Region } from '@/lib/regions'
 import NavUser from '@/components/NavUser'
 import { ratingText } from '@/lib/rating'
 import { useBookingsOpen, PrivatePhaseNotice } from '@/components/PrivatePhase'
+import { useLang, useT } from '@/components/LangProvider'
+import { LOCALE, type Lang } from '@/lib/i18n'
 
 const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
@@ -18,20 +20,28 @@ const MapView = dynamic(() => import('@/components/MapView'), {
     <div style={{ width: '100%', height: '100%', background: '#e8edf0', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center', color: '#7A8699', fontFamily: 'inherit', fontSize: '0.9rem' }}>
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#7A8699" strokeWidth="1.5" style={{ display: 'block', margin: '0 auto 0.5rem' }}><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-        Cargando mapa…
+        <MapLoadingText />
       </div>
     </div>
   ),
 })
 
-// ─── Date helpers ─────────────────────────────────────────────────────────────
-const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
-const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-const DAYS = ['Do','Lu','Ma','Mi','Ju','Vi','Sá']
+function MapLoadingText() { return <>{useT()('Cargando mapa…')}</> }
 
-function fmtDate(d: Date | null) {
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+const MONTHS: Record<Lang, string[]> = {
+  es: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+  en: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+}
+const MONTHS_SHORT: Record<Lang, string[]> = {
+  es: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+  en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+}
+const DAYS: Record<Lang, string[]> = { es: ['Do','Lu','Ma','Mi','Ju','Vi','Sá'], en: ['Su','Mo','Tu','We','Th','Fr','Sa'] }
+
+function fmtDate(d: Date | null, lang: Lang) {
   if (!d) return ''
-  return d.toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString(LOCALE[lang], { day: 'numeric', month: 'short' })
 }
 function isSameDay(a: Date, b: Date) {
   return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate()
@@ -46,6 +56,7 @@ function Calendar({
   onCheckIn:(d:Date|null)=>void; onCheckOut:(d:Date|null)=>void
   compact?: boolean
 }) {
+  const { t, lang } = useLang()
   const today = new Date(); today.setHours(0,0,0,0)
   const [view, setView] = useState(()=>new Date(today.getFullYear(),today.getMonth(),1))
   const [hover, setHover] = useState<Date|null>(null)
@@ -70,9 +81,9 @@ function Calendar({
     const end = checkOut || hover
     return (
       <div className="cal-col" key={`${year}-${month}`}>
-        <div className="cal-mname">{MONTHS_ES[month]} {year}</div>
+        <div className="cal-mname">{MONTHS[lang][month]} {year}</div>
         <div className="cal-grid">
-          {DAYS.map(d=><div key={d} className="cal-dname">{d}</div>)}
+          {DAYS[lang].map(d=><div key={d} className="cal-dname">{d}</div>)}
           {cells.map((date,i)=>{
             if (!date) return <div key={`e${i}`}/>
             const past = date < today
@@ -118,11 +129,11 @@ function Calendar({
       <div className="cal-footer">
         <span className="cal-summary">
           {nights>0
-            ? `${nights} noche${nights>1?'s':''}: ${fmtDate(checkIn)} – ${fmtDate(checkOut)}`
-            : step==='in' ? 'Selecciona la entrada' : 'Ahora elige la salida'}
+            ? `${t(nights>1?'{n} noches':'{n} noche',{n:nights})}: ${fmtDate(checkIn,lang)} – ${fmtDate(checkOut,lang)}`
+            : step==='in' ? t('Selecciona la entrada') : t('Ahora elige la salida')}
         </span>
         <button className="cal-clear" onClick={()=>{onCheckIn(null);onCheckOut(null);setStep('in')}}>
-          Borrar fechas
+          {t("Borrar fechas")}
         </button>
       </div>
     </div>
@@ -142,13 +153,14 @@ function FlexiblePicker({
   flexWeeks: number
   onFlexWeeks: (w:number)=>void
 }) {
+  const { t, lang } = useLang()
   // Build upcoming 18 months
   const today = new Date()
   const upcoming: {key:string;label:string;year:number;month:number}[] = []
   for (let i=0;i<18;i++) {
     const d = addMonths(new Date(today.getFullYear(),today.getMonth(),1), i)
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
-    upcoming.push({ key, label: MONTHS_SHORT[d.getMonth()], year: d.getFullYear(), month: d.getMonth() })
+    upcoming.push({ key, label: MONTHS_SHORT[lang][d.getMonth()], year: d.getFullYear(), month: d.getMonth() })
   }
 
   function toggleMonth(key: string) {
@@ -156,23 +168,23 @@ function FlexiblePicker({
   }
 
   const WEEK_OPTS = [
-    {v:1,l:'1 semana'},
-    {v:2,l:'2 semanas'},
-    {v:3,l:'3 semanas'},
-    {v:4,l:'4 semanas'},
+    {v:1,l:t('{n} semana',{n:1})},
+    {v:2,l:t('{n} semanas',{n:2})},
+    {v:3,l:t('{n} semanas',{n:3})},
+    {v:4,l:t('{n} semanas',{n:4})},
   ]
 
   return (
     <div className="flex-picker">
       {/* Type tabs */}
       <div className="flex-tabs">
-        <button className={`flex-tab${flexType==='meses'?' on':''}`} onClick={()=>onFlexType('meses')}>Meses</button>
-        <button className={`flex-tab${flexType==='semanas'?' on':''}`} onClick={()=>onFlexType('semanas')}>Semanas</button>
+        <button className={`flex-tab${flexType==='meses'?' on':''}`} onClick={()=>onFlexType('meses')}>{t("Meses")}</button>
+        <button className={`flex-tab${flexType==='semanas'?' on':''}`} onClick={()=>onFlexType('semanas')}>{t("Semanas")}</button>
       </div>
 
       {flexType==='meses' && (
         <>
-          <p className="flex-hint">¿En qué mes quieres viajar?</p>
+          <p className="flex-hint">{t("¿En qué mes quieres viajar?")}</p>
           <div className="flex-months-grid">
             {upcoming.map(({key,label,year})=>(
               <button key={key} className={`flex-month${flexMonths.includes(key)?' on':''}`}
@@ -184,7 +196,7 @@ function FlexiblePicker({
           </div>
           {flexMonths.length>0 && (
             <div className="flex-clear-row">
-              <button className="flex-clear" onClick={()=>onFlexMonths([])}>Borrar selección</button>
+              <button className="flex-clear" onClick={()=>onFlexMonths([])}>{t("Borrar selección")}</button>
             </div>
           )}
         </>
@@ -192,9 +204,9 @@ function FlexiblePicker({
 
       {flexType==='semanas' && (
         <>
-          <p className="flex-hint">¿Cuánto tiempo quieres quedarte?</p>
+          <p className="flex-hint">{t("¿Cuánto tiempo quieres quedarte?")}</p>
           <div className="flex-weeks-row">
-            <button className={`flex-week-chip${flexWeeks===0?' on':''}`} onClick={()=>onFlexWeeks(0)}>Cualquier semana</button>
+            <button className={`flex-week-chip${flexWeeks===0?' on':''}`} onClick={()=>onFlexWeeks(0)}>{t("Cualquier semana")}</button>
             {WEEK_OPTS.map(({v,l})=>(
               <button key={v} className={`flex-week-chip${flexWeeks===v?' on':''}`} onClick={()=>onFlexWeeks(v)}>{l}</button>
             ))}
@@ -208,6 +220,7 @@ function FlexiblePicker({
 // ─── Posada Detail Drawer ─────────────────────────────────────────────────────
 function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }) {
   const router = useRouter()
+  const { t, lang } = useLang()
   const bookingsOpen = useBookingsOpen()
   const [imgIdx,   setImgIdx]   = useState(0)
   const [checkIn,  setCheckIn]  = useState<Date|null>(null)
@@ -231,50 +244,50 @@ function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }
 
   return (
     <>
-      <button className="drw-close" onClick={onClose} aria-label="Cerrar">
+      <button className="drw-close" onClick={onClose} aria-label={t('Cerrar')}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
       <div className="drw-gal">
         <img src={posada.imgs[imgIdx]} alt={posada.nombre} className="drw-img" key={imgIdx}/>
         <div className="drw-dots">
           {posada.imgs.map((_,i)=>(
-            <button key={i} className={`drw-dot${i===imgIdx?' on':''}`} onClick={()=>setImgIdx(i)} aria-label={`Foto ${i+1}`}/>
+            <button key={i} className={`drw-dot${i===imgIdx?' on':''}`} onClick={()=>setImgIdx(i)} aria-label={t('Foto {n}',{n:i+1})}/>
           ))}
         </div>
         {imgIdx>0 && <button className="drw-arrow left" onClick={()=>setImgIdx(i=>i-1)}>‹</button>}
         {imgIdx<posada.imgs.length-1 && <button className="drw-arrow right" onClick={()=>setImgIdx(i=>i+1)}>›</button>}
-        <div className="drw-tipo-badge">{posada.tipo}</div>
+        <div className="drw-tipo-badge">{t(posada.tipo)}</div>
       </div>
       <div className="drw-body">
         <div className="drw-header">
           <div style={{flex:1,minWidth:0}}>
             <h2 className="drw-name">{posada.nombre}</h2>
             <div className="drw-meta">
-              <span className="drw-rnum">{ratingText(posada.rating, posada.reviews)}</span>
+              <span className="drw-rnum">{ratingText(posada.rating, posada.reviews, false, t)}</span>
               <span style={{color:'var(--muted)'}}>·</span>
-              <span className="drw-rooms">{posada.habitaciones} hab.</span>
+              <span className="drw-rooms">{t('{n} hab.',{n:posada.habitaciones})}</span>
             </div>
           </div>
           <div className="drw-price-block">
             <span className="drw-price">${posada.precio}</span>
-            <span className="drw-unit">/noche</span>
+            <span className="drw-unit">{t('/noche')}</span>
           </div>
         </div>
         <div className="drw-tags">
-          {posada.tags.map(t=><span key={t} className="drw-tag">{t}</span>)}
+          {posada.tags.map(tg=><span key={tg} className="drw-tag">{t(tg)}</span>)}
         </div>
         <p className="drw-desc">{posada.descripcion}</p>
         <div className="drw-div"/>
-        <div className="drw-sec-title">Selecciona tus fechas</div>
+        <div className="drw-sec-title">{t("Selecciona tus fechas")}</div>
         <div className="drw-dates-bar" onClick={()=>setShowDates(v=>!v)}>
           <div className="drw-date-seg">
-            <span className="drw-date-lbl">ENTRADA</span>
-            <span className={`drw-date-val${!checkIn?' ph':''}`}>{checkIn?fmtDate(checkIn):'Agregar fecha'}</span>
+            <span className="drw-date-lbl">{t('ENTRADA')}</span>
+            <span className={`drw-date-val${!checkIn?' ph':''}`}>{checkIn?fmtDate(checkIn,lang):t('Agregar fecha')}</span>
           </div>
           <div style={{color:'var(--muted)',padding:'0 0.5rem',fontSize:'0.9rem'}}>→</div>
           <div className="drw-date-seg">
-            <span className="drw-date-lbl">SALIDA</span>
-            <span className={`drw-date-val${!checkOut?' ph':''}`}>{checkOut?fmtDate(checkOut):'Agregar fecha'}</span>
+            <span className="drw-date-lbl">{t('SALIDA')}</span>
+            <span className={`drw-date-val${!checkOut?' ph':''}`}>{checkOut?fmtDate(checkOut,lang):t('Agregar fecha')}</span>
           </div>
           <div style={{marginLeft:'auto',paddingRight:'0.75rem',color:'var(--muted)',fontSize:'0.8rem'}}>
             {showDates?'▲':'▼'}
@@ -286,45 +299,45 @@ function PosadaDrawer({ posada, onClose }: { posada: Posada; onClose: ()=>void }
           </div>
         )}
         <div className="drw-div"/>
-        <div className="drw-sec-title">Método de pago</div>
+        <div className="drw-sec-title">{t("Método de pago")}</div>
         <div className="drw-pay-sel" onClick={()=>setShowPago(v=>!v)}>
-          <span className={pago?'':'ph'}>{pago||'Selecciona un método'}</span>
+          <span className={pago?'':'ph'}>{pago?t(pago):t('Selecciona un método')}</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         {showPago && (
           <div className="drw-pay-opts">
             {PAGO_OPTS.map(v=>(
               <div key={v} className={`drw-pay-opt${pago===v?' sel':''}`} onClick={()=>{setPago(v);setShowPago(false)}}>
-                {v}{pago===v&&<span style={{color:'var(--cacao)',marginLeft:'auto'}}>✓</span>}
+                {t(v)}{pago===v&&<span style={{color:'var(--cacao)',marginLeft:'auto'}}>✓</span>}
               </div>
             ))}
           </div>
         )}
         <div className="drw-accepted">
-          {posada.metodoPago.map(m=><span key={m} className="drw-pay-badge">{m}</span>)}
+          {posada.metodoPago.map(m=><span key={m} className="drw-pay-badge">{t(m)}</span>)}
         </div>
         <div className="drw-div"/>
         {nights>0 && (
           <div className="drw-price-summary">
-            <div className="dps-row"><span>${posada.precio} × {nights} noche{nights>1?'s':''}</span><span>${total}</span></div>
-            <div className="dps-total"><span>Total estimado</span><span>${total} USD</span></div>
+            <div className="dps-row"><span>${posada.precio} × {t(nights>1?'{n} noches':'{n} noche',{n:nights})}</span><span>${total}</span></div>
+            <div className="dps-total"><span>{t("Total estimado")}</span><span>${total} USD</span></div>
           </div>
         )}
         <div className="drw-ctas">
           {bookingsOpen ? (
             <button className="drw-btn-res" onClick={handleReserve}>
-              {nights>0 ? `Reservar · $${total} USD` : 'Reservar ahora'}
+              {nights>0 ? t('Reservar · ${total} USD',{total}) : t('Reservar ahora')}
             </button>
           ) : <PrivatePhaseNotice compact />}
           <Link href={`/posadas/${posada.slug}`} className="drw-btn-det">
-            Ver todos los detalles →
+            {t("Ver todos los detalles →")}
           </Link>
         </div>
         <div className="drw-host">
           <div className="drw-avatar">{posada.host.nombre[0]}</div>
           <div>
-            <div className="drw-host-name">Anfitrión: {posada.host.nombre}</div>
-            <div className="drw-host-info">Posadero desde {posada.host.desde} · {posada.host.idiomas.join(', ')}</div>
+            <div className="drw-host-name">{t('Anfitrión: {name}',{name:posada.host.nombre})}</div>
+            <div className="drw-host-info">{t('Posadero desde {y}',{y:posada.host.desde})} · {posada.host.idiomas.map(i=>t(i)).join(', ')}</div>
           </div>
         </div>
       </div>
@@ -355,6 +368,7 @@ const PAY_OPTS = [
 // ─── Main ─────────────────────────────────────────────────────────────────────
 function BuscarContent() {
   const searchParams = useSearchParams()
+  const { t, lang } = useLang()
 
   // Location — pick up override coords passed from landing page search
   const [query,       setQuery]       = useState(searchParams.get('q') || '')
@@ -506,14 +520,14 @@ function BuscarContent() {
     ? flexMonths.length>0
       ? flexMonths.slice(0,2).map(m=>{
           const [y,mo]=m.split('-').map(Number)
-          return MONTHS_SHORT[mo-1]+(new Date().getFullYear()!==y?` ${y}`:'')
+          return MONTHS_SHORT[lang][mo-1]+(new Date().getFullYear()!==y?` ${y}`:'')
         }).join(', ')+(flexMonths.length>2?'…':'')
       : flexType==='semanas' && flexWeeks>0
-        ? `${flexWeeks} semana${flexWeeks>1?'s':''}`
-        : 'Fechas flexibles'
-    : checkIn&&checkOut ? `${fmtDate(checkIn)} – ${fmtDate(checkOut)}`
-    : checkIn ? `${fmtDate(checkIn)} – Salida`
-    : 'Fechas'
+        ? t(flexWeeks>1?'{n} semanas':'{n} semana',{n:flexWeeks})
+        : t('Fechas flexibles')
+    : checkIn&&checkOut ? `${fmtDate(checkIn,lang)} – ${fmtDate(checkOut,lang)}`
+    : checkIn ? `${fmtDate(checkIn,lang)} – ${t('Salida')}`
+    : t('Fechas')
 
   const sliderPct = ((precioMax-40)/(200-40))*100
 
@@ -555,7 +569,7 @@ function BuscarContent() {
         .nav-link{font-size:0.85rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
         .nav-link:hover{color:var(--indigo);}
         .nav-cta{padding:0.58rem 1rem;border-radius:999px;font-size:0.82rem;font-weight:600;text-decoration:none;background:var(--cacao);color:white;}
-        @media(max-width:768px){.nav-links{display:none;}}
+        @media(max-width:768px){.nav-links .nav-link{display:none;}}
         .sb-wrap{background:white;border-bottom:1px solid var(--line);padding:0.8rem 1.75rem;position:sticky;top:calc(57px + var(--pp-h,0px));z-index:190;}
         .sb-bar{display:flex;align-items:stretch;border:1.5px solid var(--line);border-radius:16px;background:white;box-shadow:var(--sh);max-width:860px;margin:0 auto;overflow:visible;position:relative;}
         .sb-seg{flex:1;position:relative;display:flex;flex-direction:column;justify-content:center;padding:0.62rem 1rem;border-right:1.5px solid var(--line);cursor:pointer;transition:background 0.17s;min-width:0;}
@@ -789,9 +803,9 @@ function BuscarContent() {
       <nav className="nav">
         <Link href="/" className="logo">RESER<span>-VE</span></Link>
         <div className="nav-links">
-          <Link href="/#destinos" className="nav-link">Destinos</Link>
-          <Link href="/posaderos" className="nav-link">Posaderos</Link>
-          <Link href="/#como-funciona" className="nav-link">Cómo funciona</Link>
+          <Link href="/#destinos" className="nav-link">{t("Destinos")}</Link>
+          <Link href="/posaderos" className="nav-link">{t("Posaderos")}</Link>
+          <Link href="/#como-funciona" className="nav-link">{t("Cómo funciona")}</Link>
           <NavUser />
         </div>
       </nav>
@@ -801,27 +815,27 @@ function BuscarContent() {
         <div className="sb-bar">
           {/* Location */}
           <div className="sb-seg" style={{flex:'1.6'}}>
-            <div className="sb-lbl">Destino</div>
+            <div className="sb-lbl">{t("Destino")}</div>
             <div className="sb-loc-row">
-              <input ref={inputRef} className="sb-txt" placeholder="¿A dónde vas?" value={query}
+              <input ref={inputRef} className="sb-txt" placeholder={t('¿A dónde vas?')} value={query}
                 onChange={e=>{setQuery(e.target.value);setOverrideLat(undefined);setOverrideLng(undefined);setShowSug(true)}}
                 onFocus={()=>setShowSug(true)} autoComplete="off"/>
-              {query && <button className="sb-clear" onClick={clearLocation} aria-label="Borrar">✕</button>}
+              {query && <button className="sb-clear" onClick={clearLocation} aria-label={t('Borrar')}>✕</button>}
             </div>
             {showSug && (
               <div className="sb-drop" ref={sugRef}>
                 {query === '' ? (
                   /* Pre-state */
                   <>
-                    <div className="sb-sug-hdr">Sugerencias de destinos</div>
+                    <div className="sb-sug-hdr">{t("Sugerencias de destinos")}</div>
                     <div className="sb-sug-row" onMouseDown={()=>{clearLocation();setShowSug(false)}}>
                       <span className="sb-sug-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                       <div className="sb-sug-main">
-                        <div className="sb-sug-name">Buscar en toda Venezuela</div>
-                        <div className="sb-sug-sub">Ver todas las posadas disponibles</div>
+                        <div className="sb-sug-name">{t("Buscar en toda Venezuela")}</div>
+                        <div className="sb-sug-sub">{t("Ver todas las posadas disponibles")}</div>
                       </div>
                     </div>
-                    <div className="sb-sug-section-hdr">Popular</div>
+                    <div className="sb-sug-section-hdr">{t("Popular")}</div>
                     {['Los Roques','Isla Margarita','Canaima','Mochima','Caracas','Choroní','Mérida'].map(name => {
                       const loc = venezuelaLocations.find(l=>l.nombre===name)
                       if (!loc) return null
@@ -830,20 +844,20 @@ function BuscarContent() {
                           <span className="sb-sug-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="#7A8699"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></span>
                           <div className="sb-sug-main">
                             <div className="sb-sug-name">{name}</div>
-                            <div className="sb-sug-sub">{loc.region}</div>
+                            <div className="sb-sug-sub">{t(loc.region)}</div>
                           </div>
                         </div>
                       )
                     })}
-                    <div className="sb-sug-section-hdr">Regiones</div>
+                    <div className="sb-sug-section-hdr">{t("Regiones")}</div>
                     {regions.map(r=>(
                       <div key={r.id} className="sb-sug-row" onMouseDown={()=>selectRegion(r)}>
                         <span className="sb-sug-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></span>
                         <div className="sb-sug-main">
-                          <div className="sb-sug-name">{r.nombre}</div>
+                          <div className="sb-sug-name">{t(r.nombre)}</div>
                           <div className="sb-sug-sub">{r.sub}</div>
                         </div>
-                        <span className="sb-sug-badge">Región</span>
+                        <span className="sb-sug-badge">{t("Región")}</span>
                       </div>
                     ))}
                   </>
@@ -852,7 +866,7 @@ function BuscarContent() {
                   <>
                     {sugLoading && suggestions.length===0 && (
                       <div className="sb-sug-loading">
-                        <span>⟳</span> Buscando en Venezuela…
+                        <span>⟳</span> {t('Buscando en Venezuela…')}
                       </div>
                     )}
                     {suggestions.map((s,i)=>(
@@ -864,17 +878,17 @@ function BuscarContent() {
                           }
                         </span>
                         <div className="sb-sug-main">
-                          <div className="sb-sug-name">{s.label}</div>
+                          <div className="sb-sug-name">{s.isRegion ? t(s.label) : s.label}</div>
                           <div className="sb-sug-sub">{s.sub}</div>
                         </div>
                         {s.isRegion
-                          ? <span className="sb-sug-badge">Región</span>
-                          : s.isStatic && <span className="sb-sug-badge">Popular</span>
+                          ? <span className="sb-sug-badge">{t("Región")}</span>
+                          : s.isStatic && <span className="sb-sug-badge">{t("Popular")}</span>
                         }
                       </div>
                     ))}
                     {!sugLoading && suggestions.length===0 && query.length>1 && (
-                      <div className="sb-sug-loading">Sin resultados para &quot;{query}&quot;</div>
+                      <div className="sb-sug-loading">{t('Sin resultados para «{q}»',{q:query})}</div>
                     )}
                   </>
                 )}
@@ -885,13 +899,13 @@ function BuscarContent() {
           {/* Dates */}
           <div className={`sb-seg${showDate?' open':''}`} style={{flex:'1.3'}} ref={dateRef}
             onClick={()=>{setShowDate(v=>!v);setShowPay(false)}}>
-            <div className="sb-lbl">Fechas</div>
+            <div className="sb-lbl">{t("Fechas")}</div>
             <div className={`sb-val${!checkIn&&!isFlexible?' sb-ph':''}`}>{dateLabel}</div>
             {showDate && (
               <div className="sb-date-drop" onClick={e=>e.stopPropagation()}>
                 <div className="sb-modes">
-                  <button className={`sb-mode${dateMode==='exactas'?' on':''}`} onClick={()=>setDateMode('exactas')}>Fechas exactas</button>
-                  <button className={`sb-mode${dateMode==='flexibles'?' on':''}`} onClick={()=>setDateMode('flexibles')}>Fechas flexibles</button>
+                  <button className={`sb-mode${dateMode==='exactas'?' on':''}`} onClick={()=>setDateMode('exactas')}>{t("Fechas exactas")}</button>
+                  <button className={`sb-mode${dateMode==='flexibles'?' on':''}`} onClick={()=>setDateMode('flexibles')}>{t("Fechas flexibles")}</button>
                 </div>
                 {dateMode==='exactas'
                   ? <Calendar checkIn={checkIn} checkOut={checkOut} onCheckIn={setCheckIn} onCheckOut={setCheckOut}/>
@@ -904,14 +918,14 @@ function BuscarContent() {
           {/* Payment */}
           <div className={`sb-seg${showPay?' open':''}`} ref={payRef}
             onClick={()=>{setShowPay(v=>!v);setShowDate(false)}}>
-            <div className="sb-lbl">Pago</div>
-            <div className={`sb-val${!metodoPago?' sb-ph':''}`}>{metodoPago||'Cualquier opción'}</div>
+            <div className="sb-lbl">{t("Pago")}</div>
+            <div className={`sb-val${!metodoPago?' sb-ph':''}`}>{metodoPago?t(metodoPago):t('Cualquier opción')}</div>
             {showPay && (
               <div className="sb-pay-drop" onClick={e=>e.stopPropagation()}>
                 {PAY_OPTS.map(({value,label})=>(
                   <div key={value} className={`sb-pay-row${metodoPago===value?' sel':''}`}
                     onMouseDown={()=>{setMetodoPago(value);setShowPay(false)}}>
-                    {label}{metodoPago===value&&<span style={{marginLeft:'auto',color:'var(--cacao)'}}>✓</span>}
+                    {t(label)}{metodoPago===value&&<span style={{marginLeft:'auto',color:'var(--cacao)'}}>✓</span>}
                   </div>
                 ))}
               </div>
@@ -920,7 +934,7 @@ function BuscarContent() {
 
           <button className="sb-go" onClick={()=>{setShowSug(false);setShowDate(false);setShowPay(false)}}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            Buscar
+            {t("Buscar")}
           </button>
         </div>
       </div>
@@ -930,7 +944,7 @@ function BuscarContent() {
         <div className={`list-col${mobileTab==='mapa'?' hide':''}`}>
           <div className="price-box">
             <div className="price-row">
-              <span className="price-lbl">Precio máximo / noche</span>
+              <span className="price-lbl">{t("Precio máximo / noche")}</span>
               <span className="price-val">${precioMax} <small>USD</small></span>
             </div>
             <div className="sl-wrap">
@@ -942,12 +956,12 @@ function BuscarContent() {
 
           <div className="res-hdr">
             <p className="res-count">
-              <strong>{results.length}</strong> posada{results.length!==1?'s':''} encontrada{results.length!==1?'s':''}
-              {resolvedLoc&&` cerca de ${resolvedLoc}`}
+              <strong>{results.length}</strong> {t(results.length!==1?'posadas encontradas':'posada encontrada')}
+              {resolvedLoc&&` ${t('cerca de {place}',{place:resolvedLoc})}`}
             </p>
             <div className="sort-row">
-              <span className="sort-lbl">Ordenar:</span>
-              {([{v:'rating',l:'Valoración'},{v:'precio',l:'Precio'},...(results.some(r=>r.distanceKm!==null)?[{v:'distancia',l:'Distancia'}]:[])] as {v:string,l:string}[]).map(({v,l})=>(
+              <span className="sort-lbl">{t("Ordenar:")}</span>
+              {([{v:'rating',l:t('Valoración')},{v:'precio',l:t('Precio')},...(results.some(r=>r.distanceKm!==null)?[{v:'distancia',l:t('Distancia')}]:[])] as {v:string,l:string}[]).map(({v,l})=>(
                 <button key={v} className={`sort-chip${sort===v?' on':''}`} onClick={()=>setSort(v as any)}>{l}</button>
               ))}
             </div>
@@ -957,14 +971,14 @@ function BuscarContent() {
             <div className="prox-box">
               <div className="prox-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
               <div className="prox-txt">
-                <p>No hay posadas exactas en "{query}"</p>
-                <span>Mostrando las más cercanas{resolvedLoc?` a ${resolvedLoc}`:''}</span>
+                <p>{t('No hay posadas exactas en «{q}»',{q:query})}</p>
+                <span>{resolvedLoc?t('Mostrando las más cercanas a {place}',{place:resolvedLoc}):t('Mostrando las más cercanas')}</span>
               </div>
             </div>
           )}
 
           {results.length===0 ? (
-            <div className="empty"><p>Sin resultados</p><span>Prueba con otro destino o ajusta los filtros</span></div>
+            <div className="empty"><p>{t("Sin resultados")}</p><span>{t("Prueba con otro destino o ajusta los filtros")}</span></div>
           ) : (
             <div className="cards">
               {results.map(({posada:p,distanceKm,isProximity:isProx})=>(
@@ -976,25 +990,25 @@ function BuscarContent() {
                 >
                   <div className="c-img">
                     <img src={p.imgs[0]} alt={p.nombre} loading="lazy"/>
-                    <div className="c-tipo">{p.tipo}</div>
+                    <div className="c-tipo">{t(p.tipo)}</div>
                   </div>
                   <div className="c-body">
                     <div className="c-top">
                       <div className="c-name">{p.nombre}</div>
-                      <div className="c-price">${p.precio}<span style={{fontWeight:400,fontSize:'0.66rem'}}>/noche</span></div>
+                      <div className="c-price">${p.precio}<span style={{fontWeight:400,fontSize:'0.66rem'}}>{t('/noche')}</span></div>
                     </div>
                     <div style={{display:'flex',alignItems:'center',gap:'0.38rem'}}>
-                      <span className="c-rnum">{ratingText(p.rating, p.reviews, true)}</span>
+                      <span className="c-rnum">{ratingText(p.rating, p.reviews, true, t)}</span>
                     </div>
-                    <div className="c-tags">{p.tags.map(t=><span key={t} className="ctag">{t}</span>)}</div>
-                    <div className="c-pay">{p.metodoPago.map(m=><span key={m} className="ptag">{m}</span>)}</div>
+                    <div className="c-tags">{p.tags.map(tg=><span key={tg} className="ctag">{t(tg)}</span>)}</div>
+                    <div className="c-pay">{p.metodoPago.map(m=><span key={m} className="ptag">{t(m)}</span>)}</div>
                     <div className="c-foot">
                       <div className="c-dist">
                         {distanceKm!==null
-                          ? <><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--cacao)" style={{flexShrink:0}}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>{distanceKm<10?`${Math.round(distanceKm*10)/10}`:`${Math.round(distanceKm)}`} km{isProx?' (zona cercana)':''}</>
+                          ? <><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--cacao)" style={{flexShrink:0}}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>{distanceKm<10?`${Math.round(distanceKm*10)/10}`:`${Math.round(distanceKm)}`} km{isProx?` (${t('zona cercana')})`:''}</>
                           : <span>{p.destino}</span>}
                       </div>
-                      <span className="c-cta">Ver detalles →</span>
+                      <span className="c-cta">{t("Ver detalles →")}</span>
                     </div>
                   </div>
                 </div>
@@ -1016,10 +1030,10 @@ function BuscarContent() {
               alignItems:'center',gap:'0.35rem',
             }}
             className="map-back-btn"
-            aria-label="Volver a la lista"
+            aria-label={t('Volver a la lista')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            Lista
+            {t("Lista")}
           </button>
           <style>{`.map-back-btn{display:none!important;} @media(max-width:860px){.map-back-btn{display:flex!important;}}`}</style>
           <div className="map-inner">
@@ -1046,11 +1060,11 @@ function BuscarContent() {
       <div className="m-tabs">
         <button className={`m-tab${mobileTab==='lista'?' on':''}`} onClick={()=>setMobileTab('lista')}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="2.5" rx="1"/><rect x="3" y="10.75" width="18" height="2.5" rx="1"/><rect x="3" y="17.5" width="18" height="2.5" rx="1"/></svg>
-          Lista
+          {t("Lista")}
         </button>
         <button className={`m-tab${mobileTab==='mapa'?' on':''}`} onClick={()=>setMobileTab('mapa')}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
-          Mapa
+          {t("Mapa")}
         </button>
       </div>
 
@@ -1069,10 +1083,12 @@ export default function Buscar() {
   return (
     <Suspense fallback={
       <div style={{minHeight:'100dvh',background:'#FDFBF7',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'inherit',color:'#1A2B4C',fontSize:'0.9rem'}}>
-        Cargando…
+        <LoadingText />
       </div>
     }>
       <BuscarContent/>
     </Suspense>
   )
 }
+
+function LoadingText() { return <>{useT()('Cargando…')}</> }

@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { useT } from './LangProvider'
 
 // Botón de corazón para guardar/quitar una posada de favoritos.
 // `posadaId` es el id numérico de la posada (de la API).
 export default function FavoriteButton({ posadaId, variant = 'card' }: { posadaId: number; variant?: 'card' | 'full' }) {
   const { status } = useSession()
+  const t = useT()
   const router = useRouter()
   const [fav, setFav] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -43,9 +45,9 @@ export default function FavoriteButton({ posadaId, variant = 'card' }: { posadaI
   return (
     <button
       onClick={toggle}
-      aria-label={fav ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+      aria-label={fav ? t('Quitar de favoritos') : t('Guardar en favoritos')}
       aria-pressed={fav}
-      title={fav ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+      title={fav ? t('Quitar de favoritos') : t('Guardar en favoritos')}
       style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: full ? '0.5rem' : 0,
         width: full ? 'auto' : 38, height: 38, padding: full ? '0 1rem' : 0,
@@ -61,7 +63,7 @@ export default function FavoriteButton({ posadaId, variant = 'card' }: { posadaI
         fill={fav ? '#E67E22' : 'none'} stroke={fav ? '#E67E22' : '#7A8699'} strokeWidth="2">
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
       </svg>
-      {full && (fav ? 'Guardada' : 'Guardar')}
+      {full && (fav ? t('Guardada') : t('Guardar'))}
     </button>
   )
 }

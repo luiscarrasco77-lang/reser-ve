@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import NavUser from '@/components/NavUser'
 import RichText from '@/components/RichText'
+import { useLang } from '@/components/LangProvider'
+import { LOCALE } from '@/lib/i18n'
 
 type Message = {
   id: number
@@ -35,6 +37,7 @@ export default function ConversationPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { id } = useParams<{ id: string }>()
+  const { t, lang } = useLang()
   const [conv, setConv] = useState<Conversation | null>(null)
   const [loading, setLoading] = useState(true)
   const [body, setBody] = useState('')
@@ -88,16 +91,16 @@ export default function ConversationPage() {
   const myRole = (session?.user as any)?.role
 
   if (status === 'loading' || loading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'Inter,sans-serif', color: '#7A8699' }}>Cargando…</div>
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'Inter,sans-serif', color: '#7A8699' }}>{t("Cargando…")}</div>
   }
 
   if (!conv) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'Inter,sans-serif', color: '#7A8699' }}>Conversación no encontrada.</div>
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'Inter,sans-serif', color: '#7A8699' }}>{t("Conversación no encontrada.")}</div>
   }
 
   function getRoleLabel(role: string) {
-    if (role === 'admin') return 'Equipo RESER-VE'
-    if (role === 'host') return 'Posadero'
+    if (role === 'admin') return t('Equipo RESER-VE')
+    if (role === 'host') return t('Posadero')
     return null
   }
 
@@ -149,24 +152,24 @@ export default function ConversationPage() {
         <div className="chat-header">
           <a href="/mensajes" className="back-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-            Bandeja de mensajes
+            {t("Bandeja de mensajes")}
           </a>
           <div className="chat-title">
             <span className={`badge ${conv.type === 'booking' ? 'badge-booking' : 'badge-support'}`}>
-              {conv.type === 'booking' ? 'Reserva' : 'Soporte'}
+              {conv.type === 'booking' ? t('Reserva') : t('Soporte')}
             </span>
             {conv.subject}
           </div>
           {conv.posadaNombre && (
-            <div className="chat-meta">Relacionado con: {conv.posadaNombre}</div>
+            <div className="chat-meta">{t('Relacionado con: {name}', { name: conv.posadaNombre })}</div>
           )}
           {conv.viewerIsAdmin && conv.context && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: '.6rem', marginTop: '.8rem' }}>
-              {([['Cliente', conv.context.user], ['Posadero', conv.context.host]] as [string, Person | null][]).filter(([, p]) => p).map(([label, p]) => (
+              {([['Cliente', conv.context.user], [t('Posadero'), conv.context.host]] as [string, Person | null][]).filter(([, p]) => p).map(([label, p]) => (
                 <div key={label} style={{ background: 'white', border: '1px solid var(--line)', borderRadius: 12, padding: '.7rem .9rem', fontSize: '.8rem', lineHeight: 1.55 }}>
                   <div style={{ fontSize: '.68rem', fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--muted)' }}>{label}</div>
                   <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{p!.name}</div>
-                  <div><a href={`mailto:${p!.email}`} style={{ color: 'var(--cacao)' }}>{p!.email}</a> · {p!.role === 'host' ? 'Posadero' : p!.role === 'admin' ? 'Admin' : 'Viajero'} · desde {new Date(p!.createdAt).toLocaleDateString('es-VE', { month: 'short', year: 'numeric' })}</div>
+                  <div><a href={`mailto:${p!.email}`} style={{ color: 'var(--cacao)' }}>{p!.email}</a> · {p!.role === 'host' ? t('Posadero') : p!.role === 'admin' ? 'Admin' : 'Viajero'} · desde {new Date(p!.createdAt).toLocaleDateString('es-VE', { month: 'short', year: 'numeric' })}</div>
                   <div style={{ color: 'var(--muted)' }}>
                     {p!.bookings} reserva{p!.bookings === 1 ? '' : 's'}{p!.activeBookings.length ? ` · activas: ${p!.activeBookings.join(', ')}` : ''}
                     {p!.posadas.length ? ` · posadas: ${p!.posadas.join(', ')}` : ''}
@@ -180,7 +183,7 @@ export default function ConversationPage() {
         <div className="messages">
           {conv.messages.length === 0 && (
             <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '0.88rem', padding: '2rem' }}>
-              No hay mensajes aún. Sé el primero en escribir.
+              {t("No hay mensajes aún. Sé el primero en escribir.")}
             </div>
           )}
           {conv.messages.map(msg => {
@@ -199,8 +202,8 @@ export default function ConversationPage() {
                 )}
                 <div className="msg-bubble"><RichText text={msg.body} /></div>
                 <div className="msg-time">
-                  {new Date(msg.createdAt).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })},&nbsp;
-                  {new Date(msg.createdAt).toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })}
+                  {new Date(msg.createdAt).toLocaleTimeString(LOCALE[lang], { hour: '2-digit', minute: '2-digit' })},&nbsp;
+                  {new Date(msg.createdAt).toLocaleDateString(LOCALE[lang], { day: 'numeric', month: 'short' })}
                 </div>
               </div>
             )
@@ -211,14 +214,14 @@ export default function ConversationPage() {
         <div className="input-area">
           <textarea
             className="msg-input"
-            placeholder="Escribe tu mensaje…"
+            placeholder={t('Escribe tu mensaje…')}
             value={body}
             onChange={e => setBody(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
             rows={1}
           />
           <button className="send-btn" disabled={sending || !body.trim()} onClick={sendMessage}>
-            {sending ? '…' : 'Enviar'}
+            {sending ? '…' : t('Enviar')}
           </button>
         </div>
       </div>

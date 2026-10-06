@@ -1,8 +1,10 @@
 'use client'
 
-import { signOut } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import NavUser from '@/components/NavUser'
+import { useLang, useT } from '@/components/LangProvider'
+import type { Lang } from '@/lib/i18n'
 
 type Booking = {
   id: number; bookingCode: string; posadaId: number
@@ -20,14 +22,18 @@ const STATUS: Record<string, { label: string; color: string; bg: string; icon: s
   completed: { label: 'Completada',                color: '#4338ca', bg: 'rgba(99,102,241,0.1)', icon: '⭐' },
 }
 
-const MONTHS = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
-function fmt(d: string) {
+const MONTHS: Record<Lang, string[]> = {
+  es: ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],
+  en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+}
+function fmt(d: string, lang: Lang) {
   if (!d) return ''
   const [y, m, day] = d.split('-')
-  return `${day} ${MONTHS[+m-1]} ${y}`
+  return lang === 'en' ? `${MONTHS.en[+m-1]} ${+day}, ${y}` : `${day} ${MONTHS.es[+m-1]} ${y}`
 }
 
 export default function MisReservasPage() {
+  const t = useT()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [notLoggedIn, setNotLoggedIn] = useState(false)
@@ -41,7 +47,7 @@ export default function MisReservasPage() {
   }, [])
 
   async function cancel(id: number) {
-    if (!confirm('¿Cancelar esta reserva?')) return
+    if (!confirm(t('¿Cancelar esta reserva?'))) return
     setCancelling(id)
     try {
       const res = await fetch(`/api/bookings/${id}`, {
@@ -105,46 +111,43 @@ export default function MisReservasPage() {
 
       <nav className="nav">
         <a href="/" className="nav-logo">RESER<span>-VE</span></a>
-        <div style={{display:'flex',gap:'1.25rem',alignItems:'center'}}>
-          <a href="/buscar" style={{fontSize:'0.84rem',fontWeight:600,color:'var(--muted)',textDecoration:'none'}}>Explorar</a>
-          <button onClick={() => signOut({ callbackUrl: '/' })} style={{fontSize:'0.84rem',fontWeight:600,color:'var(--muted)',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit'}}>Salir</button>
-        </div>
+        <NavUser />
       </nav>
 
       <main className="main">
-        <div className="page-title">Mis reservas</div>
-        <div className="page-sub">Historial de tus estadías en posadas venezolanas</div>
+        <div className="page-title">{t("Mis reservas")}</div>
+        <div className="page-sub">{t("Historial de tus estadías en posadas venezolanas")}</div>
 
-        {loading && <div className="loading">Cargando tus reservas…</div>}
+        {loading && <div className="loading">{t("Cargando tus reservas…")}</div>}
 
         {notLoggedIn && (
           <div className="empty">
             
-            <div className="empty-title">Inicia sesión para ver tus reservas</div>
-            <a href="/login?callbackUrl=/mis-reservas" className="btn-explore">Iniciar sesión</a>
+            <div className="empty-title">{t("Inicia sesión para ver tus reservas")}</div>
+            <a href="/login?callbackUrl=/mis-reservas" className="btn-explore">{t("Iniciar sesión")}</a>
           </div>
         )}
 
         {!loading && !notLoggedIn && bookings.length === 0 && (
           <div className="empty">
             
-            <div className="empty-title">Aún no tienes reservas</div>
-            <div className="empty-sub">Las reservas abren muy pronto. Mientras tanto, explora posadas y guarda tus favoritas</div>
-            <a href="/buscar" className="btn-explore">Explorar posadas</a>
-            <a href="/favoritos" style={{ display: 'block', marginTop: '0.8rem', color: 'var(--cacao)', fontWeight: 700, fontSize: '0.86rem', textDecoration: 'none' }}>Ver mis favoritas →</a>
+            <div className="empty-title">{t("Aún no tienes reservas")}</div>
+            <div className="empty-sub">{t("Las reservas abren muy pronto. Mientras tanto, explora posadas y guarda tus favoritas")}</div>
+            <a href="/buscar" className="btn-explore">{t("Explorar posadas")}</a>
+            <a href="/favoritos" style={{ display: 'block', marginTop: '0.8rem', color: 'var(--cacao)', fontWeight: 700, fontSize: '0.86rem', textDecoration: 'none' }}>{t("Ver mis favoritas →")}</a>
           </div>
         )}
 
         {!loading && active.length > 0 && (
           <>
-            <div className="section-label">Reservas activas ({active.length})</div>
+            <div className="section-label">{t('Reservas activas ({n})', { n: active.length })}</div>
             {active.map(b => <BookingCard key={b.id} b={b} onCancel={cancel} cancelling={cancelling === b.id} />)}
           </>
         )}
 
         {!loading && past.length > 0 && (
           <>
-            <div className="section-label">Historial</div>
+            <div className="section-label">{t("Historial")}</div>
             {past.map(b => <BookingCard key={b.id} b={b} onCancel={cancel} cancelling={cancelling === b.id} />)}
           </>
         )}
@@ -154,6 +157,7 @@ export default function MisReservasPage() {
 }
 
 function ReviewForm({ posadaId }: { posadaId: number }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [rating, setRating] = useState(5)
   const [hover, setHover] = useState(0)
@@ -171,17 +175,17 @@ function ReviewForm({ posadaId }: { posadaId: number }) {
         body: JSON.stringify({ posadaId, rating, texto }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) { setError(data.error || 'No se pudo enviar la reseña'); return }
+      if (!res.ok) { setError(t(data.error || 'No se pudo enviar la reseña')); return }
       setDone(true)
-    } catch { setError('Error de red. Intenta de nuevo.') }
+    } catch { setError(t('Error de red. Intenta de nuevo.')) }
     finally { setBusy(false) }
   }
 
-  if (done) return <div className="host-note" style={{ marginTop: '0.6rem' }}>¡Gracias por tu reseña! ⭐</div>
+  if (done) return <div className="host-note" style={{ marginTop: '0.6rem' }}>{t("¡Gracias por tu reseña! ⭐")}</div>
   if (!open) {
     return (
       <button className="btn-cancel" style={{ color: 'var(--cacao)', background: 'rgba(230,126,34,0.08)', borderColor: 'rgba(230,126,34,0.25)' }} onClick={() => setOpen(true)}>
-        ⭐ Dejar una reseña
+        {t("⭐ Dejar una reseña")}
       </button>
     )
   }
@@ -190,28 +194,29 @@ function ReviewForm({ posadaId }: { posadaId: number }) {
       <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '0.5rem' }}>
         {[1, 2, 3, 4, 5].map(n => (
           <button key={n} onClick={() => setRating(n)} onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}
-            aria-label={`${n} estrellas`}
+            aria-label={t('{n} estrellas', { n })}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.3rem', padding: 0, color: (hover || rating) >= n ? '#E67E22' : 'rgba(26,43,76,0.2)' }}>★</button>
         ))}
       </div>
-      <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder="¿Cómo fue tu experiencia?"
+      <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder={t('¿Cómo fue tu experiencia?')}
         style={{ width: '100%', minHeight: 70, border: '1.5px solid var(--line)', borderRadius: 10, padding: '0.6rem 0.8rem', fontFamily: 'inherit', fontSize: '0.85rem', resize: 'vertical', outline: 'none' }} />
       {error && <div style={{ color: '#dc2626', fontSize: '0.78rem', marginTop: '0.4rem' }}>{error}</div>}
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem' }}>
         <button className="btn-explore" style={{ padding: '0.5rem 1.1rem', fontSize: '0.82rem' }} disabled={busy || !texto.trim()} onClick={submit}>
-          {busy ? 'Enviando…' : 'Publicar reseña'}
+          {busy ? t('Enviando…') : t('Publicar reseña')}
         </button>
-        <button className="btn-cancel" onClick={() => setOpen(false)}>Cancelar</button>
+        <button className="btn-cancel" onClick={() => setOpen(false)}>{t("Cancelar")}</button>
       </div>
     </div>
   )
 }
 
 function BookingCard({ b, onCancel, cancelling }: { b: Booking; onCancel: (id: number) => void; cancelling: boolean }) {
+  const { t, lang } = useLang()
   const s = STATUS[b.status] ?? STATUS.pending
   const canCancel = b.status === 'pending'
 
-  const instruction = `El posadero te enviará sus datos de pago${b.paymentMethod ? ` (${b.paymentMethod})` : ''} por el chat de RESER-VE. Monto: $${b.totalPrice} USD · referencia ${b.bookingCode}. Paga solo a datos recibidos dentro de la app.`
+  const instruction = t('El posadero te enviará sus datos de pago{method} por el chat de RESER-VE. Monto: ${total} USD · referencia {code}. Paga solo a datos recibidos dentro de la app.', { method: b.paymentMethod ? ` (${t(b.paymentMethod)})` : '', total: b.totalPrice, code: b.bookingCode })
 
   return (
     <div className="card">
@@ -222,30 +227,30 @@ function BookingCard({ b, onCancel, cancelling }: { b: Booking; onCancel: (id: n
       <div className="card-body">
         <div className="card-top">
           <div className="card-nombre">{b.posadaNombre}</div>
-          <span className="badge" style={{background: s.bg, color: s.color}}>{s.icon} {s.label}</span>
+          <span className="badge" style={{background: s.bg, color: s.color}}>{s.icon} {t(s.label)}</span>
         </div>
         <div className="card-dates">
-          <strong>{fmt(b.checkIn)}</strong> → <strong>{fmt(b.checkOut)}</strong>
-          &nbsp;·&nbsp;{b.nights} noche{b.nights > 1 ? 's' : ''}&nbsp;·&nbsp;{b.guestCount} huésped{b.guestCount > 1 ? 'es' : ''}
+          <strong>{fmt(b.checkIn, lang)}</strong> → <strong>{fmt(b.checkOut, lang)}</strong>
+          &nbsp;·&nbsp;{t(b.nights > 1 ? '{n} noches' : '{n} noche', { n: b.nights })}&nbsp;·&nbsp;{t(b.guestCount > 1 ? '{n} huéspedes' : '{n} huésped', { n: b.guestCount })}
         </div>
         <div className="card-footer">
           <span className="card-price">${b.totalPrice} USD</span>
           <span className="card-code">{b.bookingCode}</span>
-          {b.paymentMethod && <span className="card-pay">· {b.paymentMethod}</span>}
+          {b.paymentMethod && <span className="card-pay">· {t(b.paymentMethod)}</span>}
         </div>
 
         {b.status === 'confirmed' && instruction && (
           <div className="pay-instructions">
-            <strong>Instrucciones de pago:</strong> {instruction}
+            <strong>{t("Instrucciones de pago:")}</strong> {instruction}
           </div>
         )}
         {b.hostNotes && b.status === 'confirmed' && (
-          <div className="host-note"><strong>Mensaje del posadero:</strong> {b.hostNotes}</div>
+          <div className="host-note"><strong>{t("Mensaje del posadero:")}</strong> {b.hostNotes}</div>
         )}
 
         <div className="card-actions">
           {b.posadaSlug && (
-            <Link href={`/posadas/${b.posadaSlug}`} className="btn-view">Ver posada →</Link>
+            <Link href={`/posadas/${b.posadaSlug}`} className="btn-view">{t("Ver posada →")}</Link>
           )}
           <button className="btn-view" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }} onClick={async () => {
             const res = await fetch('/api/conversations/with-host', {
@@ -253,10 +258,10 @@ function BookingCard({ b, onCancel, cancelling }: { b: Booking; onCancel: (id: n
               body: JSON.stringify({ posadaId: b.posadaId, bookingId: b.id }),
             }).catch(() => null)
             if (res && res.ok) { const d = await res.json(); if (d.id) window.location.href = `/mensajes/${d.id}` }
-          }}>Mensaje al posadero →</button>
+          }}>{t("Mensaje al posadero →")}</button>
           {canCancel && (
             <button className="btn-cancel" disabled={cancelling} onClick={() => onCancel(b.id)}>
-              {cancelling ? 'Cancelando…' : 'Cancelar solicitud'}
+              {cancelling ? t('Cancelando…') : t('Cancelar solicitud')}
             </button>
           )}
           {(b.status === 'completed' || b.status === 'confirmed') && <ReviewForm posadaId={b.posadaId} />}

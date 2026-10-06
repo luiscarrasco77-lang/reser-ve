@@ -4,6 +4,7 @@ import { convertToModelMessages, streamText, stepCountIs, tool, type UIMessage }
 import { z } from 'zod'
 import { queryPosadas, isAvailable } from '@/lib/posadas-query'
 import { AI_MODEL, BOOKINGS_OPEN } from '@/lib/constants'
+import { getLang, aiLanguageNote } from '@/lib/i18n-server'
 
 export const maxDuration = 30
 
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
   try {
     const result = streamText({
       model: MODEL,
-      system: SYSTEM,
+      system: SYSTEM + aiLanguageNote(await getLang()),
       messages: await convertToModelMessages(messages),
       stopWhen: stepCountIs(6),
       tools: {

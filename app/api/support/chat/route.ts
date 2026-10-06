@@ -8,6 +8,7 @@ import { conversations, messages as messagesTable, users } from '@/lib/db/schema
 import { eq } from 'drizzle-orm'
 import { SUPPORT_SYSTEM_PROMPT } from '@/lib/support-kb'
 import { AI_MODEL } from '@/lib/constants'
+import { getLang, aiLanguageNote } from '@/lib/i18n-server'
 import { emailNewMessage } from '@/lib/email'
 
 // El asistente puede dar varios pasos (responder + usar herramienta)
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
   try {
     const result = streamText({
       model: MODEL,
-      system: SUPPORT_SYSTEM_PROMPT + contextoUsuario,
+      system: SUPPORT_SYSTEM_PROMPT + contextoUsuario + aiLanguageNote(await getLang()),
       messages: await convertToModelMessages(messages),
       stopWhen: stepCountIs(4),
       tools: {

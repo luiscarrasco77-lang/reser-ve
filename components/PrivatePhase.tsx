@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { BOOKINGS_OPEN } from '@/lib/constants'
+import { useT } from './LangProvider'
 
 // true si el usuario actual puede reservar (reservas abiertas, o admin haciendo pruebas).
 export function useBookingsOpen() {
@@ -11,6 +12,7 @@ export function useBookingsOpen() {
 
 // Aviso que sustituye al botón de reservar durante la fase privada.
 export function PrivatePhaseNotice({ compact = false }: { compact?: boolean }) {
+  const t = useT()
   return (
     <div style={{
       background: 'linear-gradient(135deg, rgba(230,126,34,0.08), rgba(26,43,76,0.05))',
@@ -18,9 +20,9 @@ export function PrivatePhaseNotice({ compact = false }: { compact?: boolean }) {
       padding: compact ? '0.75rem 0.9rem' : '1rem 1.1rem', textAlign: 'center',
       fontFamily: "'Inter', system-ui, sans-serif", color: '#1A2B4C',
     }}>
-      <div style={{ fontWeight: 800, fontSize: compact ? '0.86rem' : '0.95rem' }}>Reservas muy pronto</div>
+      <div style={{ fontWeight: 800, fontSize: compact ? '0.86rem' : '0.95rem' }}>{t("Reservas muy pronto")}</div>
       <div style={{ fontSize: compact ? '0.74rem' : '0.8rem', color: '#7A8699', marginTop: 4, lineHeight: 1.5 }}>
-        RESER-VE está en fase privada mientras incorporamos posadas y perfeccionamos el pago. Crea tu cuenta gratis y guarda tus favoritas: te avisaremos por correo cuando abran las reservas.
+        {t("RESER-VE está en fase privada mientras incorporamos posadas y perfeccionamos el pago. Crea tu cuenta gratis y guarda tus favoritas: te avisaremos por correo cuando abran las reservas.")}
       </div>
     </div>
   )
@@ -30,6 +32,7 @@ export function PrivatePhaseNotice({ compact = false }: { compact?: boolean }) {
 // (ver globals.css) para quedar justo debajo y no chocar.
 export function PrivatePhaseBar() {
   const { data } = useSession()
+  const t = useT()
   if (BOOKINGS_OPEN) return null
   return (
     <>
@@ -44,11 +47,11 @@ export function PrivatePhaseBar() {
         @media(max-width:640px){.pp-long{display:none}}
       `}</style>
       <div className="pp-bar" role="note">
-        <strong>Fase privada</strong>
-        <span className="pp-long">· Estamos sumando posadas; las reservas abren muy pronto.</span>
+        <strong>{t("Fase privada")}</strong>
+        <span className="pp-long">· {t('Estamos sumando posadas; las reservas abren muy pronto.')}</span>
         {(data?.user as any)?.role === 'host' || (data?.user as any)?.role === 'admin'
-          ? <span>Ya puedes publicar y editar tus posadas.</span>
-          : <a href="/posaderos">¿Tienes una posada? Únete →</a>}
+          ? <span>{t("Ya puedes publicar y editar tus posadas.")}</span>
+          : <a href="/posaderos">{t("¿Tienes una posada? Únete →")}</a>}
       </div>
     </>
   )

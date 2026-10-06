@@ -16,6 +16,12 @@
 /* Pastillas de precio: recuperan su redondeo */
 .maplibregl-map .mkr { border-radius: 999px !important; }
 
+/* Selector de idioma: botones en píldora (anula el redondeo global de botones). */
+.lang-switch button { border-radius: 999px !important; width: auto !important; margin: 0 !important; }
+/* Cabeceras compactas en móvil: el botón de registro y el CTA de posaderos se esconden (siguen en la página). */
+@media (max-width: 480px) { .nu-signup { display: none !important; } }
+@media (max-width: 640px) { .pos-nav-cta { display: none !important; } }
+
 * {
   box-sizing: border-box;
   margin: 0;

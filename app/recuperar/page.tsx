@@ -2,8 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useT } from '@/components/LangProvider'
+import LangCorner from '@/components/LangCorner'
 
 export default function RecuperarPage() {
+  const t = useT()
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -20,9 +23,9 @@ export default function RecuperarPage() {
         body: JSON.stringify({ email }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) { setError(data.error || 'No pudimos procesar la solicitud.'); return }
+      if (!res.ok) { setError(t(data.error || 'No pudimos procesar la solicitud.')); return }
       setSent(true)
-    } catch { setError('Error de conexión. Intenta de nuevo.') } finally { setBusy(false) }
+    } catch { setError(t('Error de conexión. Intenta de nuevo.')) } finally { setBusy(false) }
   }
 
   return (
@@ -47,32 +50,33 @@ export default function RecuperarPage() {
         .back:hover{color:var(--indigo);}
         .ok{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);color:#0f9d6b;border-radius:12px;padding:1rem;font-size:.88rem;line-height:1.6;text-align:center;}
       `}</style>
+      <LangCorner />
       <div className="wrap">
         <div className="card">
           <Link href="/" className="logo">RESER<span>-VE</span></Link>
           {sent ? (
             <>
-              <h1>Revisa tu correo</h1>
-              <div className="sub">Te enviamos a <strong>{email}</strong> un enlace para crear una nueva contraseña. El enlace vence en 1 hora.</div>
-              <div className="ok">Revisa tu bandeja de entrada (y la carpeta de spam).</div>
-              <Link href="/login" className="back">← Volver a iniciar sesión</Link>
+              <h1>{t("Revisa tu correo")}</h1>
+              <div className="sub">{t('Te enviamos a')} <strong>{email}</strong> {t('un enlace para crear una nueva contraseña. El enlace vence en 1 hora.')}</div>
+              <div className="ok">{t("Revisa tu bandeja de entrada (y la carpeta de spam).")}</div>
+              <Link href="/login" className="back">{t("← Volver a iniciar sesión")}</Link>
             </>
           ) : (
             <>
-              <h1>¿Olvidaste tu contraseña?</h1>
-              <div className="sub">Ingresa tu correo y te enviaremos un enlace para restablecerla.</div>
+              <h1>{t("¿Olvidaste tu contraseña?")}</h1>
+              <div className="sub">{t("Ingresa tu correo y te enviaremos un enlace para restablecerla.")}</div>
               <form onSubmit={submit}>
-                <label>Correo electrónico</label>
-                <input type="email" required placeholder="tu@email.com" value={email} onChange={e => { setEmail(e.target.value); setError('') }} />
+                <label>{t("Correo electrónico")}</label>
+                <input type="email" required placeholder={t('tu@email.com')} value={email} onChange={e => { setEmail(e.target.value); setError('') }} />
                 {error && (
                   <div style={{ background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.25)', color: '#dc2626', borderRadius: 10, padding: '.7rem .9rem', fontSize: '.84rem', marginTop: '1rem', lineHeight: 1.5 }}>
                     {error}
-                    {error.includes('No hay ninguna cuenta') && <> <Link href="/register" style={{ color: '#E67E22', fontWeight: 700 }}>Crear una cuenta →</Link></>}
+                    {(error.includes('No hay ninguna cuenta') || error.includes('There is no account')) && <> <Link href="/register" style={{ color: '#E67E22', fontWeight: 700 }}>{t("Crear una cuenta →")}</Link></>}
                   </div>
                 )}
-                <button type="submit" disabled={busy || !email.trim()}>{busy ? 'Enviando…' : 'Enviar enlace'}</button>
+                <button type="submit" disabled={busy || !email.trim()}>{busy ? t('Enviando…') : t('Enviar enlace')}</button>
               </form>
-              <Link href="/login" className="back">← Volver a iniciar sesión</Link>
+              <Link href="/login" className="back">{t("← Volver a iniciar sesión")}</Link>
             </>
           )}
         </div>

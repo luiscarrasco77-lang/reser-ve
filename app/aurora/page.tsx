@@ -6,6 +6,8 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import NavUser from '@/components/NavUser'
 import RichText from '@/components/RichText'
+import { useT } from '@/components/LangProvider'
+import { ratingText } from '@/lib/rating'
 
 type PosadaCard = {
   slug: string; nombre: string; destino: string; tipo: string
@@ -20,6 +22,7 @@ const EJEMPLOS = [
 ]
 
 export default function AuroraPage() {
+  const tr = useT()
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -113,13 +116,13 @@ export default function AuroraPage() {
       <div className="wrap" ref={scrollRef} style={{ height: 'calc(100vh - 60px)', overflowY: 'auto' }}>
         {!started && (
           <div className="hero">
-            <img src="/images/aurora/aurora.svg" alt="Aurora, la guacamaya viajera" className="a-hero-ava" />
-            <div className="a-badge">La guacamaya viajera de RESER-VE</div>
-            <h1 className="a-title">¡Epa! Soy <em>Aurora</em></h1>
-            <p className="a-sub">He volado de Los Roques a los tepuyes y de los Andes a Margarita. Cuéntame qué viaje sueñas y te armo la ruta con posadas reales, fechas y precios. ¿Pa' dónde vamos?</p>
+            <img src="/images/aurora/aurora.svg" alt={tr('Aurora, la guacamaya viajera')} className="a-hero-ava" />
+            <div className="a-badge">{tr('La guacamaya viajera de RESER-VE')}</div>
+            <h1 className="a-title">{tr('¡Epa! Soy')} <em>Aurora</em></h1>
+            <p className="a-sub">{tr("He volado de Los Roques a los tepuyes y de los Andes a Margarita. Cuéntame qué viaje sueñas y te armo la ruta con posadas reales, fechas y precios. ¿Pa' dónde vamos?")}</p>
             <div className="chips">
               {EJEMPLOS.map(e => (
-                <button key={e} className="chip" onClick={() => send(e)}>{e}</button>
+                <button key={e} className="chip" onClick={() => send(tr(e))}>{tr(e)}</button>
               ))}
             </div>
           </div>
@@ -152,12 +155,12 @@ export default function AuroraPage() {
                               <Link key={c.slug} href={`/posadas/${c.slug}`} className="pcard" target="_blank">
                                 <img className="pcard-img" src={c.img} alt={c.nombre} loading="lazy" />
                                 <div className="pcard-b">
-                                  <div className="pcard-t">{c.tipo} · {c.destino}</div>
+                                  <div className="pcard-t">{tr(c.tipo)} · {c.destino}</div>
                                   <div className="pcard-n">{c.nombre}</div>
-                                  <div className="pcard-m">{c.reviews ? `★ ${c.rating} · ${c.reviews} reseñas` : 'Nueva en RESER-VE'}</div>
+                                  <div className="pcard-m">{ratingText(c.rating, c.reviews, false, tr)}</div>
                                   <div className="pcard-f">
-                                    <div className="pcard-p">${c.precio}<span>/noche</span></div>
-                                    <div className="pcard-cta">Ver posada →</div>
+                                    <div className="pcard-p">${c.precio}<span>{tr('/noche')}</span></div>
+                                    <div className="pcard-cta">{tr('Ver posada →')}</div>
                                   </div>
                                 </div>
                               </Link>
@@ -165,12 +168,12 @@ export default function AuroraPage() {
                           </div>
                         )
                       }
-                      return <div key={i} className="tool-chip"><span className="spin" /> Buscando posadas…</div>
+                      return <div key={i} className="tool-chip"><span className="spin" /> {tr('Buscando posadas…')}</div>
                     }
                     if (part.type === 'tool-verDisponibilidad') {
                       const p: any = part
                       if (p.state !== 'output-available') {
-                        return <div key={i} className="tool-chip"><span className="spin" /> Verificando disponibilidad…</div>
+                        return <div key={i} className="tool-chip"><span className="spin" /> {tr('Verificando disponibilidad…')}</div>
                       }
                     }
                     return null
@@ -189,7 +192,7 @@ export default function AuroraPage() {
 
         {error && (
           <div className="msg"><div className="ai-row"><div className="ai-ava"><img src="/images/aurora/aurora.svg" alt="" /></div>
-            <div className="ai-body"><div className="ai-text">{error.message && error.message !== 'An error occurred.' ? error.message : 'Tuve un problema para responder. Intenta de nuevo en un momento. 🙏'}</div></div>
+            <div className="ai-body"><div className="ai-text">{error.message && error.message !== 'An error occurred.' ? tr(error.message) : tr('Tuve un problema para responder. Intenta de nuevo en un momento. 🙏')}</div></div>
           </div></div>
         )}
       </div>
@@ -197,17 +200,17 @@ export default function AuroraPage() {
       <div className="composer">
         <form className="composer-inner" onSubmit={e => { e.preventDefault(); send(input) }}>
           <textarea
-            placeholder="Ej: 4 noches en Los Roques y Canaima, 2 personas, presupuesto $600…"
+            placeholder={tr('Ej: 4 noches en Los Roques y Canaima, 2 personas, presupuesto $600…')}
             value={input}
             rows={1}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) } }}
           />
-          <button className="send" type="submit" disabled={busy || !input.trim()} aria-label="Enviar">
+          <button className="send" type="submit" disabled={busy || !input.trim()} aria-label={tr('Enviar')}>
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </form>
-        <div className="disc">Aurora usa IA y datos reales de RESER-VE · puede cometer errores</div>
+        <div className="disc">{tr('Aurora usa IA y datos reales de RESER-VE · puede cometer errores')}</div>
       </div>
     </>
   )

@@ -507,7 +507,7 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
           {tab === 'alertas' && (
             <>
               <div className="page-title">Alertas de moderación</div>
-              <div className="page-sub">El agente de IA revisa los chats entre viajeros y posaderos y avisa si alguien intenta reservar o pagar por fuera, ofrece otro precio o se comporta mal. También aparecen aquí los reportes de viajeros que vieron una posada más barata en otro canal.</div>
+              <div className="page-sub">El agente de IA revisa los chats entre viajeros y posaderos y avisa si alguien intenta reservar o pagar por fuera, ofrece otro precio o se comporta mal.</div>
               <div style={{ display: 'flex', gap: '.5rem', margin: '0 0 1rem' }}>
                 {(['abierta', 'todas'] as const).map(f => (
                   <button key={f} className="filter-select" style={{ fontWeight: flagFilter === f ? 800 : 500 }} onClick={() => setFlagFilter(f)}>{f === 'abierta' ? 'Pendientes' : 'Todas'}</button>

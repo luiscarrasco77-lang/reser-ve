@@ -3,9 +3,12 @@
 import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useT } from '@/components/LangProvider'
+import LangCorner from '@/components/LangCorner'
 
 function RegisterForm() {
   const router = useRouter()
+  const t = useT()
   const searchParams = useSearchParams()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -27,7 +30,7 @@ function RegisterForm() {
 
     if (!res.ok) {
       const data = await res.json()
-      setError(data.error || 'Error al registrar')
+      setError(t(data.error || 'Error al registrar'))
       setLoading(false)
       return
     }
@@ -37,7 +40,7 @@ function RegisterForm() {
     setLoading(false)
 
     if (signInRes?.error) {
-      setError('Cuenta creada, pero error al iniciar sesión automáticamente')
+      setError(t('Cuenta creada, pero error al iniciar sesión automáticamente'))
       router.push('/login')
       return
     }
@@ -80,23 +83,24 @@ function RegisterForm() {
         .back-link{display:flex;align-items:center;justify-content:center;gap:0.35rem;font-size:0.8rem;color:var(--muted);text-decoration:none;margin-bottom:1.5rem;transition:color 0.2s;}
         .back-link:hover{color:var(--indigo);}
       `}</style>
+      <LangCorner />
       <div className="auth-wrap">
         <div>
           <a href="/" className="back-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-            Volver al inicio
+            {t("Volver al inicio")}
           </a>
           <div className="auth-card">
             <div className="auth-logo">
               <a href="/">RESER<span>-VE</span></a>
             </div>
-            <h1 className="auth-title">Crea tu cuenta</h1>
-            <p className="auth-sub">Únete a la comunidad de posadas venezolanas</p>
+            <h1 className="auth-title">{t("Crea tu cuenta")}</h1>
+            <p className="auth-sub">{t("Únete a la comunidad de posadas venezolanas")}</p>
 
             {error && <div className="auth-error">{error}</div>}
 
             <form onSubmit={handleSubmit}>
-              <div className="role-section-label">Soy…</div>
+              <div className="role-section-label">{t("Soy…")}</div>
               <div className="role-grid">
                 <div
                   className={`role-card${role === 'traveler' ? ' active' : ''}`}
@@ -106,8 +110,8 @@ function RegisterForm() {
                   onKeyDown={e => e.key === 'Enter' && setRole('traveler')}
                 >
                   <div className="role-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
-                  <div className="role-label">Viajero</div>
-                  <div className="role-desc">Quiero explorar y reservar posadas</div>
+                  <div className="role-label">{t("Viajero")}</div>
+                  <div className="role-desc">{t("Quiero explorar y reservar posadas")}</div>
                 </div>
                 <div
                   className={`role-card${role === 'host' ? ' active' : ''}`}
@@ -117,35 +121,35 @@ function RegisterForm() {
                   onKeyDown={e => e.key === 'Enter' && setRole('host')}
                 >
                   <div className="role-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></div>
-                  <div className="role-label">Posadero</div>
-                  <div className="role-desc">Quiero publicar mi posada</div>
+                  <div className="role-label">{t("Posadero")}</div>
+                  <div className="role-desc">{t("Quiero publicar mi posada")}</div>
                 </div>
               </div>
 
               <div className="field">
-                <label>Nombre completo</label>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Tu nombre" />
+                <label>{t("Nombre completo")}</label>
+                <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder={t('Tu nombre')} />
               </div>
               <div className="field">
                 <label>Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="tu@email.com" />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder={t('tu@email.com')} />
               </div>
               <div className="field">
-                <label>Contraseña</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Mínimo 8 caracteres" minLength={8} />
+                <label>{t("Contraseña")}</label>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder={t('Mínimo 8 caracteres')} minLength={8} />
               </div>
 
               <button type="submit" className="btn-submit" disabled={loading}>
-                {loading ? 'Creando cuenta…' : 'Crear cuenta gratis'}
+                {loading ? t('Creando cuenta…') : t('Crear cuenta gratis')}
               </button>
               <p style={{ fontSize: '0.74rem', color: '#7A8699', textAlign: 'center', marginTop: '0.8rem', lineHeight: 1.5 }}>
-                Al crear tu cuenta aceptas los <a href="/terminos" target="_blank" style={{ color: '#E67E22' }}>Términos</a> y la <a href="/privacidad" target="_blank" style={{ color: '#E67E22' }}>Política de privacidad</a>
-                {role === 'host' && <> y las <a href="/posaderos#condiciones" target="_blank" style={{ color: '#E67E22' }}>condiciones para posaderos</a> (10% por reserva confirmada, mismo precio y mismas ofertas que en otros canales, y comunicación dentro de la app)</>}.
+                {t('Al crear tu cuenta aceptas los')} <a href="/terminos" target="_blank" style={{ color: '#E67E22' }}>{t("Términos")}</a> {t('y la')} <a href="/privacidad" target="_blank" style={{ color: '#E67E22' }}>{t("Política de privacidad")}</a>
+                {role === 'host' && <> {t('y las')} <a href="/posaderos#condiciones" target="_blank" style={{ color: '#E67E22' }}>{t("condiciones para posaderos")}</a> ({t('10% por reserva confirmada, mismo precio y mismas ofertas que en otros canales, y comunicación dentro de la app')})</>}.
               </p>
             </form>
 
             <div className="auth-footer">
-              ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+              {t('¿Ya tienes cuenta?')} <a href="/login">{t("Inicia sesión")}</a>
             </div>
           </div>
         </div>

@@ -4,6 +4,8 @@ import { and, eq } from 'drizzle-orm'
 import { getDestino, getPosadasByDestino, type Destino } from '@/lib/data'
 import { getDb } from '@/lib/db'
 import { posadas as posadasTable } from '@/lib/db/schema'
+import NavUser from '@/components/NavUser'
+import { getT } from '@/lib/i18n-server'
 
 // Posadas activas del destino (BD) y su ficha: curada si existe, o generada a partir
 // de las posadas (para destinos nuevos que publiquen los posaderos).
@@ -27,10 +29,11 @@ async function loadDestino(slug: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { destino } = await loadDestino((await params).slug)
-  if (!destino) return { title: 'Destino no encontrado' }
+  const t = await getT()
+  if (!destino) return { title: t('Destino no encontrado') }
   return {
-    title: `Posadas en ${destino.nombre}`,
-    description: `Descubre posadas auténticas en ${destino.nombre}, Venezuela: ${destino.tagline}. Fotos, precios y métodos de pago en RESER-VE.`,
+    title: t('Posadas en {place}', { place: destino.nombre }),
+    description: t('Descubre posadas auténticas en {place}, Venezuela: {tag}. Fotos, precios y métodos de pago en RESER-VE.', { place: destino.nombre, tag: t(destino.tagline) }),
   }
 }
 
@@ -40,6 +43,7 @@ export default async function DestinoPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
+  const t = await getT()
   const { destino, posadas } = await loadDestino(slug)
 
   if (!destino) notFound()
@@ -290,7 +294,7 @@ export default async function DestinoPage({
 
         @media (max-width: 768px) {
           .nav { padding: 0.9rem 1rem; }
-          .nav-actions { display: none; }
+          .nav-actions .nav-btn, .nav-actions .nav-cta { display: none; }
           .logo { font-size: 1.8rem; }
           .hero { min-height: 56vh; }
           .hero-inner { padding: 5rem 1rem 3rem; }
@@ -308,10 +312,11 @@ export default async function DestinoPage({
         <nav className="nav">
           <a href="/" className="logo">RESER<span>-VE</span></a>
           <div className="nav-actions">
-            <a href="/buscar" className="nav-btn">Destinos</a>
-            <a href="/posaderos" className="nav-btn">Posaderos</a>
-            <a href="/#como-funciona" className="nav-btn">Cómo funciona</a>
-            <a href="/register?role=host" className="nav-cta">Registra tu posada</a>
+            <a href="/buscar" className="nav-btn">{t("Destinos")}</a>
+            <a href="/posaderos" className="nav-btn">{t("Posaderos")}</a>
+            <a href="/#como-funciona" className="nav-btn">{t("Cómo funciona")}</a>
+            <a href="/register?role=host" className="nav-cta pos-nav-cta">{t('Registra tu posada')}</a>
+            <NavUser />
           </div>
         </nav>
 
@@ -319,39 +324,38 @@ export default async function DestinoPage({
           <div className="hero-bg" style={{ backgroundImage: `url('${destino.hero}')` }} />
           <div className="hero-overlay" />
           <div className="hero-inner">
-            <div className="badge">{destino.tagline}</div>
+            <div className="badge">{t(destino.tagline)}</div>
             <h1 className="hero-title">
-              Posadas en <br /><em>{destino.nombre}</em>
+              {t('Posadas en')} <br /><em>{destino.nombre}</em>
             </h1>
-            <p className="hero-sub">{destino.descripcion}</p>
+            <p className="hero-sub">{t(destino.descripcion)}</p>
           </div>
         </section>
 
         <div className="stats">
           <div className="stat-card">
             <div className="stat-n">{posadas.length}</div>
-            <div className="stat-l">posadas disponibles</div>
+            <div className="stat-l">{t("posadas disponibles")}</div>
           </div>
           <div className="stat-card">
-            <div className={`stat-n${Number(avgRating) >= 4.5 ? ' cacao' : ''}`}>{avgRating ? `★ ${avgRating}` : 'Nuevo'}</div>
-            <div className="stat-l">{avgRating ? 'valoración promedio' : 'destino en RESER-VE'}</div>
+            <div className={`stat-n${Number(avgRating) >= 4.5 ? ' cacao' : ''}`}>{avgRating ? `★ ${avgRating}` : t('Nuevo')}</div>
+            <div className="stat-l">{avgRating ? t('valoración promedio') : t('destino en RESER-VE')}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-n">Flexible</div>
-            <div className="stat-l">USD, bolívares, Zelle, Binance y más</div>
+            <div className="stat-n">{t("Flexible")}</div>
+            <div className="stat-l">{t("USD, bolívares, Zelle, Binance y más")}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-n">Boutique</div>
-            <div className="stat-l">estancias locales y auténticas</div>
+            <div className="stat-n">{t("Boutique")}</div>
+            <div className="stat-l">{t("estancias locales y auténticas")}</div>
           </div>
         </div>
 
         <section className="section">
-          <div className="section-label">Alojamientos</div>
-          <h2 className="section-h2">Explora las <em>posadas</em> disponibles</h2>
+          <div className="section-label">{t("Alojamientos")}</div>
+          <h2 className="section-h2">{t('Explora las')} <em>{t('posadas')}</em> {t('disponibles')}</h2>
           <p className="section-sub">
-            Selecciona la opción que mejor se adapte a tu viaje y descubre una
-            forma más cálida, local y confiable de hospedarte en Venezuela.
+            {t('Selecciona la opción que mejor se adapte a tu viaje y descubre una forma más cálida, local y confiable de hospedarte en Venezuela.')}
           </p>
 
           <div className="grid">
@@ -359,17 +363,17 @@ export default async function DestinoPage({
               <a href={`/posadas/${posada.slug}`} className="card" key={posada.slug}>
                 <div className="card-img">
                   {posada.imgs[0] && <img src={posada.imgs[0]} alt={posada.nombre} />}
-                  <div className="card-tipo">{posada.tipo}</div>
-                  <div className="card-price-badge">${posada.precio} / noche</div>
+                  <div className="card-tipo">{t(posada.tipo)}</div>
+                  <div className="card-price-badge">${posada.precio} {t('/ noche')}</div>
                 </div>
                 <div className="card-body">
                   <h3 className="card-title">{posada.nombre}</h3>
                   <p className="card-location">{posada.destino}</p>
-                  <p className="card-rating">{posada.reviews ? <>{renderStars(posada.rating)} {posada.rating} · {posada.reviews} reseñas</> : 'Nueva en RESER-VE'}</p>
+                  <p className="card-rating">{posada.reviews ? <>{renderStars(posada.rating)} {posada.rating} · {t('{n} reseñas', { n: posada.reviews })}</> : t('Nueva en RESER-VE')}</p>
                   <p className="card-desc">{posada.descripcion.slice(0, 100)}…</p>
                   <div className="card-bottom">
-                    <div className="price">${posada.precio} / noche</div>
-                    <span className="card-cta-link">Ver posada →</span>
+                    <div className="price">${posada.precio} {t('/ noche')}</div>
+                    <span className="card-cta-link">{t("Ver posada →")}</span>
                   </div>
                 </div>
               </a>
@@ -381,14 +385,13 @@ export default async function DestinoPage({
           <div className="consejo-card">
             <div className="consejo-content">
               <div className="consejo-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-              <h3 className="consejo-title">¿Tu primera vez en {destino.nombre}?</h3>
+              <h3 className="consejo-title">{t('¿Tu primera vez en {place}?', { place: destino.nombre })}</h3>
               <p className="consejo-text">
-                Reserva con mínimo 2 semanas de antelación. La mayoría de posadas en este destino
-                se agotan rápido, especialmente en temporada alta.
+                {t('Reserva con mínimo 2 semanas de antelación. La mayoría de posadas en este destino se agotan rápido, especialmente en temporada alta.')}
               </p>
             </div>
             <a href={`/buscar?destino=${encodeURIComponent(destino.nombre)}`} className="consejo-btn">
-              Explorar posadas disponibles →
+              {t("Explorar posadas disponibles →")}
             </a>
           </div>
         </div>
@@ -397,7 +400,7 @@ export default async function DestinoPage({
 
         <footer className="footer">
           <div className="footer-logo">RESER<span>-VE</span></div>
-          <div className="footer-text">Impulsado por Dos Locos de Viaje</div>
+          <div className="footer-text">{t('Impulsado por')} Dos Locos de Viaje</div>
         </footer>
       </main>
     </>

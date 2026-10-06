@@ -6,6 +6,9 @@ import { venezuelaLocations } from '@/lib/locations-ve'
 import { normalizeStr } from '@/lib/search'
 import { regions, findRegionsByQuery, type Region } from '@/lib/regions'
 import NavUser from '@/components/NavUser'
+import LangSwitch from '@/components/LangSwitch'
+import { useLang } from '@/components/LangProvider'
+import { LOCALE } from '@/lib/i18n'
 
 function useCounter(target: number, active: boolean, duration = 1800) {
   const [count, setCount] = useState(0)
@@ -24,6 +27,7 @@ function useCounter(target: number, active: boolean, duration = 1800) {
 }
 
 export default function Home() {
+  const { t, lang } = useLang()
   const [scrollY, setScrollY] = useState(0)
   const [progress, setProgress] = useState(0)
   const [loaded, setLoaded] = useState(false)
@@ -86,7 +90,7 @@ export default function Home() {
     }).catch(() => {})
     return () => clearTimeout(t)
   }, [])
-  const destCount = (slug: string | null) => slug && destCounts[slug] ? `${destCounts[slug]} posada${destCounts[slug] > 1 ? 's' : ''}` : null
+  const destCount = (slug: string | null) => slug && destCounts[slug] ? t(destCounts[slug] > 1 ? '{n} posadas' : '{n} posada', { n: destCounts[slug] }) : null
 
   const c1 = useCounter(stats?.posadas ?? 11, statsVisible)
   const c3 = useCounter(stats?.destinos ?? 8, statsVisible)
@@ -211,10 +215,10 @@ export default function Home() {
 
   function sbFmtDate(d: Date | null) {
     if (!d) return ''
-    return d.toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })
+    return d.toLocaleDateString(LOCALE[lang], { day: 'numeric', month: 'short' })
   }
 
-  const MONTHS_SHORT_LBL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+  const MONTHS_SHORT_LBL = lang === 'en' ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] : ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
   const sbDateLabel = sbFlexible
     ? sbFlexMonths.length > 0
       ? sbFlexMonths.slice(0,2).map(m => {
@@ -223,11 +227,11 @@ export default function Home() {
           return MONTHS_SHORT_LBL[mo-1] + (today.getFullYear() !== y ? ` ${y}` : '')
         }).join(', ') + (sbFlexMonths.length > 2 ? '…' : '')
       : sbFlexWeeks > 0
-        ? `${sbFlexWeeks} semana${sbFlexWeeks > 1 ? 's' : ''}`
-        : 'Fechas flexibles'
+        ? t(sbFlexWeeks > 1 ? '{n} semanas' : '{n} semana', { n: sbFlexWeeks })
+        : t('Fechas flexibles')
     : sbCheckIn && sbCheckOut
       ? `${sbFmtDate(sbCheckIn)} – ${sbFmtDate(sbCheckOut)}`
-      : sbCheckIn ? `${sbFmtDate(sbCheckIn)} – Salida` : 'Fechas'
+      : sbCheckIn ? `${sbFmtDate(sbCheckIn)} – ${t('Salida')}` : t('Fechas')
 
   const sbNights = sbCheckIn && sbCheckOut
     ? Math.round((sbCheckOut.getTime() - sbCheckIn.getTime()) / 86400000) : 0
@@ -238,7 +242,7 @@ export default function Home() {
     return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
   }
 
-  const MONTH_NAMES_SB = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+  const MONTH_NAMES_SB = lang === 'en' ? ['January','February','March','April','May','June','July','August','September','October','November','December'] : ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
   const today0 = new Date(); today0.setHours(0,0,0,0)
   const sbNext = sbAddMonths(sbViewMonth, 1)
 
@@ -254,7 +258,7 @@ export default function Home() {
       <div className="sb-cal-month" key={`${year}-${month}`}>
         <div className="sb-cal-mname">{MONTH_NAMES_SB[month]} {year}</div>
         <div className="sb-cal-grid">
-          {['Do','Lu','Ma','Mi','Ju','Vi','Sá'].map(d => <div key={d} className="sb-cal-dname">{d}</div>)}
+          {(lang === 'en' ? ['Su','Mo','Tu','We','Th','Fr','Sa'] : ['Do','Lu','Ma','Mi','Ju','Vi','Sá']).map(d => <div key={d} className="sb-cal-dname">{d}</div>)}
           {cells.map((date, i) => {
             if (!date) return <div key={`e${i}`} />
             const isPast = date < today0
@@ -331,7 +335,7 @@ export default function Home() {
     { name: 'Morrocoy', slug: 'morrocoy', tag: 'Costa Occidental', count: destCount('morrocoy') ?? '', img: '/images/CayoSombero.webp' },
     { name: 'Canaima', slug: 'canaima', tag: 'Gran Sabana', count: destCount('canaima') ?? '', img: '/images/KerepaKupaiWena.webp' },
     { name: 'Isla Margarita', slug: 'isla-margarita', tag: 'Caribe', count: destCount('isla-margarita') ?? '', img: '/images/PlayaElAgua.webp' },
-    { name: 'Todos los destinos', slug: null, tag: 'Venezuela', count: 'Gran Sabana, Coro, Choroní y más', img: '/images/PlayaElIndio.webp', wide: true },
+    { name: t('Todos los destinos'), slug: null, tag: 'Venezuela', count: t('Gran Sabana, Coro, Choroní y más'), img: '/images/PlayaElIndio.webp', wide: true },
   ]
 
   return (
@@ -472,6 +476,8 @@ export default function Home() {
         .mob-link{font-size:1rem;font-weight:600;color:var(--indigo);text-decoration:none;padding:0.85rem 0;border-bottom:1px solid rgba(26,43,76,0.07);display:block;}
         .mob-link:last-of-type{border-bottom:none;}
         @media(max-width:768px){.nav-links{display:none;} .nav{padding:1rem;} .nav.scrolled{padding:0.75rem 1rem;} .mob-menu-btn{display:block;}}
+        .mob-lang{display:none;align-items:center;gap:.6rem;}
+        @media(max-width:768px){.mob-lang{display:flex;} .reveal-left,.reveal-right{transform:translateY(28px);}}
 
         /* ─── HERO ─── */
         .hero {
@@ -747,7 +753,7 @@ export default function Home() {
         }
 
         /* ─── SECTIONS ─── */
-        .section { padding:3.5rem 1.5rem; max-width:1100px; margin:0 auto; }
+        .section { padding:3.5rem 1.5rem; max-width:min(1100px,100%); margin:0 auto; }
         .section-label {
           display:inline-flex; align-items:center; gap:0.5rem;
           padding:0.44rem 0.85rem; border-radius:999px; font-size:0.74rem; font-weight:700;
@@ -1078,34 +1084,37 @@ export default function Home() {
           />
         </a>
         <div className="nav-links">
-          <a href="/aurora" className="nav-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}><img src="/images/aurora/aurora.svg" alt="" width={22} height={22} style={{ borderRadius: '50%' }} />Sueña tu viaje</a>
-          <a href="/buscar" className="nav-link">Destinos</a>
-          <a href="/posaderos" className="nav-link">Posaderos</a>
-          <a href="#como-funciona" className="nav-link">Cómo funciona</a>
+          <a href="/aurora" className="nav-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}><img src="/images/aurora/aurora.svg" alt="" width={22} height={22} style={{ borderRadius: '50%' }} />{t('Sueña tu viaje')}</a>
+          <a href="/buscar" className="nav-link">{t('Destinos')}</a>
+          <a href="/posaderos" className="nav-link">{t('Posaderos')}</a>
+          <a href="#como-funciona" className="nav-link">{t('Cómo funciona')}</a>
           <NavUser dark={scrollY < 60} />
         </div>
-        <button className="mob-menu-btn" onClick={() => setMobOpen(true)} aria-label="Menú">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={scrollY < 60 ? 'white' : '#1A2B4C'} strokeWidth="2.2" strokeLinecap="round">
-            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-          </svg>
-        </button>
+        <div className="mob-lang">
+          <LangSwitch dark={scrollY < 60} />
+          <button className="mob-menu-btn" onClick={() => setMobOpen(true)} aria-label={t('Menú')}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={scrollY < 60 ? 'white' : '#1A2B4C'} strokeWidth="2.2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+        </div>
       </nav>
 
       {/* Mobile drawer */}
       <div className={`mob-drawer${mobOpen ? ' open' : ''}`}>
         <div className="mob-overlay" onClick={() => setMobOpen(false)} />
         <div className="mob-panel">
-          <button className="mob-close" onClick={() => setMobOpen(false)} aria-label="Cerrar">
+          <button className="mob-close" onClick={() => setMobOpen(false)} aria-label={t('Cerrar')}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A2B4C" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
-          <a href="/aurora" className="mob-link" onClick={() => setMobOpen(false)}>Sueña tu viaje con Aurora</a>
-          <a href="/buscar" className="mob-link" onClick={() => setMobOpen(false)}>Destinos</a>
-          <a href="/posaderos" className="mob-link" onClick={() => setMobOpen(false)}>Posaderos</a>
-          <a href="/vision" className="mob-link" onClick={() => setMobOpen(false)}>Sobre nosotros</a>
-          <a href="#como-funciona" className="mob-link" onClick={() => setMobOpen(false)}>Cómo funciona</a>
-          <a href="/faq" className="mob-link" onClick={() => setMobOpen(false)}>Preguntas frecuentes</a>
+          <a href="/aurora" className="mob-link" onClick={() => setMobOpen(false)}>{t('Sueña tu viaje con Aurora')}</a>
+          <a href="/buscar" className="mob-link" onClick={() => setMobOpen(false)}>{t('Destinos')}</a>
+          <a href="/posaderos" className="mob-link" onClick={() => setMobOpen(false)}>{t('Posaderos')}</a>
+          <a href="/vision" className="mob-link" onClick={() => setMobOpen(false)}>{t('Sobre nosotros')}</a>
+          <a href="#como-funciona" className="mob-link" onClick={() => setMobOpen(false)}>{t('Cómo funciona')}</a>
+          <a href="/faq" className="mob-link" onClick={() => setMobOpen(false)}>{t('Preguntas frecuentes')}</a>
           <div style={{marginTop:'1.5rem'}}>
-            <NavUser dark={false} />
+            <NavUser dark={false} hideLang />
           </div>
         </div>
       </div>
@@ -1127,14 +1136,14 @@ export default function Home() {
         <div className="hero-content">
           <div className="hero-panel">
             <h1 className={`hero-h1 ${loaded ? 'anim-1' : ''}`}>
-              Encuentra tu <em>posada</em><br />en Venezuela
+              {t('Encuentra tu')} <em>{t('posada')}</em><br />{t('en Venezuela')}
             </h1>
             <p className={`hero-sub ${loaded ? 'anim-2' : ''}`}>
-              Posadas familiares de Los Roques a la Gran Sabana. Compara fotos, precios y formas de pago, y paga exactamente el precio publicado.
+              {t('Posadas familiares de Los Roques a la Gran Sabana. Compara fotos, precios y formas de pago, y paga exactamente el precio publicado.')}
             </p>
             <div className={`hero-btns ${loaded ? 'anim-3' : ''}`}>
-              <a href="/buscar" className="btn-primary">Ver posadas</a>
-              <a href="/posaderos" className="btn-secondary">Publica tu posada</a>
+              <a href="/buscar" className="btn-primary">{t('Ver posadas')}</a>
+              <a href="/posaderos" className="btn-secondary">{t('Publica tu posada')}</a>
             </div>
             {/* Slide indicators — inline below buttons, no overlap with search bar */}
             <div className="slide-dots">
@@ -1143,7 +1152,7 @@ export default function Home() {
                   key={i}
                   className={`slide-dot${i === slideIdx ? ' active' : ''}`}
                   onClick={() => { setSlideIdx(i); setSlideKey(k => k + 1) }}
-                  aria-label={`Foto ${i + 1}`}
+                  aria-label={t('Foto {n}', { n: i + 1 })}
                 />
               ))}
             </div>
@@ -1155,11 +1164,11 @@ export default function Home() {
 
             {/* Location */}
             <div className="sb-seg" style={{ flex: '1.6' }}>
-              <div className="sb-seg-lbl">Destino</div>
+              <div className="sb-seg-lbl">{t('Destino')}</div>
               <input
                 ref={sbInputRef}
                 className="sb-input"
-                placeholder="¿A dónde vas?"
+                placeholder={t('¿A dónde vas?')}
                 value={destinoBusqueda}
                 onChange={e => { setDestinoBusqueda(e.target.value); setSbShowSug(true); setSbOverrideLat(undefined); setSbOverrideLng(undefined); setSbOverrideName(undefined) }}
                 onFocus={() => setSbShowSug(true)}
@@ -1170,17 +1179,17 @@ export default function Home() {
                   {destinoBusqueda === '' ? (
                     /* Pre-state: show Venezuela + popular + regions */
                     <>
-                      <div className="sb-sug-hdr">Sugerencias de destinos</div>
+                      <div className="sb-sug-hdr">{t('Sugerencias de destinos')}</div>
                       <div className="sb-sug-row-landing" onMouseDown={() => { selectVenezuela() }}>
                         <span className="sb-sug-icon-sm">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         </span>
                         <div className="sb-sug-main-col">
-                          <span className="sb-sug-name-txt">Buscar en toda Venezuela</span>
-                          <span className="sb-sug-sub-txt">Ver todas las posadas disponibles</span>
+                          <span className="sb-sug-name-txt">{t('Buscar en toda Venezuela')}</span>
+                          <span className="sb-sug-sub-txt">{t('Ver todas las posadas disponibles')}</span>
                         </div>
                       </div>
-                      <div className="sb-sug-section-hdr">Popular</div>
+                      <div className="sb-sug-section-hdr">{t('Popular')}</div>
                       {POPULAR_DEST.map(name => {
                         const loc = venezuelaLocations.find(l => l.nombre === name)
                         if (!loc) return null
@@ -1195,22 +1204,22 @@ export default function Home() {
                             </span>
                             <div className="sb-sug-main-col">
                               <span className="sb-sug-name-txt">{name}</span>
-                              <span className="sb-sug-sub-txt">{loc.region}</span>
+                              <span className="sb-sug-sub-txt">{t(loc.region)}</span>
                             </div>
                           </div>
                         )
                       })}
-                      <div className="sb-sug-section-hdr">Regiones</div>
+                      <div className="sb-sug-section-hdr">{t('Regiones')}</div>
                       {regions.map(r => (
                         <div key={r.id} className="sb-sug-row-landing" onMouseDown={() => selectRegionSug(r)}>
                           <span className="sb-sug-icon-sm">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
                           </span>
                           <div className="sb-sug-main-col">
-                            <span className="sb-sug-name-txt">{r.nombre}</span>
+                            <span className="sb-sug-name-txt">{t(r.nombre)}</span>
                             <span className="sb-sug-sub-txt">{r.sub}</span>
                           </div>
-                          <span className="sb-sug-badge-region">Región</span>
+                          <span className="sb-sug-badge-region">{t('Región')}</span>
                         </div>
                       ))}
                     </>
@@ -1219,7 +1228,7 @@ export default function Home() {
                     <>
                       {sbSugLoading && sbSuggestions.length === 0 && (
                         <div className="sb-sug-item" style={{color:'rgba(26,43,76,0.45)',fontSize:'0.82rem'}}>
-                          Buscando en Venezuela…
+                          {t('Buscando en Venezuela…')}
                         </div>
                       )}
                       {sbSuggestions.map((s, i) => (
@@ -1240,18 +1249,18 @@ export default function Home() {
                             }
                           </svg>
                           <span style={{flex:1,minWidth:0}}>
-                            <span style={{display:'block',fontWeight:500}}>{s.label}</span>
+                            <span style={{display:'block',fontWeight:500}}>{s.isRegion ? t(s.label) : s.label}</span>
                             <span style={{fontSize:'0.71rem',color:'rgba(26,43,76,0.45)'}}>{s.sub}</span>
                           </span>
                           {s.isRegion
-                            ? <span className="sb-sug-badge-region">Región</span>
-                            : s.isStatic && <span style={{fontSize:'0.6rem',fontWeight:700,padding:'0.12rem 0.38rem',borderRadius:'999px',background:'rgba(230,126,34,0.1)',color:'#E67E22',flexShrink:0}}>Popular</span>
+                            ? <span className="sb-sug-badge-region">{t('Región')}</span>
+                            : s.isStatic && <span style={{fontSize:'0.6rem',fontWeight:700,padding:'0.12rem 0.38rem',borderRadius:'999px',background:'rgba(230,126,34,0.1)',color:'#E67E22',flexShrink:0}}>{t('Popular')}</span>
                           }
                         </div>
                       ))}
                       {!sbSugLoading && sbSuggestions.length === 0 && destinoBusqueda.length > 1 && (
                         <div className="sb-sug-item" style={{color:'rgba(26,43,76,0.45)',fontSize:'0.82rem'}}>
-                          Sin resultados para &quot;{destinoBusqueda}&quot;
+                          {t('Sin resultados para «{q}»', { q: destinoBusqueda })}
                         </div>
                       )}
                     </>
@@ -1267,14 +1276,14 @@ export default function Home() {
               ref={sbDateRef}
               onClick={() => { setSbShowDate(v => !v); setSbShowPay(false) }}
             >
-              <div className="sb-seg-lbl">Fechas</div>
+              <div className="sb-seg-lbl">{t('Fechas')}</div>
               <div className={`sb-seg-val ${!sbCheckIn && !sbFlexible ? 'ph' : ''}`}>{sbDateLabel}</div>
 
               {sbShowDate && (
                 <div className="sb-date-panel" onClick={e => e.stopPropagation()}>
                   <div className="sb-date-modes">
-                    <button className={`sb-mode-btn ${!sbFlexible ? 'on' : ''}`} onClick={() => { setSbFlexible(false); setSbFlexMonths([]); setSbFlexWeeks(0) }}>Fechas exactas</button>
-                    <button className={`sb-mode-btn ${sbFlexible ? 'on' : ''}`} onClick={() => { setSbFlexible(true); setSbCheckIn(null); setSbCheckOut(null) }}>Fechas flexibles</button>
+                    <button className={`sb-mode-btn ${!sbFlexible ? 'on' : ''}`} onClick={() => { setSbFlexible(false); setSbFlexMonths([]); setSbFlexWeeks(0) }}>{t('Fechas exactas')}</button>
+                    <button className={`sb-mode-btn ${sbFlexible ? 'on' : ''}`} onClick={() => { setSbFlexible(true); setSbCheckIn(null); setSbCheckOut(null) }}>{t('Fechas flexibles')}</button>
                   </div>
                   {!sbFlexible ? (
                     <>
@@ -1289,17 +1298,17 @@ export default function Home() {
                       </div>
                       <div className="sb-date-footer">
                         <span className="sb-date-summary">
-                          {sbNights > 0 ? `${sbNights} noche${sbNights > 1 ? 's' : ''}: ${sbFmtDate(sbCheckIn)} – ${sbFmtDate(sbCheckOut)}`
-                            : sbDateStep === 'in' ? 'Selecciona entrada' : 'Selecciona salida'}
+                          {sbNights > 0 ? `${t(sbNights > 1 ? '{n} noches' : '{n} noche', { n: sbNights })}: ${sbFmtDate(sbCheckIn)} – ${sbFmtDate(sbCheckOut)}`
+                            : sbDateStep === 'in' ? t('Selecciona entrada') : t('Selecciona salida')}
                         </span>
-                        <button className="sb-date-clear" onClick={() => { setSbCheckIn(null); setSbCheckOut(null); setSbDateStep('in') }}>Borrar</button>
+                        <button className="sb-date-clear" onClick={() => { setSbCheckIn(null); setSbCheckOut(null); setSbDateStep('in') }}>{t('Borrar')}</button>
                       </div>
                     </>
                   ) : (
                     /* Flexible picker — Airbnb style */
                     (() => {
                       const today = new Date()
-                      const MONTHS_SHORT_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+                      const MONTHS_SHORT_ES = MONTHS_SHORT_LBL
                       const upcoming18 = Array.from({length:18},(_,i)=>{
                         const d=new Date(today.getFullYear(),today.getMonth()+i,1)
                         const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
@@ -1308,12 +1317,12 @@ export default function Home() {
                       return (
                         <>
                           <div className="sb-flex-tabs">
-                            <button className={`sb-flex-tab${sbFlexType==='meses'?' on':''}`} onClick={()=>setSbFlexType('meses')}>Meses</button>
-                            <button className={`sb-flex-tab${sbFlexType==='semanas'?' on':''}`} onClick={()=>setSbFlexType('semanas')}>Semanas</button>
+                            <button className={`sb-flex-tab${sbFlexType==='meses'?' on':''}`} onClick={()=>setSbFlexType('meses')}>{t('Meses')}</button>
+                            <button className={`sb-flex-tab${sbFlexType==='semanas'?' on':''}`} onClick={()=>setSbFlexType('semanas')}>{t('Semanas')}</button>
                           </div>
                           {sbFlexType==='meses' ? (
                             <>
-                              <p className="sb-flex-hint">¿En qué mes quieres viajar?</p>
+                              <p className="sb-flex-hint">{t('¿En qué mes quieres viajar?')}</p>
                               <div className="sb-flex-grid">
                                 {upcoming18.map(({key,label,year})=>(
                                   <button key={key}
@@ -1326,14 +1335,14 @@ export default function Home() {
                               </div>
                               {sbFlexMonths.length>0 && (
                                 <button style={{fontSize:'0.76rem',fontWeight:600,color:'rgba(26,43,76,0.55)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}
-                                  onClick={()=>setSbFlexMonths([])}>Borrar selección</button>
+                                  onClick={()=>setSbFlexMonths([])}>{t('Borrar selección')}</button>
                               )}
                             </>
                           ) : (
                             <>
-                              <p className="sb-flex-hint">¿Cuánto tiempo quieres quedarte?</p>
+                              <p className="sb-flex-hint">{t('¿Cuánto tiempo quieres quedarte?')}</p>
                               <div className="sb-flex-weeks">
-                                {([{v:0,l:'Cualquier semana'},{v:1,l:'1 semana'},{v:2,l:'2 semanas'},{v:3,l:'3 semanas'},{v:4,l:'4 semanas'}] as const).map(({v,l})=>(
+                                {([{v:0,l:t('Cualquier semana')},{v:1,l:t('{n} semana',{n:1})},{v:2,l:t('{n} semanas',{n:2})},{v:3,l:t('{n} semanas',{n:3})},{v:4,l:t('{n} semanas',{n:4})}]).map(({v,l})=>(
                                   <button key={v} className={`sb-flex-chip${sbFlexWeeks===v?' on':''}`} onClick={()=>setSbFlexWeeks(v as number)}>{l}</button>
                                 ))}
                               </div>
@@ -1353,17 +1362,17 @@ export default function Home() {
               ref={sbPayRef}
               onClick={() => { setSbShowPay(v => !v); setSbShowDate(false) }}
             >
-              <div className="sb-seg-lbl">Pago</div>
-              <div className={`sb-seg-val ${!sbPago ? 'ph' : ''}`}>{sbPago || 'Cualquier opción'}</div>
+              <div className="sb-seg-lbl">{t('Pago')}</div>
+              <div className={`sb-seg-val ${!sbPago ? 'ph' : ''}`}>{sbPago ? t(sbPago) : t('Cualquier opción')}</div>
               {sbShowPay && (
                 <div className="sb-pay-panel" onClick={e => e.stopPropagation()}>
                   {[
-                    { v: '', l: 'Cualquier opción' },
+                    { v: '', l: t('Cualquier opción') },
                     { v: 'Zelle', l: 'Zelle' },
-                    { v: 'Transferencia', l: 'Transferencia bancaria' },
-                    { v: 'Efectivo USD', l: 'Efectivo USD' },
-                    { v: 'Efectivo Bs', l: 'Efectivo Bs' },
-                    { v: 'Tarjeta', l: 'Tarjeta de crédito' },
+                    { v: 'Transferencia', l: t('Transferencia bancaria') },
+                    { v: 'Efectivo USD', l: t('Efectivo USD') },
+                    { v: 'Efectivo Bs', l: t('Efectivo Bs') },
+                    { v: 'Tarjeta', l: t('Tarjeta de crédito') },
                   ].map(({ v, l }) => (
                     <div key={v} className={`sb-pay-opt ${sbPago === v ? 'sel' : ''}`}
                       onMouseDown={() => { setSbPago(v); setSbShowPay(false) }}>
@@ -1378,7 +1387,7 @@ export default function Home() {
             {/* Go */}
             <button className="sb-go" onClick={sbHandleSearch}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              Buscar
+              {t('Buscar')}
             </button>
           </div>
         </div>
@@ -1394,19 +1403,19 @@ export default function Home() {
               loading="lazy"
             />
             <div className="mosaic-label">
-              <div className="mosaic-tag">Archipiélago</div>
+              <div className="mosaic-tag">{t('Archipiélago')}</div>
               <div>Los Roques</div>
             </div>
           </a>
           <a href="/buscar" className="mosaic-item" style={{textDecoration:'none'}}>
             <img
               src="/images/Waku-lodge-facilities-.webp"
-              alt="Habitación de una posada en Canaima"
+              alt={t('Habitación de una posada en Canaima')}
               loading="lazy"
             />
             <div className="mosaic-label">
-              <div className="mosaic-tag">Alojamiento</div>
-              <div>Posadas familiares</div>
+              <div className="mosaic-tag">{t('Alojamiento')}</div>
+              <div>{t('Posadas familiares')}</div>
             </div>
           </a>
           <a href="/destinos/canaima" className="mosaic-item" style={{textDecoration:'none'}}>
@@ -1416,7 +1425,7 @@ export default function Home() {
               loading="lazy"
             />
             <div className="mosaic-label">
-              <div className="mosaic-tag">Gran Sabana</div>
+              <div className="mosaic-tag">{t('Gran Sabana')}</div>
               <div>Canaima</div>
             </div>
           </a>
@@ -1429,33 +1438,33 @@ export default function Home() {
           <div className="split-photo reveal-left">
             <img
               src="/images/lodge-canaima_01.webp"
-              alt="Posada en Canaima"
+              alt={t('Posada en Canaima')}
               loading="lazy"
             />
           </div>
           <div className="split-text reveal-right">
-            <div className="section-label">Sobre las posadas</div>
-            <h2 className="section-h2">¿Qué es una posada?</h2>
+            <div className="section-label">{t('Sobre las posadas')}</div>
+            <h2 className="section-h2">{t('¿Qué es una posada?')}</h2>
             <p className="section-sub" style={{marginBottom:'0'}}>
-              Un alojamiento pequeño, casi siempre familiar. Los dueños viven en el lugar o cerca, conocen bien la zona y atienden en persona. Suelen tener pocas habitaciones, desayuno casero y precios más accesibles que un hotel.
+              {t('Un alojamiento pequeño, casi siempre familiar. Los dueños viven en el lugar o cerca, conocen bien la zona y atienden en persona. Suelen tener pocas habitaciones, desayuno casero y precios más accesibles que un hotel.')}
             </p>
             <div className="feature-grid">
               {([
                 {
                   icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cacao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-                  title:'Bien ubicadas', desc:'Frente al mar, en la montaña o junto a los parques nacionales'
+                  title:t('Bien ubicadas'), desc:t('Frente al mar, en la montaña o junto a los parques nacionales')
                 },
                 {
                   icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cacao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-                  title:'Atención de los dueños', desc:'Te recomiendan tours, traslados y dónde comer'
+                  title:t('Atención de los dueños'), desc:t('Te recomiendan tours, traslados y dónde comer')
                 },
                 {
                   icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cacao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
-                  title:'Pago en USD o Bs', desc:'Zelle, Pago Móvil, transferencia o efectivo, según la posada'
+                  title:t('Pago en USD o Bs'), desc:t('Zelle, Pago Móvil, transferencia o efectivo, según la posada')
                 },
                 {
                   icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cacao)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>,
-                  title:'Revisadas', desc:'Cada posada pasa por nuestro equipo antes de publicarse'
+                  title:t('Revisadas'), desc:t('Cada posada pasa por nuestro equipo antes de publicarse')
                 },
               ] as {icon:React.ReactNode, title:string, desc:string}[]).map((f,i) => (
                 <div className={`feature-card reveal d${i+1}`} key={i}>
@@ -1474,17 +1483,17 @@ export default function Home() {
       {/* ── CÓMO FUNCIONA ────────────────────────────────── */}
       <section id="como-funciona" className="section">
         <div className="reveal">
-          <div className="section-label">Cómo funciona</div>
-          <h2 className="section-h2">Así funciona RESER-VE</h2>
-          <p className="section-sub">Estamos en fase privada: las posadas ya se están publicando y las reservas abren pronto.</p>
+          <div className="section-label">{t('Cómo funciona')}</div>
+          <h2 className="section-h2">{t('Así funciona RESER-VE')}</h2>
+          <p className="section-sub">{t('Estamos en fase privada: las posadas ya se están publicando y las reservas abren pronto.')}</p>
         </div>
         <div className="reveal d1">
           <div className="tabs">
             <button className={`tab-btn ${activeTab === 'viajero' ? 'active' : ''}`} onClick={() => setActiveTab('viajero')}>
-              Soy viajero
+              {t('Soy viajero')}
             </button>
             <button className={`tab-btn ${activeTab === 'posadero' ? 'active' : ''}`} onClick={() => setActiveTab('posadero')}>
-              Tengo una posada
+              {t('Tengo una posada')}
             </button>
           </div>
         </div>
@@ -1492,10 +1501,10 @@ export default function Home() {
         {activeTab === 'viajero' ? (
           <div className="steps-grid">
             {[
-              ['Busca', 'Filtra por destino, precio y forma de pago, o mira las posadas en el mapa.'],
-              ['Compara', 'Revisa fotos, servicios, políticas y ubicación de cada posada.'],
-              ['Solicita', 'El posadero confirma en menos de 24 horas y te envía sus datos de pago por el chat.'],
-              ['Viaja', 'Pagas a la posada, te hospedas y al volver puedes dejar tu reseña.'],
+              [t('Busca'), t('Filtra por destino, precio y forma de pago, o mira las posadas en el mapa.')],
+              [t('Compara'), t('Revisa fotos, servicios, políticas y ubicación de cada posada.')],
+              [t('Solicita'), t('El posadero confirma en menos de 24 horas y te envía sus datos de pago por el chat.')],
+              [t('Viaja'), t('Pagas a la posada, te hospedas y al volver puedes dejar tu reseña.')],
             ].map(([t, d], i) => (
               <div className={`step-card anim-${i+1}`} key={i}>
                 <div className="step-num">0{i + 1}</div>
@@ -1507,10 +1516,10 @@ export default function Home() {
         ) : (
           <div className="steps-grid">
             {[
-              ['Crea tu cuenta', 'Regístrate como posadero. Publicar es gratis y no hay mensualidad.'],
-              ['Publica tu posada', 'Sube fotos, precios, habitaciones y las formas de pago que aceptas.'],
-              ['La revisamos', 'Nuestro equipo la revisa en 24 a 72 horas y te avisa por correo.'],
-              ['Recibe solicitudes', 'Confirmas cada reserva desde tu panel y hablas con el huésped por el chat.'],
+              [t('Crea tu cuenta'), t('Regístrate como posadero. Publicar es gratis y no hay mensualidad.')],
+              [t('Publica tu posada'), t('Sube fotos, precios, habitaciones y las formas de pago que aceptas.')],
+              [t('La revisamos'), t('Nuestro equipo la revisa en 24 a 72 horas y te avisa por correo.')],
+              [t('Recibe solicitudes'), t('Confirmas cada reserva desde tu panel y hablas con el huésped por el chat.')],
             ].map(([t, d], i) => (
               <div className={`step-card anim-${i+1}`} key={i}>
                 <div className="step-num">0{i + 1}</div>
@@ -1527,8 +1536,8 @@ export default function Home() {
       {/* ── DESTINOS ─────────────────────────────────────── */}
       <section id="destinos" className="section">
         <div className="reveal">
-          <div className="section-label">Destinos</div>
-          <h2 className="section-h2">Explora por destino</h2>
+          <div className="section-label">{t('Destinos')}</div>
+          <h2 className="section-h2">{t('Explora por destino')}</h2>
         </div>
         <div className="dest-grid">
           {destinos.map((d, i) => (
@@ -1543,7 +1552,7 @@ export default function Home() {
               <img src={d.img} alt={d.name} loading={i === 0 ? 'eager' : 'lazy'} />
               <div className="dest-overlay" />
               <div className="dest-info">
-                <div className="dest-tag">{d.tag}</div>
+                <div className="dest-tag">{t(d.tag)}</div>
                 <div className="dest-name">{d.name}</div>
                 <div className="dest-count">{d.count}</div>
               </div>
@@ -1559,19 +1568,19 @@ export default function Home() {
       <section id="posaderos" className="section">
         <div className="posadero-section">
           <div className="posadero-left reveal-left">
-            <div className="section-label">Para posaderos</div>
+            <div className="section-label">{t('Para posaderos')}</div>
             <h2 className="section-h2" style={{marginBottom:'0.6rem'}}>
-              ¿Tienes una posada?
+              {t('¿Tienes una posada?')}
             </h2>
             <p className="section-sub" style={{marginBottom:'0'}}>
-              Publícala gratis y llega a viajeros de Venezuela y del exterior que buscan dónde quedarse. Solo pagas una comisión cuando recibes una reserva confirmada.
+              {t('Publícala gratis y llega a viajeros de Venezuela y del exterior que buscan dónde quedarse. Solo pagas una comisión cuando recibes una reserva confirmada.')}
             </p>
             <div className="feature-list">
               {[
-                'Sin mensualidad ni costo de alta',
-                'Tu propia página con fotos, servicios, políticas y ubicación',
-                'Calendario por habitaciones sincronizado con Booking, Airbnb y Google Calendar',
-                'Cobras como siempre: Zelle, Pago Móvil, transferencia o efectivo',
+                t('Sin mensualidad ni costo de alta'),
+                t('Tu propia página con fotos, servicios, políticas y ubicación'),
+                t('Calendario por habitaciones sincronizado con Booking, Airbnb y Google Calendar'),
+                t('Cobras como siempre: Zelle, Pago Móvil, transferencia o efectivo'),
               ].map((f,i) => (
                 <div className="feature-item" key={i}>
                   <div className="feature-dot" />
@@ -1580,20 +1589,20 @@ export default function Home() {
               ))}
               <div className="feature-item">
                 <div className="feature-dot" />
-                <div className="feature-text">Un proyecto de <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>dos locos de viaje</a></div>
+                <div className="feature-text">{t('Un proyecto de')} <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>dos locos de viaje</a></div>
               </div>
             </div>
           </div>
           <div className="posadero-right reveal-right">
             <div className="plan-card">
-              <div className="plan-label">Empezar toma unos 10 minutos</div>
+              <div className="plan-label">{t('Empezar toma unos 10 minutos')}</div>
               <ul className="plan-items">
-                <li>Crea tu cuenta de posadero</li>
-                <li>Completa los datos y sube tus fotos</li>
-                <li>Envíala a revisión</li>
+                <li>{t('Crea tu cuenta de posadero')}</li>
+                <li>{t('Completa los datos y sube tus fotos')}</li>
+                <li>{t('Envíala a revisión')}</li>
               </ul>
-              <a href="/register?role=host" className="btn-primary full-btn">Publicar mi posada</a>
-              <a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener" style={{display:'block',textAlign:'center',marginTop:'0.8rem',fontSize:'0.84rem',color:'var(--muted)'}}>Descargar la guía para posaderos (PDF)</a>
+              <a href="/register?role=host" className="btn-primary full-btn">{t('Publicar mi posada')}</a>
+              <a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener" style={{display:'block',textAlign:'center',marginTop:'0.8rem',fontSize:'0.84rem',color:'var(--muted)'}}>{t('Descargar la guía para posaderos (PDF)')}</a>
             </div>
           </div>
         </div>
@@ -1604,36 +1613,36 @@ export default function Home() {
         <div className="footer-grid">
           <div className="footer-brand">
             <img src="/images/logo-horizontal.svg" alt="RESER-VE" className="logo-img-footer" />
-            <p>Reserva posadas en Venezuela, directamente con sus dueños.</p>
+            <p>{t('Reserva posadas en Venezuela, directamente con sus dueños.')}</p>
           </div>
           <div className="footer-col">
-            <h4>Explorar</h4>
-            <a href="/buscar">Todos los destinos</a>
+            <h4>{t('Explorar')}</h4>
+            <a href="/buscar">{t('Todos los destinos')}</a>
             <a href="/destinos/los-roques">Los Roques</a>
             <a href="/destinos/merida">Mérida</a>
             <a href="/destinos/canaima">Canaima</a>
             <a href="/destinos/isla-margarita">Isla Margarita</a>
           </div>
           <div className="footer-col">
-            <h4>Posaderos</h4>
-            <a href="/register?role=host">Registra tu posada</a>
-            <a href="/posaderos">Cómo funciona</a>
-            <a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener">Guía para posaderos (PDF)</a>
-            <a href="/faq">Preguntas frecuentes</a>
+            <h4>{t('Posaderos')}</h4>
+            <a href="/register?role=host">{t('Registra tu posada')}</a>
+            <a href="/posaderos">{t('Cómo funciona')}</a>
+            <a href="/docs/Guia-Posaderos-RESER-VE.pdf" target="_blank" rel="noopener">{t('Guía para posaderos (PDF)')}</a>
+            <a href="/faq">{t('Preguntas frecuentes')}</a>
           </div>
           <div className="footer-col">
-            <h4>Contacto</h4>
+            <h4>{t('Contacto')}</h4>
             <a href="mailto:hola@reser-ve.com">hola@reser-ve.com</a>
             <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer">Instagram</a>
-            <a href="/faq">Centro de ayuda</a>
+            <a href="/faq">{t('Centro de ayuda')}</a>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 RESER-VE · Impulsado por <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>dos locos de viaje</a></p>
+          <p>© 2026 RESER-VE · {t('Impulsado por')} <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>dos locos de viaje</a></p>
           <div style={{display:'flex',gap:'1.5rem'}}>
-            <a href="/terminos">Términos</a>
-            <a href="/privacidad">Privacidad</a>
-            <a href="/vision">Sobre nosotros</a>
+            <a href="/terminos">{t('Términos')}</a>
+            <a href="/privacidad">{t('Privacidad')}</a>
+            <a href="/vision">{t('Sobre nosotros')}</a>
           </div>
         </div>
       </footer>

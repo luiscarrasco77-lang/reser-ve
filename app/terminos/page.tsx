@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import NavUser from '@/components/NavUser'
+import { getT } from '@/lib/i18n-server'
 
-export const metadata: Metadata = {
-  title: 'Términos y Condiciones',
-  description: 'Términos y condiciones de uso de RESER-VE.',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t('Términos y Condiciones'), description: t('Términos y condiciones de uso de RESER-VE.') }
 }
 
 const SECCIONES: { t: string; p: string[] }[] = [
@@ -43,7 +45,8 @@ const SECCIONES: { t: string; p: string[] }[] = [
   ]},
 ]
 
-export default function TerminosPage() {
+export default async function TerminosPage() {
+  const t = await getT()
   return (
     <>
       <style>{`
@@ -63,19 +66,19 @@ export default function TerminosPage() {
       `}</style>
       <nav className="nav">
         <Link href="/" className="logo">RESER<span>-VE</span></Link>
-        <Link href="/" className="back">← Inicio</Link>
+        <NavUser />
       </nav>
       <main className="wrap">
-        <h1>Términos y Condiciones</h1>
-        <div className="sub">Última actualización: septiembre 2026</div>
+        <h1>{t("Términos y Condiciones")}</h1>
+        <div className="sub">{t('Última actualización: septiembre 2026')}{t('_legal_nota') !== '_legal_nota' && <> · {t('_legal_nota')}</>}</div>
         {SECCIONES.map(s => (
           <section key={s.t}>
-            <h2>{s.t}</h2>
-            {s.p.map((par, i) => <p key={i}>{par}</p>)}
+            <h2>{t(s.t)}</h2>
+            {s.p.map((par, i) => <p key={i}>{t(par)}</p>)}
           </section>
         ))}
         <div className="foot">
-          ¿Dudas sobre estos términos? Escríbenos a <a href="mailto:hola@reser-ve.com" style={{ color: 'var(--cacao)' }}>hola@reser-ve.com</a> · Consulta también nuestra <Link href="/privacidad" style={{ color: 'var(--cacao)' }}>Política de Privacidad</Link>.
+          {t('¿Dudas sobre estos términos? Escríbenos a')} <a href="mailto:hola@reser-ve.com" style={{ color: 'var(--cacao)' }}>hola@reser-ve.com</a> · {t('Consulta también nuestra')} <Link href="/privacidad" style={{ color: 'var(--cacao)' }}>{t('Política de Privacidad')}</Link>.
         </div>
       </main>
     </>

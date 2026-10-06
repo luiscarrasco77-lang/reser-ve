@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import NavUser from '@/components/NavUser'
+import { getT } from '@/lib/i18n-server'
 
-export const metadata: Metadata = {
-  title: 'Política de Privacidad',
-  description: 'Cómo RESER-VE recopila, usa y protege tus datos.',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t('Política de Privacidad'), description: t('Cómo RESER-VE recopila, usa y protege tus datos.') }
 }
 
 const SECCIONES: { t: string; p: string[] }[] = [
@@ -28,14 +30,15 @@ const SECCIONES: { t: string; p: string[] }[] = [
     'Puedes acceder, corregir o eliminar tus datos personales escribiéndonos. También puedes cerrar tu cuenta en cualquier momento.',
   ]},
   { t: '7. Cookies', p: [
-    'Usamos cookies estrictamente necesarias para mantener tu sesión iniciada y el funcionamiento del sitio.',
+    'Usamos cookies estrictamente necesarias para mantener tu sesión iniciada, recordar tu idioma y el funcionamiento del sitio.',
   ]},
   { t: '8. Contacto', p: [
     'Para cualquier asunto relacionado con tu privacidad, escríbenos a hola@reser-ve.com.',
   ]},
 ]
 
-export default function PrivacidadPage() {
+export default async function PrivacidadPage() {
+  const t = await getT()
   return (
     <>
       <style>{`
@@ -55,19 +58,19 @@ export default function PrivacidadPage() {
       `}</style>
       <nav className="nav">
         <Link href="/" className="logo">RESER<span>-VE</span></Link>
-        <Link href="/" className="back">← Inicio</Link>
+        <NavUser />
       </nav>
       <main className="wrap">
-        <h1>Política de Privacidad</h1>
-        <div className="sub">Última actualización: septiembre 2026</div>
+        <h1>{t("Política de Privacidad")}</h1>
+        <div className="sub">{t('Última actualización: septiembre 2026')}{t('_legal_nota') !== '_legal_nota' && <> · {t('_legal_nota')}</>}</div>
         {SECCIONES.map(s => (
           <section key={s.t}>
-            <h2>{s.t}</h2>
-            {s.p.map((par, i) => <p key={i}>{par}</p>)}
+            <h2>{t(s.t)}</h2>
+            {s.p.map((par, i) => <p key={i}>{t(par)}</p>)}
           </section>
         ))}
         <div className="foot">
-          Consulta también nuestros <Link href="/terminos" style={{ color: 'var(--cacao)' }}>Términos y Condiciones</Link>.
+          {t('Consulta también nuestros')} <Link href="/terminos" style={{ color: 'var(--cacao)' }}>{t('Términos y Condiciones')}</Link>.
         </div>
       </main>
     </>

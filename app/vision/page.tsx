@@ -1,11 +1,15 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+import LangSwitch from '@/components/LangSwitch'
+import { getT } from '@/lib/i18n-server'
 
-export const metadata = {
-  title: 'Sobre nosotros',
-  description: 'Qué es RESER-VE y por qué nos enfocamos en las posadas de Venezuela.',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t('Sobre nosotros'), description: t('Qué es RESER-VE y por qué nos enfocamos en las posadas de Venezuela.') }
 }
 
-export default function VisionPage() {
+export default async function VisionPage() {
+  const t = await getT()
   return (
     <>
       <style>{`
@@ -58,7 +62,7 @@ export default function VisionPage() {
         }
         .vis-nav-cta:hover { background: var(--cacao-dark); transform: translateY(-1px); }
         @media(max-width: 768px) {
-          .vis-nav-links { display: none; }
+          .vis-nav-link, .vis-nav-cta { display: none !important; }
           .vis-nav { padding: 0.85rem 1.25rem; }
         }
 
@@ -250,9 +254,10 @@ export default function VisionPage() {
           <img src="/images/logo-horizontal.svg" alt="RESER-VE" className="vis-logo" />
         </Link>
         <div className="vis-nav-links">
-          <Link href="/buscar" className="vis-nav-link">Explorar posadas</Link>
-          <Link href="/posaderos" className="vis-nav-link">Posaderos</Link>
-          <Link href="/register?role=host" className="vis-nav-cta">Registra tu posada</Link>
+          <Link href="/buscar" className="vis-nav-link">{t("Explorar posadas")}</Link>
+          <Link href="/posaderos" className="vis-nav-link">{t("Posaderos")}</Link>
+          <Link href="/register?role=host" className="vis-nav-cta">{t("Registra tu posada")}</Link>
+          <LangSwitch />
         </div>
       </nav>
 
@@ -261,12 +266,12 @@ export default function VisionPage() {
         <div className="vis-hero-img" />
         <div className="vis-hero-overlay" />
         <div className="vis-hero-content">
-          <div className="vis-hero-label">Sobre nosotros</div>
+          <div className="vis-hero-label">{t("Sobre nosotros")}</div>
           <h1 className="vis-hero-h1">
-            Por qué <em>posadas</em>
+            {t('Por qué')} <em>{t('posadas')}</em>
           </h1>
           <p className="vis-hero-sub">
-            En Venezuela, la mejor forma de conocer un destino suele ser quedarse en una posada. Queremos que encontrarlas y reservarlas sea igual de fácil que reservar un hotel.
+            {t("En Venezuela, la mejor forma de conocer un destino suele ser quedarse en una posada. Queremos que encontrarlas y reservarlas sea igual de fácil que reservar un hotel.")}
           </p>
         </div>
       </section>
@@ -276,13 +281,13 @@ export default function VisionPage() {
 
         {/* Section 1 */}
         <section className="vis-section">
-          <div className="vis-section-label">Qué es una posada</div>
-          <h2 className="vis-h2">Pequeñas, familiares y bien ubicadas</h2>
+          <div className="vis-section-label">{t("Qué es una posada")}</div>
+          <h2 className="vis-h2">{t("Pequeñas, familiares y bien ubicadas")}</h2>
           <p className="vis-p">
-            Una posada es un alojamiento pequeño, normalmente de pocas habitaciones, que gestiona una familia. Los dueños suelen vivir en el lugar o muy cerca y conocen bien la zona: saben qué tour vale la pena, quién hace el mejor traslado y dónde comer.
+            {t("Una posada es un alojamiento pequeño, normalmente de pocas habitaciones, que gestiona una familia. Los dueños suelen vivir en el lugar o muy cerca y conocen bien la zona: saben qué tour vale la pena, quién hace el mejor traslado y dónde comer.")}
           </p>
           <p className="vis-p">
-            Hay posadas frente al mar en Los Roques y Mochima, en la montaña en Mérida, en pueblos coloniales como Coro o junto a los tepuyes de la Gran Sabana. En muchos de esos lugares no hay hoteles grandes: las posadas son la forma principal de alojarse.
+            {t("Hay posadas frente al mar en Los Roques y Mochima, en la montaña en Mérida, en pueblos coloniales como Coro o junto a los tepuyes de la Gran Sabana. En muchos de esos lugares no hay hoteles grandes: las posadas son la forma principal de alojarse.")}
           </p>
         </section>
 
@@ -290,15 +295,15 @@ export default function VisionPage() {
 
         {/* Image */}
         <div className="vis-img-block">
-          <img src="/images/lodge-canaima_01.webp" alt="Posada en Canaima, Venezuela" loading="lazy" />
+          <img src="/images/lodge-canaima_01.webp" alt={t('Posada en Canaima, Venezuela')} loading="lazy" />
         </div>
 
         {/* Section 2 */}
         <section className="vis-section">
-          <div className="vis-section-label">El problema</div>
-          <h2 className="vis-h2">Difíciles de encontrar y de reservar</h2>
+          <div className="vis-section-label">{t("El problema")}</div>
+          <h2 className="vis-h2">{t("Difíciles de encontrar y de reservar")}</h2>
           <p className="vis-p">
-            La mayoría de las posadas no aparecen en Booking ni en Airbnb. Se reservan por WhatsApp o Instagram, sin precios claros, sin fotos actualizadas y sin ninguna garantía para quien paga por adelantado. Para quien viaja desde el exterior es todavía más difícil.
+            {t("La mayoría de las posadas no aparecen en Booking ni en Airbnb. Se reservan por WhatsApp o Instagram, sin precios claros, sin fotos actualizadas y sin ninguna garantía para quien paga por adelantado. Para quien viaja desde el exterior es todavía más difícil.")}
           </p>
         </section>
 
@@ -306,30 +311,30 @@ export default function VisionPage() {
 
         {/* Section 3 */}
         <section className="vis-section">
-          <div className="vis-section-label">Qué hacemos</div>
-          <h2 className="vis-h2">Un solo lugar para buscar, comparar y reservar</h2>
+          <div className="vis-section-label">{t("Qué hacemos")}</div>
+          <h2 className="vis-h2">{t("Un solo lugar para buscar, comparar y reservar")}</h2>
           <p className="vis-p">
-            En RESER-VE cada posada tiene su página con fotos, precio por noche, servicios, políticas y ubicación. Nuestro equipo revisa cada una antes de publicarla. El viajero paga exactamente el precio publicado y coordina todo con el posadero por un chat dentro de la plataforma, que deja registro de lo acordado.
+            {t("En RESER-VE cada posada tiene su página con fotos, precio por noche, servicios, políticas y ubicación. Nuestro equipo revisa cada una antes de publicarla. El viajero paga exactamente el precio publicado y coordina todo con el posadero por un chat dentro de la plataforma, que deja registro de lo acordado.")}
           </p>
           <p className="vis-p">
-            Los pagos se hacen como ya funciona en Venezuela: Zelle, Pago Móvil, transferencia o efectivo, según lo que acepte cada posada.
+            {t("Los pagos se hacen como ya funciona en Venezuela: Zelle, Pago Móvil, transferencia o efectivo, según lo que acepte cada posada.")}
           </p>
           <p className="vis-p">
-            RESER-VE es un proyecto de <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>Dos Locos de Viaje</a>, una comunidad de viajeros venezolanos.
+            {t('RESER-VE es un proyecto de')} <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>Dos Locos de Viaje</a>{t(', una comunidad de viajeros venezolanos.')}
           </p>
         </section>
 
         {/* CTA */}
         <div className="vis-cta">
           <div className="vis-cta-inner">
-            <h2>Explora las <em>posadas</em></h2>
-            <p>Busca por destino, precio o forma de pago.</p>
+            <h2>{t('Explora las')} <em>{t('posadas')}</em></h2>
+            <p>{t("Busca por destino, precio o forma de pago.")}</p>
             <div className="vis-cta-btns">
               <Link href="/buscar" className="vis-cta-btn">
-                Ver posadas
+                {t("Ver posadas")}
               </Link>
               <Link href="/register?role=host" className="vis-cta-sec">
-                Tengo una posada
+                {t("Tengo una posada")}
               </Link>
             </div>
           </div>
@@ -340,14 +345,14 @@ export default function VisionPage() {
       {/* FOOTER NOTE */}
       <div className="vis-footer-note">
         <p>
-          © 2026 RESER-VE · Impulsado por{' '}
+          © 2026 RESER-VE · {t('Impulsado por')}{' '}
           <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer">
             dos locos de viaje
           </a>
           {' '}·{' '}
-          <Link href="/">Inicio</Link>
+          <Link href="/">{t("Inicio")}</Link>
           {' '}·{' '}
-          <Link href="/buscar">Explorar posadas</Link>
+          <Link href="/buscar">{t("Explorar posadas")}</Link>
         </p>
       </div>
     </>

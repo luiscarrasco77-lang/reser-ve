@@ -75,16 +75,3 @@ ${msg.body.slice(0, 2000)}`
     console.error('[moderacion] fallo al analizar', e)
   }
 }
-
-// Reporte de un viajero: vio la posada más barata en otro canal.
-export async function reportPrice(opts: { posadaId: number; userId: number | null; canal: string; precio: string; enlace: string; nota: string }) {
-  const db = getDb()
-  const [p] = await db.select({ nombre: posadas.nombre, precio: posadas.precio }).from(posadas).where(eq(posadas.id, opts.posadaId))
-  if (!p) return false
-  const reason = `Reporte de precio: en ${opts.canal || 'otro canal'} la ven a ${opts.precio || '¿?'} (en RESER-VE: $${p.precio}/noche).`
-  const excerpt = [opts.enlace && `Enlace: ${opts.enlace}`, opts.nota && `Nota: ${opts.nota}`].filter(Boolean).join(' · ').slice(0, 500) || null
-  await db.insert(moderationFlags).values({ kind: 'reporte_precio', severity: 'media', reason, excerpt, posadaId: opts.posadaId, userId: opts.userId })
-  const admins = await db.select({ email: users.email }).from(users).where(eq(users.role, 'admin'))
-  await emailAdminModeration({ to: admins.map(a => a.email), kind: 'reporte_precio', severity: 'media', reason: `${p.nombre}. ${reason}`, excerpt: excerpt ?? '', who: 'Un viajero', conversationId: null })
-  return true
-}

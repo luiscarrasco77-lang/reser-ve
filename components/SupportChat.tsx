@@ -5,8 +5,10 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { WELCOME_MESSAGE, SUGGESTED_QUESTIONS } from '@/lib/support-kb'
 import RichText from '@/components/RichText'
+import { useT } from './LangProvider'
 
 export default function SupportChat() {
+  const tr = useT()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -109,7 +111,7 @@ export default function SupportChat() {
       `}</style>
 
       {!open && (
-        <button className="sc-fab" onClick={() => setOpen(true)} aria-label="Abrir ayuda de Chigüi">
+        <button className="sc-fab" onClick={() => setOpen(true)} aria-label={tr('Abrir ayuda de Chigüi')}>
           <span className="sc-fab-dot" />
           <img src="/images/chigui/chigui.svg" alt="" className="sc-fab-img" />
         </button>
@@ -120,27 +122,27 @@ export default function SupportChat() {
           <div className="sc-head">
             <div className="sc-ava"><img src="/images/chigui/chigui.svg" alt="" /></div>
             <div>
-              <div className="sc-title">Chigüi · Ayuda RESER-VE</div>
-              <div className="sc-sub"><span className="sc-online" /> En línea · el chigüire de RESER-VE</div>
+              <div className="sc-title">{tr('Chigüi · Ayuda RESER-VE')}</div>
+              <div className="sc-sub"><span className="sc-online" /> {tr('En línea · el chigüire de RESER-VE')}</div>
             </div>
-            <button className="sc-x" onClick={() => setOpen(false)} aria-label="Cerrar">✕</button>
+            <button className="sc-x" onClick={() => setOpen(false)} aria-label={tr('Cerrar')}>✕</button>
           </div>
 
           <div className="sc-body" ref={scrollRef}>
             {/* Bienvenida + sugerencias cuando no hay mensajes */}
             <div className="sc-row ai">
               <div className="sc-mini-ava"><img src="/images/chigui/chigui.svg" alt="" /></div>
-              <div className="sc-bub">{WELCOME_MESSAGE}</div>
+              <div className="sc-bub">{tr(WELCOME_MESSAGE)}</div>
             </div>
             {pending.map(p => (
               <a key={p.id} href={`/mensajes/${p.id}`} className="sc-ticket" style={{ textDecoration: 'none', display: 'flex' }}>
-                El equipo te respondió en «{p.subject}» · Ver →
+                {tr('El equipo te respondió en «{s}» · Ver →', { s: p.subject })}
               </a>
             ))}
             {messages.length === 0 && (
               <div className="sc-sugs">
                 {SUGGESTED_QUESTIONS.map(q => (
-                  <button key={q} className="sc-sug" onClick={() => send(q)}>{q}</button>
+                  <button key={q} className="sc-sug" onClick={() => send(tr(q))}>{tr(q)}</button>
                 ))}
               </div>
             )}
@@ -159,8 +161,8 @@ export default function SupportChat() {
             {ticketAbierto && (
               <div className="sc-ticket">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                Ticket abierto. Te avisamos por correo y aquí mismo cuando el equipo responda.
-                {ticketId && <a href={`/mensajes/${ticketId}`} style={{ marginLeft: 6, fontWeight: 700, color: 'inherit' }}>Ver ticket →</a>}
+                {tr('Ticket abierto. Te avisamos por correo y aquí mismo cuando el equipo responda.')}
+                {ticketId && <a href={`/mensajes/${ticketId}`} style={{ marginLeft: 6, fontWeight: 700, color: 'inherit' }}>{tr('Ver ticket →')}</a>}
               </div>
             )}
             {ticketMsgs.map(m => m.mine ? (
@@ -173,7 +175,7 @@ export default function SupportChat() {
             ) : (
               <div key={`t-${m.id}`} className="sc-row ai">
                 <div className="sc-mini-ava" style={{ background: '#1A2B4C', color: 'white', fontWeight: 800, fontSize: '.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>R</div>
-                <div className="sc-bub"><div style={{ fontSize: '.7rem', fontWeight: 800, color: '#E67E22', marginBottom: 2 }}>{m.senderName} · Equipo RESER-VE</div><RichText text={m.body} /></div>
+                <div className="sc-bub"><div style={{ fontSize: '.7rem', fontWeight: 800, color: '#E67E22', marginBottom: 2 }}>{m.senderName} · {tr('Equipo RESER-VE')}</div><RichText text={m.body} /></div>
               </div>
             ))}
 
@@ -187,7 +189,7 @@ export default function SupportChat() {
             {error && (
               <div className="sc-row ai">
                 <div className="sc-mini-ava"><img src="/images/chigui/chigui.svg" alt="" /></div>
-                <div className="sc-bub">Ups, tuve un problema para responder. Intenta de nuevo o escríbenos a hola@reser-ve.com.</div>
+                <div className="sc-bub">{tr('Ups, tuve un problema para responder. Intenta de nuevo o escríbenos a hola@reser-ve.com.')}</div>
               </div>
             )}
           </div>
@@ -196,7 +198,7 @@ export default function SupportChat() {
             <form className="sc-form" onSubmit={e => { e.preventDefault(); send(input) }}>
               <textarea
                 className="sc-input"
-                placeholder={ticketId ? "Escribe al equipo de RESER-VE…" : "Escribe tu mensaje…"}
+                placeholder={ticketId ? tr('Escribe al equipo de RESER-VE…') : tr('Escribe tu mensaje…')}
                 value={input}
                 rows={1}
                 onChange={e => setInput(e.target.value)}
@@ -206,7 +208,7 @@ export default function SupportChat() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
             </form>
-            <div className="sc-disc">IA de RESER-VE · puede cometer errores</div>
+            <div className="sc-disc">{tr('IA de RESER-VE · puede cometer errores')}</div>
           </div>
         </div>
       )}

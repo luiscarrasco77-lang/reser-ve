@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import type { Posada } from '@/lib/data'
 import type { SearchResult } from '@/lib/search'
+import { useT } from './LangProvider'
 
 // Mapa vectorial con MapLibre GL + OpenFreeMap (estilo "Positron", minimalista), recoloreado
 // con la paleta de RESER-VE: arena, índigo y cacao. Sin API key.
@@ -79,6 +80,9 @@ export default function MapView({
   onViewportChange, onUserPan,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const t = useT()
+  const tRef = useRef(t)
+  tRef.current = t
   const mapRef       = useRef<any>(null)
   const libRef       = useRef<any>(null)
   const markersRef   = useRef<Map<string, MarkerEntry>>(new Map())
@@ -200,7 +204,7 @@ export default function MapView({
     const safe = (s: string) => s.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]!))
     popupRef.current = new lib.Popup({ closeButton: false, closeOnClick: false, offset: 18, className: 'mkr-tip' })
       .setLngLat([p.lng, p.lat])
-      .setHTML(`<div class="mkr-tip-name">${safe(p.nombre)}</div><div class="mkr-tip-meta">${safe(p.destino)} · $${p.precio}/noche</div>`)
+      .setHTML(`<div class="mkr-tip-name">${safe(p.nombre)}</div><div class="mkr-tip-meta">${safe(p.destino)} · $${p.precio}${tRef.current('/noche')}</div>`)
       .addTo(map)
   }
 
