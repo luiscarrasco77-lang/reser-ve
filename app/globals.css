@@ -17,7 +17,9 @@
 .maplibregl-map .mkr { border-radius: 999px !important; }
 
 /* Selector de idioma: botones en píldora (anula el redondeo global de botones). */
-.lang-switch button { border-radius: 999px !important; width: auto !important; margin: 0 !important; }
+.lang-switch { width: auto !important; flex: none !important; }
+.lang-switch button { border-radius: 999px !important; width: 30px !important; height: 30px !important; min-width: 0 !important; max-width: 30px !important; padding: 3px !important; margin: 0 !important; flex: none !important; box-sizing: border-box !important; }
+.lang-switch button > span { width: 24px !important; height: 24px !important; }
 /* Cabeceras compactas en móvil: el botón de registro y el CTA de posaderos se esconden (siguen en la página). */
 @media (max-width: 480px) { .nu-signup { display: none !important; } }
 @media (max-width: 640px) { .pos-nav-cta { display: none !important; } }
