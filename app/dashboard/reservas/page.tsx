@@ -280,6 +280,7 @@ export default function ReservasPage() {
                           <div style={{fontSize:'0.72rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--muted)',marginBottom:'0.4rem'}}>
                             Mensaje al huésped (opcional)
                           </div>
+                          <div style={{ fontSize: '0.78rem', color: '#92400e', background: 'rgba(245,158,11,0.08)', borderRadius: 8, padding: '0.5rem 0.7rem', marginBottom: '0.5rem' }}>Antes de confirmar, revisa que tengas la habitación libre esas fechas (en tu cuaderno, WhatsApp o tu <a href="/dashboard/calendario" style={{ color: 'inherit', fontWeight: 700 }}>calendario</a>).</div>
                           <textarea
                             className="note-textarea"
                             placeholder="Mensaje de bienvenida o instrucciones de llegada. Los datos de pago envíalos por el chat de RESER-VE."

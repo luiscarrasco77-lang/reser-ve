@@ -56,6 +56,9 @@ function CalendarioInner() {
   const [source, setSource] = useState('whatsapp')
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
+  const [qIn, setQIn] = useState('')
+  const [qOut, setQOut] = useState('')
+  const [showGuide, setShowGuide] = useState(false)
   const [msg, setMsg] = useState('')
 
   // Sincronización
@@ -236,7 +239,7 @@ function CalendarioInner() {
         <div className="head">
           <div>
             <div className="title">Calendario</div>
-            <div className="sub">Anota aquí las reservas que recibes por WhatsApp, teléfono u otras plataformas para no vender la misma habitación dos veces.</div>
+            <div className="sub">Anota aquí las reservas que recibes por WhatsApp, teléfono u otras plataformas para no vender la misma habitación dos veces. <button className="x" onClick={() => setShowGuide(g => !g)}>{showGuide ? 'Ocultar guía' : '¿Cómo funciona?'}</button></div>
           </div>
           {data && data.posadas.length > 1 && (
             <select value={data.posada?.slug ?? ''} onChange={e => router.push(`/dashboard/calendario?posada=${e.target.value}`)}>
@@ -244,6 +247,17 @@ function CalendarioInner() {
             </select>
           )}
         </div>
+
+        {showGuide && (
+          <div className="card" style={{ marginBottom: '1.25rem', lineHeight: 1.6, fontSize: '.88rem' }}>
+            <div className="h3">Cómo evitar el overbooking, según cómo trabajes</div>
+            <p><b>Si lo llevas todo a mano</b> (cuaderno, WhatsApp, teléfono): cada vez que alguien te reserve por fuera, anótalo aquí en 10 segundos (fechas, habitaciones y de dónde vino). Así RESER-VE nunca ofrece esas habitaciones. Y recuerda: <b>ninguna reserva de RESER-VE es firme hasta que tú la confirmas</b>, así que antes de confirmar puedes revisar tu cuaderno.</p>
+            <p><b>Si también estás en Booking, Airbnb o Expedia:</b> conecta su calendario una sola vez (abajo, en “Sincronizar”). Sus reservas se bloquean aquí solas, y si pegas el enlace de RESER-VE allá, las de aquí se bloquean allá.</p>
+            <p><b>Si usas Google Calendar:</b> conéctalo igual y anota tus reservas donde te resulte más cómodo.</p>
+            <p><b>¿Prefieres que lo hagamos por ti?</b> Escríbenos a hola@reser-ve.com o al chat de ayuda con las fechas ocupadas y las anotamos nosotros.</p>
+            <p className="muted" style={{ fontSize: '.8rem' }}>Ojo: la sincronización entre plataformas no es instantánea. Booking y Airbnb leen los calendarios externos cada cierto tiempo (normalmente cada pocas horas). RESER-VE los vuelve a leer cada día, cada vez que abres este calendario y justo antes de aceptar una reserva.</p>
+          </div>
+        )}
 
         {loading && !data && <div className="card muted">Cargando calendario…</div>}
         {!loading && !data?.posada && (
@@ -304,7 +318,14 @@ function CalendarioInner() {
                 <div className="card">
                   <div className="h3">Anotar una reserva externa</div>
                   {!selStart ? (
-                    <p className="muted">Toca el día de llegada y luego la última noche en el calendario.</p>
+                    <>
+                      <p className="muted" style={{ marginBottom: '.6rem' }}>Toca el día de llegada y luego la última noche en el calendario, o escribe las fechas:</p>
+                      <div className="row" style={{ marginBottom: '.5rem' }}>
+                        <label className="muted" style={{ flex: 1 }}>Llegada<input type="date" min={today} value={qIn} onChange={e => setQIn(e.target.value)} style={{ width: '100%', marginTop: '.2rem' }} /></label>
+                        <label className="muted" style={{ flex: 1 }}>Salida<input type="date" min={qIn || today} value={qOut} onChange={e => setQOut(e.target.value)} style={{ width: '100%', marginTop: '.2rem' }} /></label>
+                      </div>
+                      <button className="btn ghost" disabled={!qIn || !qOut || qOut <= qIn} onClick={() => { setSelStart(qIn); setSelEnd(addDays(qOut, -1)); if (!qIn.startsWith(month)) setMonth(qIn.slice(0, 7)) }}>Continuar</button>
+                    </>
                   ) : (
                     <>
                       <p className="muted" style={{ marginBottom: '.6rem' }}>

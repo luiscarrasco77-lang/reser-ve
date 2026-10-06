@@ -146,7 +146,7 @@ export async function emailHostNewBooking(opts: {
       <div class="row"><span>Precio que paga el huésped</span><strong>$${opts.totalPrice} USD</strong></div>
       <div class="total"><span>Tu ingreso</span><span>$${hostNet(opts.totalPrice)} USD</span></div>
       ${opts.notes ? `<div class="info-box"><strong>Nota del viajero:</strong> ${esc(opts.notes)}</div>` : ''}
-      <div class="info-box"><strong>Próximos pasos:</strong> confirma o rechaza desde tu panel. Si confirmas, envíale tus datos de pago al viajero por el <strong>chat de RESER-VE</strong> (nunca por fuera de la plataforma).</div>
+      <div class="info-box"><strong>Próximos pasos:</strong> revisa que tengas la habitación libre esas fechas (en tu cuaderno, WhatsApp o tu calendario de RESER-VE) y confirma o rechaza desde tu panel. Si confirmas, envíale tus datos de pago al viajero por el <strong>chat de RESER-VE</strong> (nunca por fuera de la plataforma).</div>
       <a href="${SITE_URL}/dashboard/reservas" class="btn">Gestionar reserva →</a>
     </div>
   `)
