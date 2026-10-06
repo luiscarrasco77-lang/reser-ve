@@ -320,7 +320,7 @@ export default async function VisionPage() {
             {t("Los pagos se hacen como ya funciona en Venezuela: Zelle, Pago Móvil, transferencia o efectivo, según lo que acepte cada posada.")}
           </p>
           <p className="vis-p">
-            {t('RESER-VE es un proyecto de')} <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>Dos Locos de Viaje</a>{t(', una comunidad de viajeros venezolanos.')}
+            {t('RESER-VE es un proyecto respaldado por')} <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>Dos Locos de Viaje</a>{t(', una comunidad de viajeros venezolanos.')}
           </p>
         </section>
 
@@ -345,9 +345,9 @@ export default async function VisionPage() {
       {/* FOOTER NOTE */}
       <div className="vis-footer-note">
         <p>
-          © 2026 RESER-VE · {t('Impulsado por')}{' '}
+          © 2026 RESER-VE · {t('Respaldado por')}{' '}
           <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer">
-            dos locos de viaje
+            Dos Locos de Viaje
           </a>
           {' '}·{' '}
           <Link href="/">{t("Inicio")}</Link>

@@ -344,7 +344,7 @@ export default async function PosaderosPage() {
         <div className="vision-callout">
           <div className="vision-text">
             <h3>{t("¿Quiénes somos?")}</h3>
-            <p>{t("RESER-VE es un proyecto de Dos Locos de Viaje, una comunidad de viajeros venezolanos. Te contamos por qué nos enfocamos en las posadas.")}</p>
+            <p>{t("RESER-VE es un proyecto respaldado por Dos Locos de Viaje, una comunidad de viajeros venezolanos. Te contamos por qué nos enfocamos en las posadas.")}</p>
           </div>
           <a href="/vision" className="vision-link">{t("Sobre nosotros")}</a>
         </div>

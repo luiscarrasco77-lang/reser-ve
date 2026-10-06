@@ -1589,7 +1589,7 @@ export default function Home() {
               ))}
               <div className="feature-item">
                 <div className="feature-dot" />
-                <div className="feature-text">{t('Un proyecto de')} <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>dos locos de viaje</a></div>
+                <div className="feature-text">{t('Proyecto respaldado por')} <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>Dos Locos de Viaje</a></div>
               </div>
             </div>
           </div>
@@ -1638,7 +1638,7 @@ export default function Home() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 RESER-VE · {t('Impulsado por')} <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>dos locos de viaje</a></p>
+          <p>© 2026 RESER-VE · {t('Respaldado por')} <a href="https://www.instagram.com/doslocosdeviaje/" target="_blank" rel="noopener noreferrer" style={{color:'inherit',textDecoration:'underline',textUnderlineOffset:'2px'}}>Dos Locos de Viaje</a></p>
           <div style={{display:'flex',gap:'1.5rem'}}>
             <a href="/terminos">{t('Términos')}</a>
             <a href="/privacidad">{t('Privacidad')}</a>

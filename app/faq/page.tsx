@@ -25,7 +25,7 @@ const faqs = [
       },
       {
         q: '¿Cómo está respaldada la plataforma?',
-        a: 'RESER-VE es un proyecto impulsado por Dos Locos de Viaje, una comunidad venezolana de viajeros que cree en el turismo auténtico y responsable. Cada posada listada es revisada manualmente para garantizar calidad.',
+        a: 'RESER-VE es un proyecto respaldado por Dos Locos de Viaje, una comunidad venezolana de viajeros que cree en el turismo auténtico y responsable. Cada posada listada es revisada manualmente para garantizar calidad.',
       },
     ],
   },

@@ -400,7 +400,7 @@ export default async function DestinoPage({
 
         <footer className="footer">
           <div className="footer-logo">RESER<span>-VE</span></div>
-          <div className="footer-text">{t('Impulsado por')} Dos Locos de Viaje</div>
+          <div className="footer-text">{t('Respaldado por')} Dos Locos de Viaje</div>
         </footer>
       </main>
     </>
