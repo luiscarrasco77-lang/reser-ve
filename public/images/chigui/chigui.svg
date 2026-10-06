@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="#FFF6E8"/><stop offset="1" stop-color="#FBDDB4"/></radialGradient>
+    <linearGradient id="fur" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BE8C62"/><stop offset="1" stop-color="#A06D45"/></linearGradient>
+    <clipPath id="c"><circle cx="100" cy="100" r="100"/></clipPath>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg)"/>
+  <g clip-path="url(#c)">
+    <!-- cuerpo -->
+    <rect x="34" y="166" width="132" height="70" rx="48" fill="#A06D45"/>
+    <!-- orejitas -->
+    <ellipse cx="64" cy="34" rx="9" ry="8" fill="#7E5232"/>
+    <ellipse cx="136" cy="34" rx="9" ry="8" fill="#7E5232"/>
+    <ellipse cx="64" cy="35" rx="4" ry="3.5" fill="#D3A27A"/>
+    <ellipse cx="136" cy="35" rx="4" ry="3.5" fill="#D3A27A"/>
+    <!-- cabeza alargada de chigüire -->
+    <rect x="48" y="28" width="104" height="150" rx="44" fill="url(#fur)"/>
+    <!-- hocico largo y chato -->
+    <rect x="52" y="92" width="96" height="84" rx="40" fill="#C9976C"/>
+    <!-- nariz -->
+    <rect x="78" y="100" width="44" height="17" rx="8.5" fill="#4A2D1B"/>
+    <ellipse cx="90" cy="108" rx="3.2" ry="2.4" fill="#22140B"/>
+    <ellipse cx="110" cy="108" rx="3.2" ry="2.4" fill="#22140B"/>
+    <ellipse cx="95" cy="104" rx="5.5" ry="1.7" fill="#7A5236" opacity=".7"/>
+    <!-- boca -->
+    <path d="M100 118v7M89 128q11 9 22 0" fill="none" stroke="#4A2D1B" stroke-width="3" stroke-linecap="round"/>
+    <!-- ojos arriba, como el chigüire -->
+    <ellipse cx="74" cy="66" rx="6" ry="6.8" fill="#22140B"/>
+    <ellipse cx="126" cy="66" rx="6" ry="6.8" fill="#22140B"/>
+    <circle cx="76.2" cy="63.6" r="2.1" fill="#fff"/>
+    <circle cx="128.2" cy="63.6" r="2.1" fill="#fff"/>
+    <!-- cachetes -->
+    <ellipse cx="62" cy="88" rx="8.5" ry="5" fill="#F2897A" opacity=".55"/>
+    <ellipse cx="138" cy="88" rx="8.5" ry="5" fill="#F2897A" opacity=".55"/>
+    <!-- cayena naranja -->
+    <g transform="translate(114 30) rotate(-12)">
+      <circle cx="0" cy="-8" r="6.8" fill="#E67E22"/><circle cx="7.6" cy="-2.5" r="6.8" fill="#E67E22"/>
+      <circle cx="4.7" cy="6.5" r="6.8" fill="#E67E22"/><circle cx="-4.7" cy="6.5" r="6.8" fill="#E67E22"/>
+      <circle cx="-7.6" cy="-2.5" r="6.8" fill="#E67E22"/>
+      <circle cx="0" cy="0" r="4.2" fill="#FFD27A"/><circle cx="0" cy="0" r="1.6" fill="#C96510"/>
+    </g>
+  </g>
+</svg>

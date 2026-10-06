@@ -8,7 +8,7 @@ import { AI_MODEL } from './constants'
 const MODEL = AI_MODEL
 // Cuenta de sistema sin contraseña ni permisos: no puede iniciar sesión ni restablecer contraseña.
 const VERA_EMAIL = 'vera@system.reser-ve.com'
-const VERA_NAME = 'Vera · Asistente RESER-VE'
+const VERA_NAME = 'Chigüi · Ayuda RESER-VE'
 
 // Usuario "bot" que firma las respuestas de la IA dentro de /mensajes.
 async function getVeraUserId(): Promise<number> {

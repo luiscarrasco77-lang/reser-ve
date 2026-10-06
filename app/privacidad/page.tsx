@@ -16,7 +16,7 @@ const SECCIONES: { t: string; p: string[] }[] = [
     'No vendemos tus datos personales a terceros.',
   ]},
   { t: '3. Asistente de IA', p: [
-    'Nuestros asistentes de IA (Vera y Aurora) procesan tus mensajes para ayudarte a reservar y responder consultas. No compartimos datos sensibles de pago con ellos y sus respuestas pueden contener errores.',
+    'Nuestros asistentes de IA (Chigüi y Aurora) procesan tus mensajes para ayudarte a reservar y responder consultas. No compartimos datos sensibles de pago con ellos y sus respuestas pueden contener errores.',
   ]},
   { t: '4. Con quién compartimos datos', p: [
     'Compartimos con el posadero los datos necesarios para gestionar tu reserva (nombre, fechas, contacto). Usamos proveedores de infraestructura (alojamiento, base de datos, envío de correos) que procesan datos en nuestro nombre bajo acuerdos de confidencialidad.',
