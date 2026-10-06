@@ -336,7 +336,7 @@ export default function FichaPosada() {
             </div>
             {posada.politicas.length > 0 && <div className="section-label">{t("Políticas de la posada")}</div>}
             <div className="politicas">
-              {posada.politicas.map(p => <div className="politica" key={p}>{p}</div>)}
+              {posada.politicas.map(p => <div className="politica" key={p}>{t(p)}</div>)}
             </div>
             {posada.reseñas.length > 0 && (
               <>

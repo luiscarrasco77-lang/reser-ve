@@ -31,7 +31,7 @@ export default function CuentaPage() {
     await signOut({ callbackUrl: '/?cuenta=eliminada' })
   }
 
-  const rol = info?.user.role === 'host' ? t('Posadero') : info?.user.role === 'admin' ? t('Administrador') : t('Viajero')
+  const rol = info?.user.role === 'host' ? t('Viajero y posadero') : info?.user.role === 'admin' ? t('Administrador') : t('Viajero')
 
   return (
     <>

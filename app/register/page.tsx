@@ -126,6 +126,7 @@ function RegisterForm() {
                 </div>
               </div>
 
+              <p style={{ fontSize: '0.78rem', color: '#7A8699', textAlign: 'center', margin: '-0.4rem 0 1.1rem' }}>{t('Con la misma cuenta puedes viajar y también publicar tu posada.')}</p>
               <div className="field">
                 <label>{t("Nombre completo")}</label>
                 <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder={t('Tu nombre')} />

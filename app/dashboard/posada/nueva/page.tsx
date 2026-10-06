@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import { DESTINOS, OTRO, slugify } from '@/lib/destinos-form'
 import { uploadPosadaImage } from '@/lib/upload-image'
 import { useRouter } from 'next/navigation'
+import PoliciesPicker from '@/components/PoliciesPicker'
+import { buildPolicies, type PolicyState } from '@/lib/policies'
 
 
 const tiposOpciones = [
@@ -37,7 +39,7 @@ export default function NuevaPosadaPage() {
   const [destinoSlug, setDestinoSlug] = useState(DESTINOS[0].slug)
   const [localidad, setLocalidad] = useState('')
   const [tipo, setTipo] = useState(tiposOpciones[0])
-  const [politicasTxt, setPoliticasTxt] = useState('')
+  const [politicas, setPoliticas] = useState<PolicyState>({ values: { checkin: 'Check-in desde las 2:00 pm', checkout: 'Check-out hasta las 12:00 pm' }, otras: '' })
   const [descripcion, setDescripcion] = useState('')
   const [precio, setPrecio] = useState('')
   const [habitaciones, setHabitaciones] = useState('4')
@@ -122,7 +124,7 @@ export default function NuevaPosadaPage() {
       capacidad: parseInt(capacidad),
       tags,
       servicios,
-      politicas: politicasTxt.split('\n').map(x => x.trim()).filter(Boolean),
+      politicas: buildPolicies(politicas),
       imgs,
       lat,
       lng,
@@ -224,8 +226,8 @@ export default function NuevaPosadaPage() {
               <div className="hint" style={{ marginTop: '0.4rem' }}>No incluyas teléfonos, correos ni enlaces: toda la comunicación con huéspedes va por el chat de RESER-VE.</div>
             </div>
             <div className="field">
-              <label>Políticas de la posada <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(una por línea)</span></label>
-              <textarea value={politicasTxt} onChange={e => setPoliticasTxt(e.target.value)} rows={3} placeholder={'Check-in desde las 2:00 pm\nCancelación gratis hasta 72 h antes\nNo se admiten mascotas'} />
+              <label>Políticas de la posada</label>
+              <PoliciesPicker value={politicas} onChange={setPoliticas} />
             </div>
           </div>
 

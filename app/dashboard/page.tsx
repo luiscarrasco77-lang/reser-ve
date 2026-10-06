@@ -13,9 +13,7 @@ export default async function DashboardPage() {
   const role = (session.user as any).role
   const userId = parseInt((session.user as any).id)
 
-  if (role !== 'host' && role !== 'admin') {
-    redirect('/mis-reservas')
-  }
+  if (role !== 'host' && role !== 'admin') return null // el layout muestra la activación del modo posadero
 
   const db = getDb()
 

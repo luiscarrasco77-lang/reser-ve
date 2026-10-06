@@ -11,7 +11,9 @@ import { info } from './en/info'
 import { legal } from './en/legal'
 import { meta } from './en/meta'
 import { reserva } from './en/reserva'
+import { unify } from './en/unify'
 import { viajero } from './en/viajero'
+import { POLICY_EN } from './policies'
 
 export const EN: Record<string, string> = {
   ...common,
@@ -26,5 +28,7 @@ export const EN: Record<string, string> = {
   ...legal,
   ...meta,
   ...reserva,
+  ...unify,
   ...viajero,
+  ...POLICY_EN,
 }

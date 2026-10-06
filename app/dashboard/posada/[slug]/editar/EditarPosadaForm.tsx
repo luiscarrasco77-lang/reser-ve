@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import { DESTINOS, OTRO, slugify } from '@/lib/destinos-form'
 import { uploadPosadaImage } from '@/lib/upload-image'
 import { useRouter } from 'next/navigation'
+import PoliciesPicker from '@/components/PoliciesPicker'
+import { buildPolicies, parsePolicies, type PolicyState } from '@/lib/policies'
 
 
 const tiposOpciones = [
@@ -61,7 +63,7 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
   const [destinoSlug, setDestinoSlug] = useState(initDestino?.slug ?? OTRO)
   const [localidad, setLocalidad] = useState(initDestino ? '' : posada.destino)
   const [tipo, setTipo] = useState(posada.tipo ?? tiposOpciones[0])
-  const [politicasTxt, setPoliticasTxt] = useState(((posada.politicas as string[]) ?? []).join('\n'))
+  const [politicas, setPoliticas] = useState<PolicyState>(() => parsePolicies((posada.politicas as string[]) ?? []))
   const [descripcion, setDescripcion] = useState(posada.descripcion ?? '')
   const [precio, setPrecio] = useState(String(posada.precio ?? ''))
   const [habitaciones, setHabitaciones] = useState(String(posada.habitaciones ?? 4))
@@ -139,7 +141,7 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
       tags,
       servicios,
       metodoPago: metodosPago,
-      politicas: politicasTxt.split('\n').map(x => x.trim()).filter(Boolean),
+      politicas: buildPolicies(politicas),
       imgs,
       lat,
       lng,
@@ -283,8 +285,8 @@ export default function EditarPosadaForm({ posada }: { posada: Posada }) {
               <div className="hint" style={{ marginTop: '0.4rem' }}>No incluyas teléfonos, correos ni enlaces: toda la comunicación con huéspedes va por el chat de RESER-VE.</div>
             </div>
             <div className="field">
-              <label>Políticas de la posada <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(una por línea)</span></label>
-              <textarea value={politicasTxt} onChange={e => setPoliticasTxt(e.target.value)} rows={3} placeholder={'Check-in desde las 2:00 pm\nCancelación gratis hasta 72 h antes\nNo se admiten mascotas'} />
+              <label>Políticas de la posada</label>
+              <PoliciesPicker value={politicas} onChange={setPoliticas} />
             </div>
           </div>
 

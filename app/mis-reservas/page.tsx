@@ -40,7 +40,7 @@ export default function MisReservasPage() {
   const [cancelling, setCancelling] = useState<number | null>(null)
 
   useEffect(() => {
-    fetch('/api/bookings')
+    fetch('/api/bookings?as=guest')
       .then(r => { if (r.status === 401) { setNotLoggedIn(true); return null }; return r.json() })
       .then(data => { if (data) setBookings(data) })
       .finally(() => setLoading(false))

@@ -10,7 +10,8 @@ import { emailHostNewBooking, emailGuestBookingReceived } from '@/lib/email'
 
 type BookingRow = typeof bookings.$inferSelect
 
-export async function GET() {
+// ?as=guest: las reservas que hizo el usuario como viajero (un posadero también puede viajar).
+export async function GET(req: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const userId = parseInt((session.user as any).id)
@@ -21,7 +22,8 @@ export async function GET() {
 
   let rows: BookingRow[]
 
-  if (role === 'host') {
+  const asGuest = new URL(req.url).searchParams.get('as') === 'guest'
+  if (role === 'host' && !asGuest) {
     const hostPosadas = await db.select({ id: posadas.id }).from(posadas).where(eq(posadas.hostId, userId))
     const posadaIds = hostPosadas.map(p => p.id)
     if (posadaIds.length === 0) {
@@ -105,6 +107,9 @@ export async function POST(req: NextRequest) {
   const [posada] = await db.select().from(posadas).where(eq(posadas.id, posadaId))
   if (!posada || posada.status !== 'active' || (posada.isDemo && (session.user as any).role !== 'admin')) {
     return NextResponse.json({ error: 'Posada no disponible' }, { status: 400 })
+  }
+  if (posada.hostId === parseInt((session.user as any).id) && (session.user as any).role !== 'admin') {
+    return NextResponse.json({ error: 'No puedes reservar tu propia posada' }, { status: 400 })
   }
 
   // Capacity check

@@ -106,7 +106,7 @@ function UserMenu({ dark = false }: { dark?: boolean }) {
               color: role === 'admin' ? '#dc2626' : role === 'host' ? 'var(--cacao)' : 'var(--muted)',
               padding: '0.18rem 0.52rem', borderRadius: 999,
             }}>
-              {role === 'host' ? t('Posadero') : role === 'admin' ? 'Admin' : t('Viajero')}
+              {role === 'host' ? t('Viajero y posadero') : role === 'admin' ? 'Admin' : t('Viajero')}
             </div>
           </div>
 
@@ -116,20 +116,26 @@ function UserMenu({ dark = false }: { dark?: boolean }) {
           )}
           {role === 'host' || role === 'admin' ? (
             <>
+              <MenuLabel>{t('Como posadero')}</MenuLabel>
               <MenuItem href="/dashboard" icon="grid">{t('Mi panel')}</MenuItem>
               <MenuItem href="/dashboard/posadas" icon="home">{t('Mis posadas')}</MenuItem>
-              <MenuItem href="/dashboard/posada/nueva" icon="plus">{t('Publicar posada')}</MenuItem>
-              <MenuItem href="/dashboard/reservas" icon="calendar">{t('Reservas')}</MenuItem>
+              <MenuItem href="/dashboard/reservas" icon="calendar">{t('Reservas recibidas')}</MenuItem>
               <MenuItem href="/dashboard/calendario" icon="calendar">{t('Calendario')}</MenuItem>
+              <MenuLabel>{t('Como viajero')}</MenuLabel>
             </>
-          ) : (
-            <MenuItem href="/mis-reservas" icon="calendar">{t('Mis reservas')}</MenuItem>
-          )}
+          ) : null}
+          <MenuItem href="/mis-reservas" icon="calendar">{t('Mis reservas')}</MenuItem>
           <MenuItem href="/aurora" icon="sparkle">{t('Sueña tu viaje')}</MenuItem>
           <MenuItem href="/favoritos" icon="heart">{t('Favoritos')}</MenuItem>
           <MenuItem href="/mensajes" icon="message">{t('Mensajes')}</MenuItem>
           <MenuItem href="/buscar" icon="search">{t('Explorar posadas')}</MenuItem>
           <MenuItem href="/cuenta" icon="grid">{t('Mi cuenta')}</MenuItem>
+          {role !== 'host' && role !== 'admin' && (
+            <>
+              <div style={{ height: 1, background: 'rgba(26,43,76,0.07)', margin: '0.3rem 0' }} />
+              <MenuItem href="/dashboard" icon="plus">{t('Publica tu posada')}</MenuItem>
+            </>
+          )}
 
           <div style={{ height: 1, background: 'rgba(26,43,76,0.07)', margin: '0.3rem 0' }} />
           <button
@@ -151,6 +157,10 @@ function UserMenu({ dark = false }: { dark?: boolean }) {
       )}
     </div>
   )
+}
+
+function MenuLabel({ children }: { children: React.ReactNode }) {
+  return <div style={{ padding: '0.7rem 1rem 0.2rem', fontSize: '0.62rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>{children}</div>
 }
 
 function MenuItem({ href, icon, children }: { href: string; icon: string; children: React.ReactNode }) {
