@@ -54,3 +54,5 @@ input, select, textarea, button {
 .field-textarea {
   border-radius: 12px !important;
 }
+/* Opciones de políticas en el formulario de posadas (pastillas). */
+.pol-chip { border-radius: 999px !important; }

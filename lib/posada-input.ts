@@ -1,7 +1,7 @@
 // Validación y lista blanca de campos de una posada (alta y edición por el posadero).
 // Nunca incluye status, hostId, rating, reviews ni slug.
 
-const arr = (v: unknown) => Array.isArray(v) ? v.map(String).slice(0, 60) : []
+const arr = (v: unknown) => Array.isArray(v) ? v.map(String).slice(0, 100) : []
 
 // Teléfonos, correos, enlaces o redes: la comunicación con huéspedes va por el chat de la app.
 // Un teléfono = una secuencia con 10+ dígitos (ignora fechas, montos o RIF, que tienen menos).

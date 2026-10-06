@@ -45,29 +45,92 @@ export const POLICY_FIELDS: PolicyField[] = [
   { key: 'documento', label: 'Identificación', options: ['', 'Se requiere documento de identidad al llegar', 'Se requiere documento de identidad de todos los huéspedes'] },
 ]
 
-export type PolicyState = { values: Record<string, string>; otras: string }
+
+// Extras de selección múltiple (al estilo de "Reglas de la casa", "Seguridad y propiedad"
+// y "Servicios" de Airbnb/Booking). Español → inglés.
+export const POLICY_EXTRAS: { group: string; items: [string, string][] }[] = [
+  { group: 'Reglas de la casa', items: [
+    ['Prohibido el ingreso de bebidas alcohólicas', 'No outside alcoholic drinks'],
+    ['Respetar el número máximo de huéspedes', 'Maximum number of guests must be respected'],
+    ['No se permite la fotografía comercial sin autorización', 'No commercial photography without permission'],
+    ['Se pide cuidar el agua y la electricidad', 'Please be mindful of water and electricity use'],
+    ['Apagar el aire acondicionado al salir de la habitación', 'Turn off the air conditioning when leaving the room'],
+    ['No se permite cocinar en las habitaciones', 'No cooking in the rooms'],
+    ['Se pide quitarse el calzado en las áreas interiores', 'Please remove shoes indoors'],
+    ['Las toallas de la habitación no se llevan a la playa', 'Room towels may not be taken to the beach'],
+    ['Reciclaje y separación de basura', 'Recycling and waste separation'],
+    ['Al salir: entregar la llave y dejar la basura en su lugar', 'On check-out: return the key and leave the trash in place'],
+  ] },
+  { group: 'Seguridad y propiedad', items: [
+    ['Piscina sin cerca ni reja', 'Pool without a fence or gate'],
+    ['Cerca de agua: mar, río o laguna', 'Near water: sea, river or lagoon'],
+    ['Escaleras o zonas en altura sin baranda', 'Stairs or heights without railings'],
+    ['Animales en la propiedad', 'Animals on the property'],
+    ['Cámaras de seguridad en áreas comunes', 'Security cameras in common areas'],
+    ['Vigilancia o seguridad privada', 'Private security on site'],
+    ['Detector de humo', 'Smoke detector'],
+    ['Extintor', 'Fire extinguisher'],
+    ['Botiquín de primeros auxilios', 'First aid kit'],
+    ['Caja fuerte en la habitación', 'In-room safe'],
+    ['Zona sin señal de teléfono o con internet limitado', 'Limited phone signal or internet'],
+  ] },
+  { group: 'Servicios y energía', items: [
+    ['Planta eléctrica para cortes de luz', 'Backup generator for power cuts'],
+    ['Tanque de agua de respaldo', 'Backup water tank'],
+    ['Agua caliente', 'Hot water'],
+    ['Ropa de cama y toallas incluidas', 'Bed linen and towels included'],
+    ['Limpieza diaria', 'Daily cleaning'],
+    ['Desayuno incluido en el precio', 'Breakfast included in the price'],
+    ['Desayuno con costo adicional', 'Breakfast at extra cost'],
+    ['Comidas por encargo', 'Meals on request'],
+    ['Traslado desde el aeropuerto o terminal con costo adicional', 'Airport or bus terminal transfer at extra cost'],
+    ['Estacionamiento gratuito', 'Free parking'],
+    ['Cuna disponible a pedido', 'Crib available on request'],
+    ['Cama adicional con costo extra', 'Extra bed at additional cost'],
+    ['Tours y excursiones a pedido', 'Tours and excursions on request'],
+    ['Se aceptan pagos en dólares y bolívares', 'Payments accepted in dollars and bolívars'],
+  ] },
+  { group: 'Llegada y salida', items: [
+    ['Llegada temprana según disponibilidad', 'Early check-in subject to availability'],
+    ['Salida tardía según disponibilidad', 'Late check-out subject to availability'],
+    ['Recepción las 24 horas', '24-hour reception'],
+    ['El anfitrión recibe en persona', 'The host welcomes you in person'],
+    ['Llegada autónoma con llaves en caja de seguridad', 'Self check-in with lockbox'],
+    ['Avisar la hora de llegada por el chat', 'Let us know your arrival time in the chat'],
+    ['Acceso por carretera de tierra o en 4x4', 'Access by dirt road or 4x4'],
+    ['Acceso solo en lancha', 'Access by boat only'],
+    ['Acceso en avioneta', 'Access by small plane'],
+  ] },
+]
+const EXTRA_SET = new Set(POLICY_EXTRAS.flatMap(g => g.items.map(([es]) => es)))
+
+export type PolicyState = { values: Record<string, string>; extras: string[]; otras: string }
 
 // Separa las políticas guardadas en opciones conocidas y texto libre.
 export function parsePolicies(list: string[]): PolicyState {
   const values: Record<string, string> = {}
+  const extras: string[] = []
   const otras: string[] = []
   for (const raw of list) {
     const p = raw.trim()
     if (!p) continue
     const f = POLICY_FIELDS.find(f => !values[f.key] && f.options.includes(p))
     if (f) values[f.key] = p
+    else if (EXTRA_SET.has(p)) extras.push(p)
     else otras.push(p)
   }
-  return { values, otras: otras.join('\n') }
+  return { values, extras, otras: otras.join('\n') }
 }
 
 export function buildPolicies(s: PolicyState): string[] {
   const out = POLICY_FIELDS.map(f => s.values[f.key]).filter(Boolean) as string[]
-  return [...out, ...s.otras.split('\n').map(x => x.trim()).filter(Boolean)]
+  const extras = POLICY_EXTRAS.flatMap(g => g.items.map(([es]) => es)).filter(e => s.extras.includes(e))
+  return [...out, ...extras, ...s.otras.split('\n').map(x => x.trim()).filter(Boolean)]
 }
 
 // Traducciones al inglés de todas las opciones (para la ficha en inglés).
 export const POLICY_EN: Record<string, string> = {
+  ...Object.fromEntries(POLICY_EXTRAS.flatMap(g => g.items)),
   ...Object.fromEntries(HOURS_IN.map(h => [`Check-in desde las ${h}`, `Check-in from ${h}`])),
   ...Object.fromEntries(HOURS_OUT.map(h => [`Check-out hasta las ${h}`, `Check-out until ${h}`])),
   'Check-in flexible (coordinar por el chat)': 'Flexible check-in (arrange in the chat)',

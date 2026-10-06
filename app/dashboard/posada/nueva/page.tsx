@@ -39,7 +39,7 @@ export default function NuevaPosadaPage() {
   const [destinoSlug, setDestinoSlug] = useState(DESTINOS[0].slug)
   const [localidad, setLocalidad] = useState('')
   const [tipo, setTipo] = useState(tiposOpciones[0])
-  const [politicas, setPoliticas] = useState<PolicyState>({ values: { checkin: 'Check-in desde las 2:00 pm', checkout: 'Check-out hasta las 12:00 pm' }, otras: '' })
+  const [politicas, setPoliticas] = useState<PolicyState>({ values: { checkin: 'Check-in desde las 2:00 pm', checkout: 'Check-out hasta las 12:00 pm' }, extras: [], otras: '' })
   const [descripcion, setDescripcion] = useState('')
   const [precio, setPrecio] = useState('')
   const [habitaciones, setHabitaciones] = useState('4')
