@@ -16,6 +16,8 @@ type Message = {
   createdAt: string
 }
 
+type Person = { id: number; name: string; email: string; role: string; createdAt: string; bookings: number; activeBookings: string[]; posadas: string[] }
+
 type Conversation = {
   id: number
   type: 'booking' | 'support'
@@ -23,6 +25,8 @@ type Conversation = {
   userId: number
   hostId: number | null
   posadaNombre?: string | null
+  viewerIsAdmin?: boolean
+  context?: { user: Person | null; host: Person | null } | null
   messages: Message[]
   lastMessageAt: string
 }
@@ -156,6 +160,21 @@ export default function ConversationPage() {
           {conv.posadaNombre && (
             <div className="chat-meta">Relacionado con: {conv.posadaNombre}</div>
           )}
+          {conv.viewerIsAdmin && conv.context && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: '.6rem', marginTop: '.8rem' }}>
+              {([['Cliente', conv.context.user], ['Posadero', conv.context.host]] as [string, Person | null][]).filter(([, p]) => p).map(([label, p]) => (
+                <div key={label} style={{ background: 'white', border: '1px solid var(--line)', borderRadius: 12, padding: '.7rem .9rem', fontSize: '.8rem', lineHeight: 1.55 }}>
+                  <div style={{ fontSize: '.68rem', fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--muted)' }}>{label}</div>
+                  <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{p!.name}</div>
+                  <div><a href={`mailto:${p!.email}`} style={{ color: 'var(--cacao)' }}>{p!.email}</a> · {p!.role === 'host' ? 'Posadero' : p!.role === 'admin' ? 'Admin' : 'Viajero'} · desde {new Date(p!.createdAt).toLocaleDateString('es-VE', { month: 'short', year: 'numeric' })}</div>
+                  <div style={{ color: 'var(--muted)' }}>
+                    {p!.bookings} reserva{p!.bookings === 1 ? '' : 's'}{p!.activeBookings.length ? ` · activas: ${p!.activeBookings.join(', ')}` : ''}
+                    {p!.posadas.length ? ` · posadas: ${p!.posadas.join(', ')}` : ''}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="messages">
@@ -165,7 +184,8 @@ export default function ConversationPage() {
             </div>
           )}
           {conv.messages.map(msg => {
-            const isMine = msg.senderId === myId
+            // El admin ve a la derecha lo que escribe el equipo; el resto ve a la derecha lo suyo.
+            const isMine = conv.viewerIsAdmin && msg.senderId !== conv.userId ? msg.senderRole === 'admin' : msg.senderId === myId
             const isAdmin = msg.senderRole === 'admin'
             return (
               <div key={msg.id} className={`msg ${isMine ? 'mine' : isAdmin ? 'admin theirs' : 'theirs'}`}>

@@ -28,6 +28,15 @@ export async function POST(req: Request) {
   const userName = session?.user?.name ?? null
   const userRole = session?.user ? (session.user as any).role : 'invitado'
 
+  // Ticket con el resumen y la conversación con Chigüi, para que el equipo tenga todo el contexto.
+  const ticketBody = (resumen: string) => {
+    const transcript = messages.slice(-14).map(m => {
+      const text = m.parts.filter(p => p.type === 'text').map(p => (p as any).text).join(' ').trim()
+      return text ? `${m.role === 'user' ? (userName ?? 'Usuario') : 'Chigüi'}: ${text.slice(0, 600)}` : ''
+    }).filter(Boolean).join('\n')
+    return `[Ticket abierto por Chigüi]\n\nResumen: ${resumen}\n\n— Conversación con Chigüi —\n${transcript}`.slice(0, 3900)
+  }
+
   const contextoUsuario = userId
     ? `\n\n# Contexto del usuario actual\nEstá conectado como ${userName} (rol: ${userRole}, id: ${userId}). Puedes abrir tickets a su nombre.`
     : `\n\n# Contexto del usuario actual\nNO ha iniciado sesión. Para abrir un ticket formal con un agente, invítalo a iniciar sesión en /login; aun así puedes recoger su consulta.`
@@ -69,7 +78,7 @@ export async function POST(req: Request) {
                 senderId: userId,
                 senderName: userName ?? 'Usuario',
                 senderRole: userRole,
-                body: `[Ticket abierto vía asistente IA]\n\n${resumen}`,
+                body: ticketBody(resumen),
               })
               // Avisa a los admins del nuevo ticket.
               const admins = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.role, 'admin'))

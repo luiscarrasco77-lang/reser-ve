@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { WELCOME_MESSAGE, SUGGESTED_QUESTIONS } from '@/lib/support-kb'
@@ -21,17 +21,48 @@ export default function SupportChat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, busy])
 
-  function send(text: string) {
+  async function send(text: string) {
     const t = text.trim()
     if (!t || busy) return
-    sendMessage({ text: t })
     setInput('')
+    if (ticketId) {
+      // Con ticket abierto, el mensaje va al equipo (queda en el ticket y les llega por correo).
+      await fetch(`/api/conversations/${ticketId}/messages`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body: t }) }).catch(() => {})
+      loadTicket()
+      return
+    }
+    sendMessage({ text: t })
   }
 
   // ¿Algún ticket se abrió en esta conversación?
-  const ticketAbierto = messages.some(m =>
-    m.parts.some(p => (p as any).type === 'tool-escalarAAgente' && (p as any).output?.creado),
-  )
+  const ticketPart = messages.flatMap(m => m.parts).find(p => (p as any).type === 'tool-escalarAAgente' && (p as any).output?.creado) as any
+  const ticketAbierto = !!ticketPart
+  const ticketId: number | null = ticketPart?.output?.conversationId ?? null
+
+  // Respuestas del equipo dentro del chat (se consultan cada 15 s mientras está abierto).
+  // Tras abrir el ticket, el chat muestra el hilo del ticket (usuario, equipo y Chigüi) y lo que se escribe va al equipo.
+  const [ticketMsgs, setTicketMsgs] = useState<{ id: number; senderId: number; senderName: string; senderRole: string; body: string; mine: boolean }[]>([])
+  const loadTicket = useCallback(() => {
+    if (!ticketId) return
+    fetch(`/api/conversations/${ticketId}`).then(r => r.ok ? r.json() : null).then(c => {
+      if (c?.messages) setTicketMsgs(c.messages.slice(1).map((m: any) => ({ ...m, mine: m.senderId === c.userId && !String(m.senderName).startsWith('Chigüi') })))
+    }).catch(() => {})
+  }, [ticketId])
+  useEffect(() => {
+    if (!open || !ticketId) return
+    loadTicket()
+    const t = setInterval(loadTicket, 15_000)
+    return () => clearInterval(t)
+  }, [open, ticketId, loadTicket])
+
+  // Al abrir: ¿hay tickets anteriores con respuestas sin leer?
+  const [pending, setPending] = useState<{ id: number; subject: string }[]>([])
+  useEffect(() => {
+    if (!open) return
+    fetch('/api/conversations').then(r => r.ok ? r.json() : []).then((list: any[]) => {
+      if (Array.isArray(list)) setPending(list.filter(c => c.type === 'support' && c.unread > 0 && c.id !== ticketId).map(c => ({ id: c.id, subject: c.subject })))
+    }).catch(() => {})
+  }, [open, ticketId])
 
   return (
     <>
@@ -101,6 +132,11 @@ export default function SupportChat() {
               <div className="sc-mini-ava"><img src="/images/chigui/chigui.svg" alt="" /></div>
               <div className="sc-bub">{WELCOME_MESSAGE}</div>
             </div>
+            {pending.map(p => (
+              <a key={p.id} href={`/mensajes/${p.id}`} className="sc-ticket" style={{ textDecoration: 'none', display: 'flex' }}>
+                El equipo te respondió en «{p.subject}» · Ver →
+              </a>
+            ))}
             {messages.length === 0 && (
               <div className="sc-sugs">
                 {SUGGESTED_QUESTIONS.map(q => (
@@ -123,9 +159,23 @@ export default function SupportChat() {
             {ticketAbierto && (
               <div className="sc-ticket">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                Ticket abierto con un agente humano
+                Ticket abierto. Te avisamos por correo y aquí mismo cuando el equipo responda.
+                {ticketId && <a href={`/mensajes/${ticketId}`} style={{ marginLeft: 6, fontWeight: 700, color: 'inherit' }}>Ver ticket →</a>}
               </div>
             )}
+            {ticketMsgs.map(m => m.mine ? (
+              <div key={`t-${m.id}`} className="sc-row me"><div className="sc-bub"><RichText text={m.body} /></div></div>
+            ) : String(m.senderName).startsWith('Chigüi') ? (
+              <div key={`t-${m.id}`} className="sc-row ai">
+                <div className="sc-mini-ava"><img src="/images/chigui/chigui.svg" alt="" /></div>
+                <div className="sc-bub"><RichText text={m.body} /></div>
+              </div>
+            ) : (
+              <div key={`t-${m.id}`} className="sc-row ai">
+                <div className="sc-mini-ava" style={{ background: '#1A2B4C', color: 'white', fontWeight: 800, fontSize: '.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>R</div>
+                <div className="sc-bub"><div style={{ fontSize: '.7rem', fontWeight: 800, color: '#E67E22', marginBottom: 2 }}>{m.senderName} · Equipo RESER-VE</div><RichText text={m.body} /></div>
+              </div>
+            ))}
 
             {busy && (
               <div className="sc-row ai">
@@ -146,7 +196,7 @@ export default function SupportChat() {
             <form className="sc-form" onSubmit={e => { e.preventDefault(); send(input) }}>
               <textarea
                 className="sc-input"
-                placeholder="Escribe tu mensaje…"
+                placeholder={ticketId ? "Escribe al equipo de RESER-VE…" : "Escribe tu mensaje…"}
                 value={input}
                 rows={1}
                 onChange={e => setInput(e.target.value)}
