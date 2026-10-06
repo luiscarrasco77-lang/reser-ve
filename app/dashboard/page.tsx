@@ -175,7 +175,7 @@ export default async function DashboardPage() {
           {recentBookings.length === 0 ? (
             <div className="empty-state">
               <p>Aún no tienes reservas.</p>
-              <a href="/dashboard/posada/nueva" className="action-btn action-btn-primary" style={{display:'inline-flex',textDecoration:'none'}}>Publicar mi primera posada</a>
+              {hostPosadas.length === 0 && <a href="/dashboard/posada/nueva" className="action-btn action-btn-primary" style={{display:'inline-flex',textDecoration:'none'}}>Publicar mi primera posada</a>}
             </div>
           ) : (
             <>

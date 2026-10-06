@@ -31,7 +31,7 @@ export function PrivatePhaseNotice({ compact = false }: { compact?: boolean }) {
 // Franja superior del sitio: fija, de altura --pp-h. Los headers usan top: var(--pp-h)
 // (ver globals.css) para quedar justo debajo y no chocar.
 export function PrivatePhaseBar() {
-  const { data } = useSession()
+  const { data, status } = useSession()
   const t = useT()
   if (BOOKINGS_OPEN) return null
   return (
@@ -49,7 +49,7 @@ export function PrivatePhaseBar() {
       <div className="pp-bar" role="note">
         <strong>{t("Fase privada")}</strong>
         <span className="pp-long">· {t('Estamos sumando posadas; las reservas abren muy pronto.')}</span>
-        {(data?.user as any)?.role === 'host' || (data?.user as any)?.role === 'admin'
+        {status === 'loading' ? null : (data?.user as any)?.role === 'host' || (data?.user as any)?.role === 'admin'
           ? <span>{t("Ya puedes publicar y editar tus posadas.")}</span>
           : <a href="/posaderos">{t("¿Tienes una posada? Únete →")}</a>}
       </div>
