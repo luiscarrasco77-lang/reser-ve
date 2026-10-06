@@ -37,10 +37,22 @@ function Badge({ status, map }: { status: string; map: Record<string, { label: s
   return <span style={{ display:'inline-block', padding:'0.2rem 0.6rem', borderRadius:'99px', fontSize:'0.7rem', fontWeight:700, background:s.bg, color:s.color }}>{s.label}</span>
 }
 
-type Tab = 'overview' | 'review' | 'posadas' | 'bookings' | 'users'
+type Tab = 'overview' | 'review' | 'posadas' | 'bookings' | 'users' | 'alertas'
+type Flag = { id: number; kind: string; severity: string; reason: string; excerpt: string | null; conversationId: number | null; status: string; createdAt: string; userName: string | null; userRole: string | null; posada: { nombre: string; slug: string } | null }
+const FLAG_LABEL: Record<string, string> = { fuera_de_plataforma: 'Fuera de la plataforma', precio: 'Precio distinto', conducta: 'Conducta', reporte_precio: 'Reporte de precio' }
 
 export default function AdminDashboard({ adminName, adminEmail }: { adminName: string; adminEmail: string }) {
   const [tab, setTab] = useState<Tab>('overview')
+  // ?tab=alertas (enlace del correo de alerta) abre directamente esa pestaña.
+  useEffect(() => { if (new URLSearchParams(window.location.search).get('tab') === 'alertas') setTab('alertas') }, [])
+  const [flags, setFlags] = useState<Flag[]>([])
+  const [flagFilter, setFlagFilter] = useState<'abierta' | 'todas'>('abierta')
+  const loadFlags = useCallback(() => fetch('/api/admin/flags').then(r => r.ok ? r.json() : []).then(setFlags).catch(() => {}), [])
+  useEffect(() => { loadFlags() }, [loadFlags])
+  async function setFlagStatus(id: number, status: string) {
+    await fetch('/api/admin/flags', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) })
+    loadFlags()
+  }
   const [stats, setStats] = useState<Stats | null>(null)
   const [posadas, setPosadas] = useState<Posada[]>([])
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -139,6 +151,7 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
     { id: 'posadas',   label: 'Posadas' },
     { id: 'bookings',  label: 'Reservas', badge: stats?.pendingBookings || undefined },
     { id: 'users',     label: 'Usuarios' },
+    { id: 'alertas',   label: 'Alertas', badge: flags.filter(f => f.status === 'abierta').length || undefined },
   ]
 
   return (
@@ -491,6 +504,39 @@ export default function AdminDashboard({ adminName, adminEmail }: { adminName: s
           )}
 
           {/* ── USERS ── */}
+          {tab === 'alertas' && (
+            <>
+              <div className="page-title">Alertas de moderación</div>
+              <div className="page-sub">El agente de IA revisa los chats entre viajeros y posaderos y avisa si alguien intenta reservar o pagar por fuera, ofrece otro precio o se comporta mal. También aparecen aquí los reportes de viajeros que vieron una posada más barata en otro canal.</div>
+              <div style={{ display: 'flex', gap: '.5rem', margin: '0 0 1rem' }}>
+                {(['abierta', 'todas'] as const).map(f => (
+                  <button key={f} className="filter-select" style={{ fontWeight: flagFilter === f ? 800 : 500 }} onClick={() => setFlagFilter(f)}>{f === 'abierta' ? 'Pendientes' : 'Todas'}</button>
+                ))}
+              </div>
+              {flags.filter(f => flagFilter === 'todas' || f.status === 'abierta').length === 0 ? (
+                <div style={{ color: 'var(--muted)', fontSize: '.9rem' }}>No hay alertas pendientes.</div>
+              ) : flags.filter(f => flagFilter === 'todas' || f.status === 'abierta').map(f => (
+                <div key={f.id} style={{ background: 'white', border: `1.5px solid ${f.severity === 'alta' ? 'rgba(220,38,38,.35)' : 'var(--line)'}`, borderRadius: 12, padding: '1rem 1.1rem', marginBottom: '.7rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ fontWeight: 800 }}>{FLAG_LABEL[f.kind] ?? f.kind} <span style={{ fontSize: '.72rem', fontWeight: 700, color: f.severity === 'alta' ? '#B42318' : '#B54708', marginLeft: 6 }}>{f.severity === 'alta' ? 'ALTA' : 'MEDIA'}</span></div>
+                    <div style={{ fontSize: '.78rem', color: 'var(--muted)' }}>{new Date(f.createdAt).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' })} · {f.status}</div>
+                  </div>
+                  <div style={{ fontSize: '.86rem', margin: '.4rem 0' }}>{f.reason}</div>
+                  {f.excerpt && <div style={{ fontSize: '.82rem', background: 'var(--sand, #FDFBF7)', borderLeft: '3px solid var(--cacao)', padding: '.5rem .7rem', borderRadius: '0 8px 8px 0', margin: '.4rem 0', whiteSpace: 'pre-wrap' }}>{f.excerpt}</div>}
+                  <div style={{ fontSize: '.8rem', color: 'var(--muted)' }}>
+                    {f.userName && <>Escrito por <b>{f.userName}</b>{f.userRole ? ` (${f.userRole === 'host' ? 'posadero' : f.userRole === 'traveler' ? 'viajero' : f.userRole})` : ''} · </>}
+                    {f.posada && <Link href={`/posadas/${f.posada.slug}`} target="_blank" className="tbl-link">{f.posada.nombre}</Link>}
+                  </div>
+                  <div style={{ display: 'flex', gap: '.5rem', marginTop: '.6rem', flexWrap: 'wrap' }}>
+                    {f.conversationId && <Link href={`/mensajes/${f.conversationId}`} className="action-btn btn-act" style={{ textDecoration: 'none' }}>Ver conversación</Link>}
+                    {f.status === 'abierta' && <button className="action-btn btn-act" onClick={() => setFlagStatus(f.id, 'revisada')}>Marcar revisada</button>}
+                    {f.status === 'abierta' && <button className="action-btn btn-sus" onClick={() => setFlagStatus(f.id, 'descartada')}>Descartar</button>}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
           {tab === 'users' && (
             <>
               <div className="page-title">Usuarios</div>

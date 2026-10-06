@@ -7,6 +7,7 @@ import { type Posada } from '@/lib/data'
 import NavUser from '@/components/NavUser'
 import { useBookingsOpen, PrivatePhaseNotice } from '@/components/PrivatePhase'
 import FavoriteButton from '@/components/FavoriteButton'
+import ReportPrice from '@/components/ReportPrice'
 import { SITE_URL } from '@/lib/constants'
 import { ratingText } from '@/lib/rating'
 
@@ -425,6 +426,7 @@ export default function FichaPosada() {
                   <span className="booking-badge" key={m}>{m}</span>
                 ))}
               </div>
+              {!(posada as any).isDemo && <ReportPrice slug={slug} />}
             </div>
           </div>
         </div>

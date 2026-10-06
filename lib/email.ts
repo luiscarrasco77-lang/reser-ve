@@ -439,6 +439,26 @@ export async function emailAdminPosadaEdited(opts: {
   return deliver(resend, { from: FROM, to: opts.to, replyTo: opts.hostEmail || undefined, subject: `Posada editada: ${opts.nombre}`, html })
 }
 
+// ─── Email: alerta de moderación (a los admins) ───────────────────────────────
+const KIND_LABEL: Record<string, string> = {
+  fuera_de_plataforma: 'Intento de reservar o pagar fuera de RESER-VE', precio: 'Oferta de precio distinta al publicado',
+  conducta: 'Conducta inapropiada', reporte_precio: 'Reporte de precio más bajo en otro canal',
+}
+export async function emailAdminModeration(opts: { to: string[]; kind: string; severity: string; reason: string; excerpt: string; who: string; conversationId: number | null }) {
+  const resend = getResend()
+  if ((!resend && !process.env.BREVO_API_KEY) || opts.to.length === 0) return false
+  const html = baseHtml(`
+    <div class="card">
+      <div class="title">Alerta: ${esc(KIND_LABEL[opts.kind] ?? opts.kind)}</div>
+      <div class="sub">Prioridad ${esc(opts.severity)} · ${esc(opts.who)}</div>
+      <div class="info-box"><strong>Motivo:</strong> ${esc(opts.reason)}</div>
+      ${opts.excerpt ? `<div class="info-box" style="margin-top:.75rem"><strong>Texto:</strong> ${esc(opts.excerpt.slice(0, 600))}</div>` : ''}
+      <a href="${SITE_URL}/admin?tab=alertas" class="btn">Revisar en el panel →</a>
+    </div>
+  `)
+  return deliver(resend, { from: FROM, to: opts.to, subject: `Alerta de moderación: ${KIND_LABEL[opts.kind] ?? opts.kind}`, html })
+}
+
 // ─── Email: restablecer contraseña ─────────────────────────────────────────────
 export async function emailPasswordReset(opts: { email: string; name: string; resetUrl: string }) {
   const resend = getResend()

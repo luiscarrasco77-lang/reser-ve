@@ -6,6 +6,7 @@ import { BOOKINGS_OPEN, PRIVATE_PHASE_MSG, MAX_MESSAGE } from '@/lib/constants'
 import { and, eq } from 'drizzle-orm'
 import { auth } from '@/auth'
 import { emailNewMessage } from '@/lib/email'
+import { moderateMessage } from '@/lib/moderation'
 import { users } from '@/lib/db/schema'
 
 // Abre (o reutiliza) una conversación entre el viajero y el posadero de una posada.
@@ -65,9 +66,10 @@ export async function POST(req: NextRequest) {
 
   // Inserta el mensaje inicial (si se envió).
   if (message?.trim()) {
-    await db.insert(messages).values({
+    const [first] = await db.insert(messages).values({
       conversationId: conv.id, senderId: userId, senderName: userName, senderRole: userRole, body: message.trim(),
-    })
+    }).returning({ id: messages.id })
+    if (userRole !== 'admin') after(() => moderateMessage(first.id))
     await db.update(conversations).set({ lastMessageAt: new Date() }).where(eq(conversations.id, conv.id))
 
     // Notifica al posadero tras responder.

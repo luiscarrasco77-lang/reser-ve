@@ -22,10 +22,14 @@ const SECCIONES: { t: string; p: string[] }[] = [
   ]},
   { t: '4. Responsabilidades del posadero', p: [
     'El posadero es responsable de la exactitud de la información publicada (fotos, precios, servicios, disponibilidad) y de la calidad del alojamiento. RESER-VE revisa las posadas antes de publicarlas, pero no garantiza cada estancia.',
-    'Paridad de precios: el precio publicado en RESER-VE debe ser igual o mejor que el ofrecido por el posadero en otros canales para la misma posada y fechas. No se permite inflar el precio en la plataforma para trasladar la comisión al viajero.',
+    'Paridad de precios: el precio publicado en RESER-VE debe ser igual o mejor que el ofrecido por el posadero en otros canales (WhatsApp, redes sociales, página propia, Booking, Airbnb u otros) para la misma posada y fechas. No se permite inflar el precio en la plataforma para trasladar la comisión al viajero.',
+    'Ofertas y promociones: si el posadero ofrece un descuento, promoción o tarifa especial en cualquier otro canal, debe ofrecer la misma condición en RESER-VE durante el mismo periodo.',
+    'Comunicación y pagos dentro de la plataforma: el posadero no debe invitar a los viajeros que lo contactaron por RESER-VE a reservar o pagar por otros canales para evitar la comisión.',
+    'Incumplimientos: RESER-VE revisa las conversaciones de la plataforma con herramientas automáticas y atiende los avisos de los viajeros. Incumplir la paridad de precios, las ofertas equivalentes o la regla de comunicación dentro de la plataforma puede dar lugar a un aviso y, si se repite, a la suspensión de la posada o de la cuenta.',
   ]},
   { t: '5. Conducta del usuario', p: [
     'Los usuarios se comprometen a proporcionar información veraz, a no usar la plataforma con fines fraudulentos y a tratar con respeto a anfitriones y demás viajeros.',
+    'Para prevenir fraudes y proteger a ambas partes, los mensajes entre viajeros y posaderos pueden ser revisados de forma automatizada y, si hay una alerta, por el equipo de RESER-VE.',
     'RESER-VE puede suspender cuentas o posadas que incumplan estos términos.',
   ]},
   { t: '6. Reseñas', p: [

@@ -140,7 +140,7 @@ function RegisterForm() {
               </button>
               <p style={{ fontSize: '0.74rem', color: '#7A8699', textAlign: 'center', marginTop: '0.8rem', lineHeight: 1.5 }}>
                 Al crear tu cuenta aceptas los <a href="/terminos" target="_blank" style={{ color: '#E67E22' }}>Términos</a> y la <a href="/privacidad" target="_blank" style={{ color: '#E67E22' }}>Política de privacidad</a>
-                {role === 'host' && <> y las <a href="/posaderos#condiciones" target="_blank" style={{ color: '#E67E22' }}>condiciones para posaderos</a> (10% por reserva confirmada, paridad de precio y comunicación dentro de la app)</>}.
+                {role === 'host' && <> y las <a href="/posaderos#condiciones" target="_blank" style={{ color: '#E67E22' }}>condiciones para posaderos</a> (10% por reserva confirmada, mismo precio y mismas ofertas que en otros canales, y comunicación dentro de la app)</>}.
               </p>
             </form>
 

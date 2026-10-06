@@ -6,6 +6,7 @@ import { auth } from '@/auth'
 import { eq } from 'drizzle-orm'
 import { emailNewMessage } from '@/lib/email'
 import { generateVeraReply } from '@/lib/vera'
+import { moderateMessage } from '@/lib/moderation'
 import { MAX_MESSAGE } from '@/lib/constants'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -43,6 +44,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     senderRole: role,
     body: body.trim(),
   }).returning()
+
+  // El agente moderador revisa los chats viajero ↔ posadero (no los de soporte ni del equipo).
+  if (conv.type === 'booking' && role !== 'admin') after(() => moderateMessage(msg.id))
 
   // Update lastMessageAt on conversation
   await db.update(conversations).set({ lastMessageAt: new Date() }).where(eq(conversations.id, conv.id))

@@ -140,6 +140,21 @@ export const calendarFeeds = pgTable('calendar_feeds', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
+// Alertas de moderación: conversaciones sospechosas (detectadas por IA) y reportes de precios.
+export const moderationFlags = pgTable('moderation_flags', {
+  id: serial('id').primaryKey(),
+  kind: text('kind').notNull(),            // fuera_de_plataforma | precio | conducta | reporte_precio
+  severity: text('severity').notNull(),    // media | alta
+  reason: text('reason').notNull(),
+  excerpt: text('excerpt'),
+  conversationId: integer('conversation_id'),
+  messageId: integer('message_id'),
+  posadaId: integer('posada_id'),
+  userId: integer('user_id'),              // quién escribió o reportó
+  status: text('status').notNull().default('abierta'), // abierta | revisada | descartada
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
 export const favorites = pgTable('favorites', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').references(() => users.id).notNull(),
