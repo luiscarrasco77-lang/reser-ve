@@ -111,7 +111,7 @@ export default function AuroraPage() {
       <div className="wrap" ref={scrollRef} style={{ height: 'calc(100vh - 60px)', overflowY: 'auto' }}>
         {!started && (
           <div className="hero">
-            <div className="a-badge">Planificador de viajes con IA</div>
+            <div className="a-badge">Aurora · tu compañera de viaje</div>
             <h1 className="a-title">Hola, soy <em>Aurora</em></h1>
             <p className="a-sub">Cuéntame qué viaje sueñas por Venezuela y armo un itinerario a tu medida con posadas reales, disponibilidad y precios. ¿Por dónde empezamos?</p>
             <div className="chips">

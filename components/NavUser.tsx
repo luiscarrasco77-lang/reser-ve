@@ -112,7 +112,7 @@ export default function NavUser({ dark = false }: { dark?: boolean }) {
           ) : (
             <MenuItem href="/mis-reservas" icon="calendar">Mis reservas</MenuItem>
           )}
-          <MenuItem href="/aurora" icon="sparkle">Planifica con IA</MenuItem>
+          <MenuItem href="/aurora" icon="sparkle">Sueña tu viaje</MenuItem>
           <MenuItem href="/favoritos" icon="heart">Favoritos</MenuItem>
           <MenuItem href="/mensajes" icon="message">Mensajes</MenuItem>
           <MenuItem href="/buscar" icon="search">Explorar posadas</MenuItem>
