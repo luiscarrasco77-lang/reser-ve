@@ -44,5 +44,18 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
       .innerJoin(posadas, eq(posadas.id, bookings.posadaId)).where(eq(bookings.id, conv.bookingId))
     posadaNombre = row?.nombre ?? null
   }
-  return NextResponse.json({ ...conv, posadaNombre, messages: msgs })
+  // Para el admin: ficha de quién abrió la conversación (y del posadero si es un chat de reserva).
+  let context = null
+  if (role === 'admin') {
+    const person = async (id: number | null) => {
+      if (!id) return null
+      const [u] = await db.select({ id: users.id, name: users.name, email: users.email, role: users.role, createdAt: users.createdAt }).from(users).where(eq(users.id, id))
+      if (!u) return null
+      const bks = await db.select({ code: bookings.bookingCode, status: bookings.status, checkIn: bookings.checkIn }).from(bookings).where(eq(bookings.guestId, id))
+      const hosted = await db.select({ nombre: posadas.nombre }).from(posadas).where(eq(posadas.hostId, id))
+      return { ...u, bookings: bks.length, activeBookings: bks.filter(b => b.status === 'pending' || b.status === 'confirmed').map(b => `${b.code} (${b.checkIn})`), posadas: hosted.map(h => h.nombre) }
+    }
+    context = { user: await person(conv.userId), host: await person(conv.hostId) }
+  }
+  return NextResponse.json({ ...conv, posadaNombre, context, viewerIsAdmin: role === 'admin', messages: msgs })
 }
