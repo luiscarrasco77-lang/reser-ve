@@ -1078,7 +1078,7 @@ export default function Home() {
           />
         </a>
         <div className="nav-links">
-          <a href="/aurora" className="nav-link">Sueña tu viaje</a>
+          <a href="/aurora" className="nav-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}><img src="/images/aurora/aurora.svg" alt="" width={22} height={22} style={{ borderRadius: '50%' }} />Sueña tu viaje</a>
           <a href="/buscar" className="nav-link">Destinos</a>
           <a href="/posaderos" className="nav-link">Posaderos</a>
           <a href="#como-funciona" className="nav-link">Cómo funciona</a>

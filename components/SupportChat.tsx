@@ -69,7 +69,7 @@ export default function SupportChat() {
       <style>{`
         .sc-fab{position:fixed;bottom:1.5rem;right:1.5rem;z-index:900;width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#E67E22,#C96510);color:#fff;box-shadow:0 12px 30px rgba(230,126,34,0.4),0 4px 12px rgba(26,43,76,0.2);display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s;}
         .sc-fab:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 18px 42px rgba(230,126,34,0.5);}
-        .sc-fab.sc-fab{padding:0;width:64px;height:64px;border:3px solid #fff;background:#FBDDB4;}
+        .sc-fab.sc-fab{border-radius:50% !important;padding:0;width:64px;height:64px;border:3px solid #fff;background:#FBDDB4;}
         .sc-fab-img{width:100%;height:100%;border-radius:50%;display:block;}
         .sc-fab-dot{z-index:1;position:absolute;top:2px;right:2px;width:14px;height:14px;background:#10b981;border:2.5px solid #fff;border-radius:50%;}
         .sc-panel{position:fixed;bottom:1.5rem;right:1.5rem;z-index:901;width:min(390px,calc(100vw - 2rem));height:min(600px,calc(100vh - 3rem));background:#FDFBF7;border-radius:22px;box-shadow:0 24px 70px rgba(26,43,76,0.28);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(26,43,76,0.08);font-family:'Inter',system-ui,sans-serif;animation:scIn .22s cubic-bezier(.16,1,.3,1);}

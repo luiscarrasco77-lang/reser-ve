@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE3B8"/><stop offset=".55" stop-color="#FDBF8A"/><stop offset="1" stop-color="#F49A6C"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8392F"/><stop offset="1" stop-color="#C9241D"/></linearGradient>
+    <clipPath id="c"><circle cx="100" cy="100" r="100"/></clipPath>
+  </defs>
+  <g clip-path="url(#c)">
+    <!-- amanecer -->
+    <rect width="200" height="200" fill="url(#sky)"/>
+    <circle cx="150" cy="150" r="34" fill="#FFD27A" opacity=".85"/>
+    <!-- tepuy -->
+    <path d="M0 168 L28 150 L36 120 L84 116 L92 146 L118 160 L200 156 L200 200 L0 200 Z" fill="#7C4A6B" opacity=".55"/>
+    <!-- cuerpo / alas -->
+    <path d="M58 200 C58 150 80 128 104 128 C130 128 150 150 150 200 Z" fill="url(#red)"/>
+    <path d="M60 200 C62 168 74 152 90 146 C84 166 82 184 84 200 Z" fill="#F6C443"/>
+    <path d="M62 200 C64 180 70 168 80 160 C78 176 78 190 80 200 Z" fill="#2E6FD0"/>
+    <!-- cabeza -->
+    <circle cx="104" cy="92" r="46" fill="url(#red)"/>
+    <!-- cara blanca con rayitas -->
+    <path d="M96 66 C118 58 140 70 142 92 C143 110 130 120 116 120 C102 120 92 108 92 92 C92 82 92 72 96 66 Z" fill="#FFF8EE"/>
+    <g stroke="#B8B0A6" stroke-width="2.2" stroke-linecap="round">
+      <path d="M100 98 q6 3 10 1"/><path d="M98 106 q7 3 12 0"/><path d="M104 113 q5 2 9 0"/>
+    </g>
+    <!-- ojo -->
+    <circle cx="116" cy="84" r="9.5" fill="#FFF8EE" stroke="#E6DED2" stroke-width="1.5"/>
+    <circle cx="117" cy="84" r="6" fill="#22140B"/>
+    <circle cx="119.3" cy="81.6" r="2.1" fill="#fff"/>
+    <!-- pico curvo -->
+    <path d="M132 86 C150 84 160 98 156 114 C154 124 146 128 140 126 C146 118 146 108 138 104 C132 101 128 96 132 86 Z" fill="#2A2420"/>
+    <path d="M134 104 C140 106 144 112 142 120 C136 120 130 114 130 108 Z" fill="#F2EBE0"/>
+    <path d="M138 90 C146 90 152 96 153 104" fill="none" stroke="#5A4E46" stroke-width="2" stroke-linecap="round"/>
+    <!-- cachete -->
+    <ellipse cx="108" cy="104" rx="7" ry="4" fill="#F2897A" opacity=".45"/>
+    <!-- copete -->
+    <path d="M78 58 C74 44 82 36 92 40 C88 46 90 52 96 54 Z" fill="#E8392F"/>
+    <path d="M90 52 C90 38 100 32 108 38 C102 42 102 48 106 52 Z" fill="#F0503F"/>
+  </g>
+</svg>

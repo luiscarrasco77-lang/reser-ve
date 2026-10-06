@@ -68,7 +68,9 @@ export default function AuroraPage() {
         .msg.user{display:flex;justify-content:flex-end;}
         .user-bub{background:linear-gradient(135deg,var(--cacao),var(--cacao-dark));color:white;padding:0.8rem 1.1rem;border-radius:18px 18px 4px 18px;font-size:0.92rem;max-width:80%;box-shadow:0 8px 20px rgba(230,126,34,0.25);}
         .ai-row{display:flex;gap:0.75rem;align-items:flex-start;}
-        .ai-ava{color:white;font-weight:800;width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:linear-gradient(135deg,#24395f,#1A2B4C);box-shadow:0 4px 14px rgba(26,43,76,0.3);}
+        .ai-ava img{width:100%;height:100%;display:block;}
+        .a-hero-ava{width:110px;height:110px;border-radius:50%;display:block;margin:0 auto 1rem;box-shadow:0 12px 32px rgba(232,57,47,.25);border:4px solid white;}
+        .ai-ava{overflow:hidden;width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:linear-gradient(135deg,#24395f,#1A2B4C);box-shadow:0 4px 14px rgba(26,43,76,0.3);}
         .ai-body{flex:1;min-width:0;}
         .ai-name{font-size:0.75rem;font-weight:800;letter-spacing:0.02em;color:var(--cacao-dark);margin-bottom:0.35rem;}
         .ai-text{background:white;border:1px solid var(--line);border-radius:4px 18px 18px 18px;padding:1rem 1.2rem;font-size:0.92rem;line-height:1.65;box-shadow:0 6px 20px rgba(26,43,76,0.06);}
@@ -111,9 +113,10 @@ export default function AuroraPage() {
       <div className="wrap" ref={scrollRef} style={{ height: 'calc(100vh - 60px)', overflowY: 'auto' }}>
         {!started && (
           <div className="hero">
-            <div className="a-badge">Aurora · tu compañera de viaje</div>
-            <h1 className="a-title">Hola, soy <em>Aurora</em></h1>
-            <p className="a-sub">Cuéntame qué viaje sueñas por Venezuela y armo un itinerario a tu medida con posadas reales, disponibilidad y precios. ¿Por dónde empezamos?</p>
+            <img src="/images/aurora/aurora.svg" alt="Aurora, la guacamaya viajera" className="a-hero-ava" />
+            <div className="a-badge">La guacamaya viajera de RESER-VE</div>
+            <h1 className="a-title">¡Epa! Soy <em>Aurora</em></h1>
+            <p className="a-sub">He volado de Los Roques a los tepuyes y de los Andes a Margarita. Cuéntame qué viaje sueñas y te armo la ruta con posadas reales, fechas y precios. ¿Pa' dónde vamos?</p>
             <div className="chips">
               {EJEMPLOS.map(e => (
                 <button key={e} className="chip" onClick={() => send(e)}>{e}</button>
@@ -131,7 +134,7 @@ export default function AuroraPage() {
           return (
             <div key={m.id} className="msg">
               <div className="ai-row">
-                <div className="ai-ava">A</div>
+                <div className="ai-ava"><img src="/images/aurora/aurora.svg" alt="" /></div>
                 <div className="ai-body">
                   <div className="ai-name">AURORA</div>
                   {m.parts.map((part, i) => {
@@ -179,13 +182,13 @@ export default function AuroraPage() {
         })}
 
         {busy && messages[messages.length - 1]?.role === 'user' && (
-          <div className="msg"><div className="ai-row"><div className="ai-ava">A</div>
+          <div className="msg"><div className="ai-row"><div className="ai-ava"><img src="/images/aurora/aurora.svg" alt="" /></div>
             <div className="ai-body"><div className="ai-name">AURORA</div><div className="ai-text"><div className="dots"><span /><span /><span /></div></div></div>
           </div></div>
         )}
 
         {error && (
-          <div className="msg"><div className="ai-row"><div className="ai-ava">A</div>
+          <div className="msg"><div className="ai-row"><div className="ai-ava"><img src="/images/aurora/aurora.svg" alt="" /></div>
             <div className="ai-body"><div className="ai-text">{error.message && error.message !== 'An error occurred.' ? error.message : 'Tuve un problema para responder. Intenta de nuevo en un momento. 🙏'}</div></div>
           </div></div>
         )}
