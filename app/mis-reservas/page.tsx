@@ -98,7 +98,7 @@ export default function MisReservasPage() {
         .btn-cancel{font-size:0.78rem;font-weight:600;color:#b91c1c;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:99px;padding:0.28rem 0.75rem;cursor:pointer;font-family:inherit;transition:all 0.18s;}
         .btn-cancel:hover:not(:disabled){background:rgba(239,68,68,0.13);}
         .btn-cancel:disabled{opacity:0.5;cursor:not-allowed;}
-        .host-note{background:rgba(16,185,129,0.07);border-left:3px solid #10b981;border-radius:0 8px 8px 0;padding:0.6rem 0.85rem;font-size:0.8rem;color:#047857;margin-top:0.6rem;line-height:1.5;}
+        .host-note{white-space:pre-line;background:rgba(16,185,129,0.07);border-left:3px solid #10b981;border-radius:0 8px 8px 0;padding:0.6rem 0.85rem;font-size:0.8rem;color:#047857;margin-top:0.6rem;line-height:1.5;}
         .pay-instructions{background:rgba(230,126,34,0.06);border-left:3px solid var(--cacao);border-radius:0 8px 8px 0;padding:0.6rem 0.85rem;font-size:0.8rem;color:#92400e;margin-top:0.6rem;line-height:1.5;}
         .empty{text-align:center;padding:3.5rem 1rem;}
         .empty-icon{font-size:2.5rem;margin-bottom:0.75rem;}

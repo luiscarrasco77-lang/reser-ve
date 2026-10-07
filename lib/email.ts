@@ -224,7 +224,7 @@ export async function emailGuestBookingConfirmed(opts: {
       <div class="divider"></div>
       <div class="total"><span>Total a pagar</span><span>$${opts.totalPrice} USD</span></div>
       <div class="info-box"><strong>Instrucciones de pago:</strong><br/>${instruccion}</div>
-      ${opts.hostNotes ? `<div class="info-box" style="margin-top:0.75rem"><strong>Mensaje del posadero:</strong> ${esc(opts.hostNotes)}</div>` : ''}
+      ${opts.hostNotes ? `<div class="info-box" style="margin-top:0.75rem"><strong>Mensaje del posadero:</strong><br/>${esc(opts.hostNotes).replace(/\n/g, '<br/>')}</div>` : ''}
     </div>
   `)
 

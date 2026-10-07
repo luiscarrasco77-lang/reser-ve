@@ -45,6 +45,8 @@ export const posadas = pgTable('posadas', {
   replacedDemoId: integer('replaced_demo_id'),
   // Token secreto del enlace iCal de exportación (calendario de la posada).
   icalToken: text('ical_token').unique(),
+  // Mensaje que se envía al huésped al confirmar una reserva (privado: puede incluir datos de pago).
+  mensajeConfirmacion: text('mensaje_confirmacion'),
   hostNombre: text('host_nombre'),
   hostDesde: text('host_desde'),
   hostIdiomas: json('host_idiomas').$type<string[]>().notNull().default([]),

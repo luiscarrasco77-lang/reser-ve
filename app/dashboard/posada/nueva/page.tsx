@@ -6,6 +6,8 @@ import { uploadPosadaImage } from '@/lib/upload-image'
 import { useRouter } from 'next/navigation'
 import PoliciesPicker from '@/components/PoliciesPicker'
 import { buildPolicies, type PolicyState } from '@/lib/policies'
+import ConfirmMessageEditor from '@/components/ConfirmMessageEditor'
+import { DEFAULT_CONFIRM_MESSAGE } from '@/lib/confirm-message'
 
 
 const tiposOpciones = [
@@ -40,6 +42,7 @@ export default function NuevaPosadaPage() {
   const [localidad, setLocalidad] = useState('')
   const [tipo, setTipo] = useState(tiposOpciones[0])
   const [politicas, setPoliticas] = useState<PolicyState>({ values: { checkin: 'Check-in desde las 2:00 pm', checkout: 'Check-out hasta las 12:00 pm' }, extras: [], otras: '' })
+  const [mensajeConfirmacion, setMensajeConfirmacion] = useState(DEFAULT_CONFIRM_MESSAGE)
   const [descripcion, setDescripcion] = useState('')
   const [precio, setPrecio] = useState('')
   const [habitaciones, setHabitaciones] = useState('4')
@@ -125,6 +128,7 @@ export default function NuevaPosadaPage() {
       tags,
       servicios,
       politicas: buildPolicies(politicas),
+      mensajeConfirmacion,
       imgs,
       lat,
       lng,
@@ -287,6 +291,10 @@ export default function NuevaPosadaPage() {
           </div>
 
           {/* Photos */}
+          <div className="form-section">
+            <div className="section-head">Mensaje al confirmar una reserva</div>
+            <ConfirmMessageEditor value={mensajeConfirmacion} onChange={setMensajeConfirmacion} posadaNombre={nombre} />
+          </div>
           <div className="form-section">
             <div className="section-head">Fotos de la posada</div>
             <div className={`img-drop${dragOver ? ' drag' : ''}`} onDragEnter={() => setDragOver(true)} onDragLeave={() => setDragOver(false)} onDrop={() => setDragOver(false)}>

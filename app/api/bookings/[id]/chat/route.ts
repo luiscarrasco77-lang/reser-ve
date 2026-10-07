@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { auth } from '@/auth'
 import { getDb } from '@/lib/db'
-import { bookings, conversations, posadas } from '@/lib/db/schema'
+import { bookings, posadas } from '@/lib/db/schema'
+import { ensureBookingConversation } from '@/lib/booking-chat'
 import { parseId } from '@/lib/http'
 
 // Abre (o crea) el chat de una reserva. Lo pueden usar el huésped, el posadero o un admin.
@@ -22,13 +23,6 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
   if (!p?.hostId) return NextResponse.json({ error: 'Esta posada no tiene posadero asignado' }, { status: 400 })
   if (b.guestId !== userId && p.hostId !== userId && role !== 'admin') return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const [existing] = await db.select({ id: conversations.id }).from(conversations).where(and(
-    eq(conversations.type, 'booking'), eq(conversations.userId, b.guestId), eq(conversations.hostId, p.hostId), eq(conversations.bookingId, b.id),
-  ))
-  if (existing) return NextResponse.json({ id: existing.id })
-  const [conv] = await db.insert(conversations).values({
-    type: 'booking', userId: b.guestId, hostId: p.hostId, bookingId: b.id,
-    subject: `${p.nombre} · ${b.bookingCode}`, lastMessageAt: new Date(),
-  }).returning({ id: conversations.id })
-  return NextResponse.json({ id: conv.id }, { status: 201 })
+  const conv = await ensureBookingConversation(b, { hostId: p.hostId, nombre: p.nombre })
+  return NextResponse.json({ id: conv.id }, { status: conv.created ? 201 : 200 })
 }

@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
   // Enrich with posada name + slug
   const posadaIds = [...new Set(rows.map(b => b.posadaId))]
   const posadaInfo = posadaIds.length > 0
-    ? await db.select({ id: posadas.id, nombre: posadas.nombre, slug: posadas.slug, imgs: posadas.imgs })
+    ? await db.select({ id: posadas.id, nombre: posadas.nombre, slug: posadas.slug, imgs: posadas.imgs, mensajeConfirmacion: posadas.mensajeConfirmacion, hostId: posadas.hostId })
         .from(posadas).where(inArray(posadas.id, posadaIds))
     : []
   const posadaMap = Object.fromEntries(posadaInfo.map(p => [p.id, p]))
@@ -59,6 +59,8 @@ export async function GET(req: NextRequest) {
     posadaNombre: posadaMap[b.posadaId]?.nombre ?? `Posada #${b.posadaId}`,
     posadaSlug: posadaMap[b.posadaId]?.slug ?? '',
     posadaImg: ((posadaMap[b.posadaId]?.imgs ?? []) as string[])[0] ?? '',
+    // Plantilla del mensaje al confirmar: solo para el dueño de la posada (o un admin).
+    confirmTemplate: (posadaMap[b.posadaId]?.hostId === userId || role === 'admin') ? posadaMap[b.posadaId]?.mensajeConfirmacion ?? null : undefined,
     guestName: guestMap[b.guestId]?.name ?? `Huésped #${b.guestId}`,
     // El email del huésped solo lo ve el propio huésped o un admin (el posadero usa el chat).
     guestEmail: role === 'admin' || b.guestId === userId ? guestMap[b.guestId]?.email ?? '' : '',

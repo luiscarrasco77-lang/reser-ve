@@ -4,6 +4,7 @@ import { useState, useEffect, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import DashboardNav from '@/components/DashboardNav'
 import { hostNet } from '@/lib/constants'
+import { DEFAULT_CONFIRM_MESSAGE, renderConfirmMessage } from '@/lib/confirm-message'
 
 type Booking = {
   id: number
@@ -24,6 +25,7 @@ type Booking = {
   guestCount: number
   notes: string | null
   hostNotes: string | null
+  confirmTemplate?: string | null
   createdAt: string
 }
 
@@ -60,6 +62,20 @@ export default function ReservasPage() {
       .then(data => { setBookings(Array.isArray(data) ? data : []); setLoading(false) })
       .catch(() => { setLoadError(true); setLoading(false) })
   }, [])
+
+  // Abre/cierra el detalle. En una solicitud pendiente, rellena el mensaje de confirmación
+  // con la plantilla de la posada y los datos de la reserva (se puede editar antes de enviar).
+  function toggle(b: Booking) {
+    const open = expanded !== b.id
+    setExpanded(open ? b.id : null)
+    if (open && b.status === 'pending' && hostNoteInput[b.id] === undefined) {
+      const text = renderConfirmMessage(b.confirmTemplate || DEFAULT_CONFIRM_MESSAGE, {
+        huesped: b.guestName, posada: b.posadaNombre, checkIn: b.checkIn, checkOut: b.checkOut,
+        nights: b.nights, guests: b.guestCount, total: b.totalPrice, metodo: b.paymentMethod, codigo: b.bookingCode ?? '',
+      })
+      setHostNoteInput(prev => ({ ...prev, [b.id]: text }))
+    }
+  }
 
   // Abre (o crea) el chat con el huésped de esta reserva.
   async function openChat(id: number) {
@@ -184,7 +200,7 @@ export default function ReservasPage() {
               </div>
               {filtered.map(b => (
                 <Fragment key={b.id}>
-                  <div className="t-row" onClick={() => setExpanded(expanded === b.id ? null : b.id)}>
+                  <div className="t-row" onClick={() => toggle(b)}>
                     <div>
                       <div style={{fontWeight:600}}>{b.guestName || `Huésped #${b.guestId}`}</div>
                       {b.bookingCode && <span className="code-chip" style={{marginTop:3,display:'inline-block'}}>{b.bookingCode}</span>}
@@ -206,7 +222,7 @@ export default function ReservasPage() {
                     <div className="actions" onClick={e => e.stopPropagation()}>
                       {b.status === 'pending' && (
                         <>
-                          <button className="act-btn act-expand" onClick={() => setExpanded(expanded === b.id ? null : b.id)}>
+                          <button className="act-btn act-expand" onClick={() => toggle(b)}>
                             {expanded === b.id ? 'Cerrar' : 'Revisar'}
                           </button>
                           <button className="act-btn act-cancel" disabled={updating === b.id} onClick={() => updateStatus(b.id, 'cancelled')}>
@@ -278,12 +294,14 @@ export default function ReservasPage() {
                       {b.status === 'pending' && (
                         <div>
                           <div style={{fontSize:'0.72rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--muted)',marginBottom:'0.4rem'}}>
-                            Mensaje al huésped (opcional)
+                            Mensaje de confirmación al huésped
                           </div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginBottom: '0.5rem', lineHeight: 1.5 }}>Se envía al chat de la reserva y en su correo al confirmar. Puedes editarlo aquí; tu texto predeterminado se cambia en <a href={`/dashboard/posada/${b.posadaSlug}/editar`} style={{ color: 'var(--cacao)', fontWeight: 600 }}>tu posada</a>.</div>
                           <div style={{ fontSize: '0.78rem', color: '#92400e', background: 'rgba(245,158,11,0.08)', borderRadius: 8, padding: '0.5rem 0.7rem', marginBottom: '0.5rem' }}>Antes de confirmar, revisa que tengas la habitación libre esas fechas (en tu cuaderno, WhatsApp o tu <a href="/dashboard/calendario" style={{ color: 'inherit', fontWeight: 700 }}>calendario</a>).</div>
                           <textarea
                             className="note-textarea"
-                            placeholder="Mensaje de bienvenida o instrucciones de llegada. Los datos de pago envíalos por el chat de RESER-VE."
+                            placeholder="Mensaje de bienvenida, datos de pago o instrucciones de llegada."
+                            rows={9}
                             value={hostNoteInput[b.id] ?? ''}
                             onChange={e => setHostNoteInput(prev => ({ ...prev, [b.id]: e.target.value }))}
                           />
@@ -300,7 +318,7 @@ export default function ReservasPage() {
                               className="act-btn act-cancel"
                               style={{padding:'0.5rem 1.2rem',fontSize:'0.82rem'}}
                               disabled={updating === b.id}
-                              onClick={() => updateStatus(b.id, 'cancelled', hostNoteInput[b.id])}
+                              onClick={() => updateStatus(b.id, 'cancelled')}
                             >
                               Rechazar
                             </button>
@@ -310,7 +328,7 @@ export default function ReservasPage() {
                       {b.hostNotes && b.status !== 'pending' && (
                         <div>
                           <div style={{fontSize:'0.72rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--muted)',marginBottom:'0.3rem'}}>Tu mensaje al huésped</div>
-                          <div style={{fontSize:'0.84rem',background:'white',padding:'0.6rem 0.8rem',borderRadius:10,border:'1.5px solid var(--line)'}}>{b.hostNotes}</div>
+                          <div style={{fontSize:'0.84rem',background:'white',padding:'0.6rem 0.8rem',borderRadius:10,border:'1.5px solid var(--line)',whiteSpace:'pre-line'}}>{b.hostNotes}</div>
                         </div>
                       )}
                     </div>

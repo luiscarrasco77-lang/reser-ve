@@ -3,7 +3,9 @@ import { isRangeAvailable, roomsForGuests, syncStaleFeeds } from '@/lib/availabi
 import { hasContactInfo } from '@/lib/posada-input'
 import { parseId, readJson } from '@/lib/http'
 import { getDb } from '@/lib/db'
-import { bookings, posadas, users } from '@/lib/db/schema'
+import { bookings, messages, posadas, users, conversations } from '@/lib/db/schema'
+import { ensureBookingConversation } from '@/lib/booking-chat'
+import { moderateMessage } from '@/lib/moderation'
 import { eq } from 'drizzle-orm'
 import { auth } from '@/auth'
 import { emailGuestBookingConfirmed, emailGuestBookingCancelled, emailHostGuestCancelled } from '@/lib/email'
@@ -55,8 +57,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const body = await readJson(req)
   if (Object.keys(body).length === 0) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
   const status = String(body.status ?? '')
-  const hostNotes = typeof body.hostNotes === 'string' ? body.hostNotes.trim().slice(0, 1000) || null : null
-  if (hostNotes && hasContactInfo(hostNotes)) {
+  const hostNotes = typeof body.hostNotes === 'string' ? body.hostNotes.trim().slice(0, 2000) || null : null
+  // Al confirmar, el mensaje va al chat de la reserva (ahí sí caben los datos de pago y lo revisa
+  // el moderador). En los demás casos (rechazo) no se permiten datos de contacto.
+  if (hostNotes && status !== 'confirmed' && hasContactInfo(hostNotes)) {
     return NextResponse.json({ error: 'No incluyas teléfonos, correos ni enlaces: los datos de pago y contacto se envían por el chat de RESER-VE.' }, { status: 400 })
   }
   const userId = parseInt((session.user as any).id)
@@ -100,6 +104,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .set({ status: status as any, hostNotes: actor === 'guest' ? booking.hostNotes : (hostNotes ?? booking.hostNotes), updatedAt: new Date() })
     .where(eq(bookings.id, bookingId))
     .returning()
+
+  // Mensaje de confirmación del posadero → chat de la reserva (como los mensajes de Airbnb).
+  if (status === 'confirmed' && hostNotes && posada?.hostId && actor !== 'guest') {
+    const conv = await ensureBookingConversation(booking, { hostId: posada.hostId, nombre: posada.nombre })
+    const [sender] = await db.select({ name: users.name }).from(users).where(eq(users.id, userId))
+    const [msg] = await db.insert(messages).values({
+      conversationId: conv.id, senderId: userId, senderName: sender?.name ?? 'Posadero', senderRole: role, body: hostNotes,
+    }).returning({ id: messages.id })
+    await db.update(conversations).set({ lastMessageAt: new Date() }).where(eq(conversations.id, conv.id))
+    if (role !== 'admin') after(() => moderateMessage(msg.id))
+  }
 
   // Correos tras responder.
   after(async () => {

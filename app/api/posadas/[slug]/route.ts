@@ -44,7 +44,8 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
   const reseñas = rows.map(r => ({ autor: r.authorName, pais: r.authorCountry ?? '', rating: r.rating, texto: r.texto }))
 
   // Las notas internas de revisión solo las ven el dueño y los admins.
-  const { reviewNotes, hostId, ...pub } = posada
+  // El token iCal y el mensaje de confirmación son privados: nunca salen en la API pública.
+  const { reviewNotes, hostId, icalToken, mensajeConfirmacion, replacedDemoId, ...pub } = posada
   const privileged = !!session
   return NextResponse.json({ ...pub, ...(privileged ? { reviewNotes } : {}), reseñas })
 }
@@ -90,7 +91,7 @@ async function update(req: NextRequest, slug: string) {
     .where(eq(posadas.id, posada.id)).returning()
   // Una posada publicada que se edita queda visible, pero los admins reciben aviso para revisarla.
   if (posada.status === 'active' && role !== 'admin') {
-    const changed = Object.keys(parsed.data).filter(k => JSON.stringify((posada as any)[k]) !== JSON.stringify(parsed.data[k]))
+    const changed = Object.keys(parsed.data).filter(k => k !== 'mensajeConfirmacion').filter(k => JSON.stringify((posada as any)[k]) !== JSON.stringify(parsed.data[k]))
     if (changed.length) after(() => notifyAdmins(posada.id, 'edited', changed))
   }
   return NextResponse.json(updated)

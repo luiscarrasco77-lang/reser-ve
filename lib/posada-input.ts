@@ -58,6 +58,8 @@ export function parsePosadaInput(body: any, partial = false): Result {
     }
   }
   if (!partial || has('tipo')) d.tipo = String(body.tipo || 'Posada').slice(0, 60)
+  // Mensaje privado al huésped al confirmar (puede llevar datos de pago: no se valida como texto público).
+  if (has('mensajeConfirmacion')) d.mensajeConfirmacion = String(body.mensajeConfirmacion ?? '').trim().slice(0, 2000) || null
   for (const k of ['tags', 'servicios', 'politicas', 'imgs', 'metodoPago'] as const) {
     if (!partial || has(k)) d[k] = arr(body[k])
   }
